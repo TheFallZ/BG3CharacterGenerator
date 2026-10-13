@@ -497,7 +497,7 @@ function rollBackground(): string | null {
 function rollRomance(): string | null { return pick(data.romances); }
 
 const definitions: Record<CardKey, { title: string; wide: boolean; roll: () => GeneratorResult }> = {
-  darkUrge: {title: "Should I Take The Dark Urge?", wide: false, roll: rollDarkUrge},
+  darkUrge: {title: "Should I accept the tadpole?", wide: false, roll: rollDarkUrge},
   race: {title: "Race", wide: false, roll: rollRace},
   class: {title: "Class", wide: true, roll: rollClass},
   feats: {title: "Feat options", wide: false, roll: rollFeats},
