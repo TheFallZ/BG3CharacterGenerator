@@ -6,6 +6,8 @@ A small, browser-based character generator for Baldur's Gate 3. Generate a chara
 
 - Randomizes class, race, feats, background, romance, and the Dark Urge prompt.
 - Has an 8% chance to generate a multiclass build, marked clearly in the Class card.
+- Applies BG3 multiclass proficiency grants separately from starting-class skill choices, including multiclass-only skill picks.
+- Shows racial, background, and supported subclass proficiencies; Githyanki Astral Knowledge is labeled as a temporary grant.
 - Includes The Haunted One in the background pool regardless of the Dark Urge response.
 - Generates a companion or base-game hireling build with a subclass, preferred weapons, and a deity for Clerics. Companions can keep their default class or roll a different one; hirelings keep their base-game class.
 - Saves, loads, and deletes builds using browser storage.
@@ -44,3 +46,7 @@ npm.cmd run build
 ## Saved Builds
 
 Saved characters are stored in the browser's local storage. They remain in that browser on that device and are not shared with other visitors or synced across devices.
+
+## Proficiency Rules
+
+The first generated class uses its starting-class skill picks. A second class uses BG3's multiclass proficiency grants instead of receiving all its starting-class skill picks. The BG3 Wiki notes that multiclass Clerics appear to receive two skill proficiencies despite this likely being a game bug; the generator mirrors that behavior.

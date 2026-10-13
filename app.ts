@@ -33,7 +33,7 @@ interface Character {
   race?: ClassEntry[];
   class?: ClassEntry[];
   feats?: string[];
-  background?: string | null;
+  background?: string | ClassEntry[] | null;
   romance?: string | null;
   companionBuild?: ClassEntry[];
 }
@@ -191,7 +191,7 @@ const DEFAULT_DATA: GeneratorData = {
     },
     "Ranger": {
       skills: ["Animal Handling", "Athletics", "Insight", "Investigation", "Nature", "Perception", "Stealth", "Survival"],
-      skillCount: 2,
+      skillCount: 3,
       subclasses: ["Beast Master", "Gloom Stalker", "Hunter", "Swarmkeeper"],
       options: {
         "Natural Explorer": [
@@ -296,6 +296,77 @@ const DEFAULT_DATA: GeneratorData = {
 
 const SAVED_CHARACTERS_KEY = "bg3-character-generator-saved-results";
 
+const BACKGROUND_SKILLS: Record<string, string[]> = {
+  Acolyte: ["Insight", "Religion"],
+  Charlatan: ["Deception", "Sleight of Hand"],
+  Criminal: ["Deception", "Stealth"],
+  Entertainer: ["Acrobatics", "Performance"],
+  "Folk Hero": ["Animal Handling", "Survival"],
+  "Guild Artisan": ["Insight", "Persuasion"],
+  "The Haunted One": ["Intimidation", "Medicine"],
+  Noble: ["History", "Persuasion"],
+  Outlander: ["Athletics", "Survival"],
+  Sage: ["Arcana", "History"],
+  Soldier: ["Athletics", "Intimidation"],
+  Urchin: ["Sleight of Hand", "Stealth"]
+};
+
+const RACIAL_PROFICIENCIES: Record<string, Record<string, string[]>> = {
+  Drow: {"*": ["Perception", "Rapiers", "Shortswords", "Hand Crossbows"]},
+  Dwarf: {"*": ["Battleaxes", "Handaxes", "Light Hammers", "Warhammers"], "Shield Dwarf": ["Light Armour", "Medium Armour"]},
+  Elf: {"*": ["Perception", "Longswords", "Shortswords", "Longbows", "Shortbows"], "Wood Elf": ["Stealth"]},
+  Githyanki: {"*": ["Light Armour", "Medium Armour", "Greatswords", "Longswords", "Shortswords"]},
+  Gnome: {"Rock Gnome": ["Expertise in History"]},
+  "Half-Elf": {"*": ["Light Armour", "Shields", "Pikes", "Spears", "Halberds", "Glaives"]},
+  "Half-Orc": {"*": ["Intimidation"]},
+  Human: {"*": ["Light Armour", "Shields", "Pikes", "Spears", "Halberds", "Glaives"]}
+};
+
+const MULTICLASS_PROFICIENCIES: Record<string, string[]> = {
+  Barbarian: ["Shields", "Simple Weapons", "Martial Weapons"],
+  Bard: ["Light Armour", "Musical Instruments"],
+  Cleric: ["Light Armour", "Medium Armour", "Shields", "Flails", "Morningstars"],
+  Druid: ["Light Armour", "Medium Armour", "Shields"],
+  Fighter: ["Light Armour", "Medium Armour", "Shields", "Simple Weapons", "Martial Weapons"],
+  Monk: ["Simple Weapons", "Shortswords"],
+  Paladin: ["Light Armour", "Medium Armour", "Shields", "Simple Weapons", "Martial Weapons"],
+  Ranger: ["Light Armour", "Medium Armour", "Shields", "Simple Weapons", "Martial Weapons"],
+  Rogue: ["Light Armour"],
+  Sorcerer: [],
+  Warlock: ["Light Armour", "Simple Weapons"],
+  Wizard: []
+};
+
+const MULTICLASS_SKILL_COUNTS: Record<string, number> = {
+  Bard: 1,
+  Cleric: 2,
+  Ranger: 1,
+  Rogue: 1
+};
+
+const SUBCLASS_PROFICIENCIES: Record<string, Record<string, string[]>> = {
+  Bard: {
+    "College of Swords": ["Medium Armour", "Scimitars"],
+    "College of Valour": ["Medium Armour", "Shields", "Martial Weapons"]
+  },
+  Cleric: {
+    Life: ["Heavy Armour"],
+    Nature: ["Heavy Armour"],
+    Tempest: ["Heavy Armour", "Martial Weapons"],
+    War: ["Heavy Armour", "Martial Weapons"]
+  }
+};
+
+const KNOWLEDGE_DOMAIN_SKILLS = ["Arcana", "History", "Nature", "Religion"];
+const NATURE_DOMAIN_SKILLS = ["Animal Handling", "Nature", "Survival"];
+const ASTRAL_KNOWLEDGE_SKILLS: Record<string, string[]> = {
+  Strength: ["Athletics"],
+  Dexterity: ["Acrobatics", "Sleight of Hand", "Stealth"],
+  Intelligence: ["Arcana", "History", "Investigation", "Nature", "Religion"],
+  Wisdom: ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"],
+  Charisma: ["Deception", "Intimidation", "Performance", "Persuasion"]
+};
+
 let data: GeneratorData = structuredClone(DEFAULT_DATA);
 let character: Character = {};
 let cardOrder: CardKey[] = ["class", "race", "feats", "background", "darkUrge", "romance", "companionBuild"];
@@ -377,10 +448,26 @@ function rollRace(): ClassEntry[] {
     result.push({label: "Subrace", value: pick(info.subraces)});
   }
 
-  const subrace = result.find(x => x.label === "Subrace")?.value || "";
+  const subraceValue = result.find(x => x.label === "Subrace")?.value;
+  const subrace = typeof subraceValue === "string" ? subraceValue : "";
   if (race === "Elf" && subrace === "High Elf" ||
       race === "Half-Elf" && subrace === "High Half-Elf") {
     result.push({label: "High Elf Cantrip", value: pick(data.highElfCantrips)});
+  }
+
+  const racialProficiencies = [
+    ...(RACIAL_PROFICIENCIES[race]?.["*"] || []),
+    ...(RACIAL_PROFICIENCIES[race]?.[subrace] || [])
+  ];
+  if (racialProficiencies.length) {
+    result.push({label: "Racial Proficiencies", value: racialProficiencies});
+  }
+  if (race === "Githyanki") {
+    const ability = pick(Object.keys(ASTRAL_KNOWLEDGE_SKILLS)) ?? "Strength";
+    result.push({
+      label: `Astral Knowledge (${ability}, until Long Rest)`,
+      value: ASTRAL_KNOWLEDGE_SKILLS[ability]
+    });
   }
 
   if (info.extra) {
@@ -495,12 +582,43 @@ function rollClassOptions(className: string, subclass: string | null): ClassEntr
   return entries;
 }
 
-function rollSingleClass(className: string): ClassEntry[] {
+function rollSubclassProficiencies(className: string, subclass: string | null): ClassEntry[] {
+  const entries: ClassEntry[] = [];
+  const proficiencies = SUBCLASS_PROFICIENCIES[className]?.[subclass ?? ""] || [];
+  if (proficiencies.length) {
+    entries.push({label: "Subclass Proficiencies", value: proficiencies});
+  }
+
+  if (className === "Cleric" && subclass === "Knowledge") {
+    entries.push({label: "Knowledge Domain Expertise", value: pickMany(KNOWLEDGE_DOMAIN_SKILLS, 2)});
+  }
+  if (className === "Cleric" && subclass === "Nature") {
+    entries.push({label: "Nature Domain Skill Proficiency", value: pick(NATURE_DOMAIN_SKILLS)});
+  }
+  return entries;
+}
+
+function rollSingleClass(className: string, isMulticlass = false): ClassEntry[] {
   const cls = data.classes[className];
   const subclass = pick(cls.subclasses || []);
-  const entries: ClassEntry[] = [
-    {label: "Class", value: className},
-    {label: "Skill Proficiencies", value: randomSkills(className, cls.skillCount || 2)},
+  const entries: ClassEntry[] = [{label: "Class", value: className}];
+
+  if (isMulticlass) {
+    const skillCount = MULTICLASS_SKILL_COUNTS[className] || 0;
+    if (skillCount) {
+      entries.push({label: "Multiclass Skill Proficiencies", value: randomSkills(className, skillCount)});
+    }
+    entries.push({
+      label: "Multiclass Proficiencies",
+      value: MULTICLASS_PROFICIENCIES[className]?.length
+        ? MULTICLASS_PROFICIENCIES[className]
+        : ["None"]
+    });
+  } else {
+    entries.push({label: "Skill Proficiencies", value: randomSkills(className, cls.skillCount || 2)});
+  }
+
+  entries.push(
     {label: className === "Wizard" ? "Wizard School" :
              className === "Monk" ? "Monastic Tradition" :
              className === "Sorcerer" ? "Sorcerer Subclass" :
@@ -512,13 +630,14 @@ function rollSingleClass(className: string): ClassEntry[] {
              className === "Rogue" ? "Rogue Subclass" :
              className === "Paladin" ? "Paladin Oath" :
              className === "Warlock" ? "Warlock Patron" : "Subclass", value: subclass}
-  ];
+  );
 
   const extra = rollClassOptions(className, subclass);
   for (const entry of extra) {
     if (entry.label === "Warlock Patron") continue;
     entries.push(entry);
   }
+  entries.push(...rollSubclassProficiencies(className, subclass));
   return entries;
 }
 
@@ -532,7 +651,7 @@ function rollClass(): ClassEntry[] {
     const remaining = names.filter(n => n !== primary);
     const secondary = pick(remaining) ?? primary;
     const first = rollSingleClass(primary);
-    const second = rollSingleClass(secondary);
+    const second = rollSingleClass(secondary, true);
     entries.push(...first, ...second);
   } else {
     entries.push(...rollSingleClass(primary));
@@ -545,8 +664,12 @@ function rollFeats(): string[] {
   return pickMany(data.feats, Number(data.settings?.featCount ?? 4), true);
 }
 
-function rollBackground(): string | null {
-  return pick(data.backgrounds);
+function rollBackground(): ClassEntry[] {
+  const background = pick(data.backgrounds) ?? data.backgrounds[0];
+  return [
+    {label: "Background", value: background},
+    {label: "Background Skill Proficiencies", value: BACKGROUND_SKILLS[background] || []}
+  ];
 }
 function rollRomance(): string | null { return pick(data.romances); }
 
