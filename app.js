@@ -404,9 +404,43 @@ function pickMany(list, count, allowDuplicates = false) {
     }
     return result;
 }
-function randomSkills(className, count) {
+function randomSkills(className, count, excludedSkills = [], reservedSkills = [], reservedCount = 0) {
     const cls = data.classes[className];
-    return pickMany(cls?.skills || [], count);
+    const availableSkills = (cls?.skills || []).filter(skill => !excludedSkills.includes(skill));
+    if (!reservedSkills.length)
+        return pickMany(availableSkills, count);
+    const reservedSet = new Set(reservedSkills);
+    const safeSkills = availableSkills.filter(skill => !reservedSet.has(skill));
+    const overlappingSkills = availableSkills.filter(skill => reservedSet.has(skill));
+    const safePicks = pickMany(safeSkills, Math.min(count, safeSkills.length));
+    const overlapCapacity = Math.max(0, reservedSkills.length - reservedCount);
+    const overlappingPicks = pickMany(overlappingSkills, Math.min(count - safePicks.length, overlapCapacity));
+    return [...safePicks, ...overlappingPicks];
+}
+function getRacialSkillProficiencies() {
+    const skillNames = new Set(Object.values(data.classes).flatMap(classInfo => classInfo.skills));
+    const racialEntries = character.race || [];
+    const skills = racialEntries.flatMap(entry => {
+        if (entry.label !== "Racial Proficiencies" && entry.label !== "Additional Skill Proficiency")
+            return [];
+        const values = Array.isArray(entry.value) ? entry.value : [entry.value];
+        return values.filter((skill) => typeof skill === "string" && skillNames.has(skill));
+    });
+    return [...new Set(skills)];
+}
+function getBackgroundSkillProficiencies(background = character.background) {
+    if (typeof background === "string")
+        return BACKGROUND_SKILLS[background] || [];
+    if (!Array.isArray(background))
+        return [];
+    const skillEntry = background.find(entry => entry.label === "Background Skill Proficiencies");
+    if (Array.isArray(skillEntry?.value))
+        return skillEntry.value.filter((skill) => typeof skill === "string");
+    const backgroundName = background.find(entry => entry.label === "Background")?.value;
+    return typeof backgroundName === "string" ? BACKGROUND_SKILLS[backgroundName] || [] : [];
+}
+function getExistingSkillProficiencies() {
+    return [...new Set([...getRacialSkillProficiencies(), ...getBackgroundSkillProficiencies()])];
 }
 function rollDarkUrge() {
     return pick(data.darkUrge);
@@ -538,7 +572,7 @@ function rollClassOptions(className, subclass) {
     }
     return entries;
 }
-function rollSubclassProficiencies(className, subclass) {
+function rollSubclassProficiencies(className, subclass, excludedSkills = []) {
     const entries = [];
     const proficiencies = SUBCLASS_PROFICIENCIES[className]?.[subclass ?? ""] || [];
     if (proficiencies.length) {
@@ -548,18 +582,20 @@ function rollSubclassProficiencies(className, subclass) {
         entries.push({ label: "Knowledge Domain Expertise", value: pickMany(KNOWLEDGE_DOMAIN_SKILLS, 2) });
     }
     if (className === "Cleric" && subclass === "Nature") {
-        entries.push({ label: "Nature Domain Skill Proficiency", value: pick(NATURE_DOMAIN_SKILLS) });
+        const availableSkills = NATURE_DOMAIN_SKILLS.filter(skill => !excludedSkills.includes(skill));
+        if (availableSkills.length)
+            entries.push({ label: "Nature Domain Skill Proficiency", value: pick(availableSkills) });
     }
     return entries;
 }
-function rollSingleClass(className, isMulticlass = false) {
+function rollSingleClass(className, isMulticlass = false, excludedSkills = [], reservedSkills = [], reservedCount = 0) {
     const cls = data.classes[className];
     const subclass = pick(cls.subclasses || []);
     const entries = [{ label: "Class", value: className }];
     if (isMulticlass) {
         const skillCount = MULTICLASS_SKILL_COUNTS[className] || 0;
         if (skillCount) {
-            entries.push({ label: "Multiclass Skill Proficiencies", value: randomSkills(className, skillCount) });
+            entries.push({ label: "Multiclass Skill Proficiencies", value: randomSkills(className, skillCount, excludedSkills) });
         }
         entries.push({
             label: "Multiclass Proficiencies",
@@ -569,7 +605,7 @@ function rollSingleClass(className, isMulticlass = false) {
         });
     }
     else {
-        entries.push({ label: "Skill Proficiencies", value: randomSkills(className, cls.skillCount || 2) });
+        entries.push({ label: "Skill Proficiencies", value: randomSkills(className, cls.skillCount || 2, excludedSkills, reservedSkills, reservedCount) });
     }
     entries.push(...rollStartingMagic(className));
     entries.push({ label: className === "Wizard" ? "Wizard School" :
@@ -589,23 +625,31 @@ function rollSingleClass(className, isMulticlass = false) {
             continue;
         entries.push(entry);
     }
-    entries.push(...rollSubclassProficiencies(className, subclass));
+    entries.push(...rollSubclassProficiencies(className, subclass, excludedSkills));
     return entries;
 }
 function rollClass() {
     const names = Object.keys(data.classes);
     const primary = pick(names) ?? names[0];
     const entries = [];
+    const existingSkills = getExistingSkillProficiencies();
     const multi = Math.random() * 100 < Number(data.settings?.multiclassChance ?? 8);
     if (multi) {
         const remaining = names.filter(n => n !== primary);
         const secondary = pick(remaining) ?? primary;
-        const first = rollSingleClass(primary);
-        const second = rollSingleClass(secondary, true);
+        const secondarySkillCount = MULTICLASS_SKILL_COUNTS[secondary] || 0;
+        const secondarySkills = secondarySkillCount
+            ? (data.classes[secondary]?.skills || []).filter(skill => !existingSkills.includes(skill))
+            : [];
+        const first = rollSingleClass(primary, false, existingSkills, secondarySkills, secondarySkillCount);
+        const firstSkills = first
+            .filter(entry => entry.label === "Skill Proficiencies" || entry.label === "Nature Domain Skill Proficiency")
+            .flatMap(entry => Array.isArray(entry.value) ? entry.value : typeof entry.value === "string" ? [entry.value] : []);
+        const second = rollSingleClass(secondary, true, [...existingSkills, ...firstSkills]);
         entries.push(...first, ...second);
     }
     else {
-        entries.push(...rollSingleClass(primary));
+        entries.push(...rollSingleClass(primary, false, existingSkills));
     }
     return entries;
 }
@@ -613,7 +657,9 @@ function rollFeats() {
     return pickMany(data.feats, Number(data.settings?.featCount ?? 4), true);
 }
 function rollBackground() {
-    const background = pick(data.backgrounds) ?? data.backgrounds[0];
+    const racialSkills = new Set(getRacialSkillProficiencies());
+    const availableBackgrounds = data.backgrounds.filter(background => (BACKGROUND_SKILLS[background] || []).every(skill => !racialSkills.has(skill)));
+    const background = pick(availableBackgrounds.length ? availableBackgrounds : data.backgrounds) ?? data.backgrounds[0];
     return [
         { label: "Background", value: background },
         { label: "Background Skill Proficiencies", value: BACKGROUND_SKILLS[background] || [] }
@@ -668,14 +714,23 @@ function normalizeResult(value) {
 }
 function reroll(key) {
     character = { ...character, [key]: definitions[key].roll() };
+    if (key === "race") {
+        character.background = rollBackground();
+        character.class = rollClass();
+    }
+    if (key === "background")
+        character.class = rollClass();
     if (key === "romance")
         character.companionBuild = rollCompanionBuild(character.romance);
     renderCards();
 }
 function generateAll() {
     character.darkUrge = rollDarkUrge();
+    character.race = rollRace();
+    character.background = rollBackground();
+    character.class = rollClass();
     for (const key of cardOrder) {
-        if (key !== "darkUrge") {
+        if (key !== "darkUrge" && key !== "class" && key !== "race" && key !== "background") {
             character = { ...character, [key]: definitions[key].roll() };
         }
     }
