@@ -864,6 +864,8 @@ function renderCards(): void {
       }).join("");
     } else if (key === "companionBuild") {
       content = normalizeResult(value).map(entryHTML).join("");
+    } else if (key === "background") {
+      content = normalizeResult(value).map(entryHTML).join("");
     } else if (key === "feats") {
       content = entryHTML({label: "", value: value as string | string[] | null});
     } else {
