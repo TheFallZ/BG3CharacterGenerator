@@ -296,27 +296,42 @@ const ASTRAL_KNOWLEDGE_SKILLS = {
 };
 const STARTING_MAGIC = {
     Bard: {
+        cantripCount: 2,
         cantrips: ["Blade Ward", "Dancing Lights", "Friends", "Light", "Mage Hand", "Minor Illusion", "True Strike", "Vicious Mockery"],
+        spellCount: 4,
         spells: ["Animal Friendship", "Bane", "Charm Person", "Cure Wounds", "Dissonant Whispers", "Faerie Fire", "Healing Word", "Longstrider", "Sleep", "Speak with Animals", "Tasha's Hideous Laughter", "Thunderwave"]
     },
     Cleric: {
+        cantripCount: 3,
         cantrips: ["Guidance", "Light", "Resistance", "Sacred Flame", "Thaumaturgy", "Toll the Dead"],
+        spellCount: 4,
+        spellLabel: "Prepared Level 1 Spells",
         spells: ["Bane", "Bless", "Command", "Cure Wounds", "Guiding Bolt", "Healing Word", "Inflict Wounds", "Sanctuary", "Shield of Faith"]
     },
     Druid: {
+        cantripCount: 2,
         cantrips: ["Guidance", "Poison Spray", "Produce Flame", "Resistance", "Shillelagh", "Thorn Whip"],
+        spellCount: 4,
+        spellLabel: "Prepared Level 1 Spells",
         spells: ["Animal Friendship", "Charm Person", "Cure Wounds", "Entangle", "Faerie Fire", "Goodberry", "Healing Word", "Longstrider", "Speak with Animals", "Thunderwave"]
     },
     Sorcerer: {
+        cantripCount: 4,
         cantrips: ["Acid Splash", "Blade Ward", "Bone Chill", "Dancing Lights", "Fire Bolt", "Friends", "Light", "Mage Hand", "Minor Illusion", "Poison Spray", "Ray of Frost", "Shocking Grasp", "True Strike"],
+        spellCount: 2,
         spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Colour Spray", "Expeditious Retreat", "False Life", "Mage Armour", "Magic Missile", "Shield", "Sleep", "Thunderwave", "Witch Bolt"]
     },
     Warlock: {
+        cantripCount: 2,
         cantrips: ["Blade Ward", "Bone Chill", "Eldritch Blast", "Friends", "Mage Hand", "Minor Illusion", "Poison Spray", "True Strike"],
+        spellCount: 2,
         spells: ["Armour of Agathys", "Arms of Hadar", "Charm Person", "Expeditious Retreat", "Hellish Rebuke", "Hex", "Protection from Evil and Good", "Witch Bolt"]
     },
     Wizard: {
+        cantripCount: 3,
         cantrips: ["Acid Splash", "Blade Ward", "Bone Chill", "Dancing Lights", "Fire Bolt", "Friends", "Light", "Mage Hand", "Minor Illusion", "Poison Spray", "Ray of Frost", "Shocking Grasp", "True Strike"],
+        spellCount: 6,
+        spellLabel: "Level 1 Spellbook Picks",
         spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Colour Spray", "Disguise Self", "Expeditious Retreat", "False Life", "Find Familiar", "Fog Cloud", "Grease", "Mage Armour", "Magic Missile", "Shield", "Sleep", "Tasha's Hideous Laughter", "Thunderwave", "Witch Bolt"]
     }
 };
@@ -325,8 +340,8 @@ function rollStartingMagic(className) {
     if (!magic)
         return [];
     return [
-        { label: "Starting Cantrip", value: pick(magic.cantrips) },
-        { label: "Starting Level 1 Spell", value: pick(magic.spells) }
+        { label: "Starting Cantrips", value: pickMany(magic.cantrips, magic.cantripCount) },
+        { label: magic.spellLabel ?? "Starting Spells", value: pickMany(magic.spells, magic.spellCount) }
     ];
 }
 let data = structuredClone(DEFAULT_DATA);
