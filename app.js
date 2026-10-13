@@ -294,6 +294,41 @@ const ASTRAL_KNOWLEDGE_SKILLS = {
     Wisdom: ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"],
     Charisma: ["Deception", "Intimidation", "Performance", "Persuasion"]
 };
+const STARTING_MAGIC = {
+    Bard: {
+        cantrips: ["Blade Ward", "Dancing Lights", "Friends", "Light", "Mage Hand", "Minor Illusion", "True Strike", "Vicious Mockery"],
+        spells: ["Animal Friendship", "Bane", "Charm Person", "Cure Wounds", "Dissonant Whispers", "Faerie Fire", "Healing Word", "Longstrider", "Sleep", "Speak with Animals", "Tasha's Hideous Laughter", "Thunderwave"]
+    },
+    Cleric: {
+        cantrips: ["Guidance", "Light", "Resistance", "Sacred Flame", "Thaumaturgy", "Toll the Dead"],
+        spells: ["Bane", "Bless", "Command", "Cure Wounds", "Guiding Bolt", "Healing Word", "Inflict Wounds", "Sanctuary", "Shield of Faith"]
+    },
+    Druid: {
+        cantrips: ["Guidance", "Poison Spray", "Produce Flame", "Resistance", "Shillelagh", "Thorn Whip"],
+        spells: ["Animal Friendship", "Charm Person", "Cure Wounds", "Entangle", "Faerie Fire", "Goodberry", "Healing Word", "Longstrider", "Speak with Animals", "Thunderwave"]
+    },
+    Sorcerer: {
+        cantrips: ["Acid Splash", "Blade Ward", "Bone Chill", "Dancing Lights", "Fire Bolt", "Friends", "Light", "Mage Hand", "Minor Illusion", "Poison Spray", "Ray of Frost", "Shocking Grasp", "True Strike"],
+        spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Colour Spray", "Expeditious Retreat", "False Life", "Mage Armour", "Magic Missile", "Shield", "Sleep", "Thunderwave", "Witch Bolt"]
+    },
+    Warlock: {
+        cantrips: ["Blade Ward", "Bone Chill", "Eldritch Blast", "Friends", "Mage Hand", "Minor Illusion", "Poison Spray", "True Strike"],
+        spells: ["Armour of Agathys", "Arms of Hadar", "Charm Person", "Expeditious Retreat", "Hellish Rebuke", "Hex", "Protection from Evil and Good", "Witch Bolt"]
+    },
+    Wizard: {
+        cantrips: ["Acid Splash", "Blade Ward", "Bone Chill", "Dancing Lights", "Fire Bolt", "Friends", "Light", "Mage Hand", "Minor Illusion", "Poison Spray", "Ray of Frost", "Shocking Grasp", "True Strike"],
+        spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Colour Spray", "Disguise Self", "Expeditious Retreat", "False Life", "Find Familiar", "Fog Cloud", "Grease", "Mage Armour", "Magic Missile", "Shield", "Sleep", "Tasha's Hideous Laughter", "Thunderwave", "Witch Bolt"]
+    }
+};
+function rollStartingMagic(className) {
+    const magic = STARTING_MAGIC[className];
+    if (!magic)
+        return [];
+    return [
+        { label: "Starting Cantrip", value: pick(magic.cantrips) },
+        { label: "Starting Level 1 Spell", value: pick(magic.spells) }
+    ];
+}
 let data = structuredClone(DEFAULT_DATA);
 let character = {};
 let cardOrder = ["class", "race", "feats", "background", "darkUrge", "romance", "companionBuild"];
@@ -521,6 +556,7 @@ function rollSingleClass(className, isMulticlass = false) {
     else {
         entries.push({ label: "Skill Proficiencies", value: randomSkills(className, cls.skillCount || 2) });
     }
+    entries.push(...rollStartingMagic(className));
     entries.push({ label: className === "Wizard" ? "Wizard School" :
             className === "Monk" ? "Monastic Tradition" :
                 className === "Sorcerer" ? "Sorcerer Subclass" :
@@ -591,6 +627,7 @@ function rollCompanionBuild(romance = character.romance) {
         { label: "Class", value: className },
         { label: "Subclass", value: subclass }
     ];
+    entries.push(...rollStartingMagic(className));
     if (className === "Cleric") {
         const deities = data.classes.Cleric.options?.["Deity"];
         if (Array.isArray(deities))
