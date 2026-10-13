@@ -209,6 +209,8 @@ button.danger { color: #8c4037; }
 .card-background,
 .card-romance { --card-accent: #92787b; }
 
+.card-companionBuild { --card-accent: #718577; }
+
 .card-multiclass {
   border-color: #718577;
   border-top-color: #718577;

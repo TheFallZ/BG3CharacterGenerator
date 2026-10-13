@@ -222,7 +222,7 @@ const DEFAULT_DATA = {
         "Guild Artisan", "Noble", "Outlander", "Sage", "Soldier", "Urchin",
         "The Haunted One"
     ],
-    romances: ["Astarion", "Gale", "Halsin", "Karlach", "Lae'zel", "Minthara", "Shadowheart", "Wyll"],
+    romances: ["Astarion", "Gale", "Halsin", "Karlach", "Lae'zel", "Minthara", "Shadowheart", "Wyll", "Jaheriah", "Minsc", "No One"],
     settings: {
         multiclassChance: 8,
         featCount: 4
@@ -231,7 +231,47 @@ const DEFAULT_DATA = {
 const SAVED_CHARACTERS_KEY = "bg3-character-generator-saved-results";
 let data = structuredClone(DEFAULT_DATA);
 let character = {};
-let cardOrder = ["class", "race", "feats", "background", "darkUrge", "romance"];
+let cardOrder = ["class", "race", "feats", "background", "darkUrge", "romance", "companionBuild"];
+const COMPANION_DEFAULT_CLASSES = {
+    Astarion: "Rogue",
+    Gale: "Wizard",
+    Halsin: "Druid",
+    Karlach: "Barbarian",
+    "Lae'zel": "Fighter",
+    Minthara: "Paladin",
+    Shadowheart: "Cleric",
+    Wyll: "Warlock",
+    Jaheriah: "Druid",
+    Minsc: "Ranger"
+};
+const BASE_HIRELINGS = [
+    { name: "Brinna Brightsong", defaultClass: "Bard" },
+    { name: "Danton", defaultClass: "Druid" },
+    { name: "Eldra Luthrinn", defaultClass: "Barbarian" },
+    { name: "Sir Fuzzalump", defaultClass: "Wizard" },
+    { name: "Jacelyn", defaultClass: "Sorcerer" },
+    { name: "Kerz", defaultClass: "Paladin" },
+    { name: "Kree Derryck", defaultClass: "Warlock" },
+    { name: "Maddala Deadeye", defaultClass: "Rogue" },
+    { name: "Sina'zith", defaultClass: "Monk" },
+    { name: "Varanna Sunblossom", defaultClass: "Fighter" },
+    { name: "Ver'yll Wenkiir", defaultClass: "Ranger" },
+    { name: "Zenith Feur'sel", defaultClass: "Cleric" }
+];
+const WEAPON_PREFERENCES = {
+    Barbarian: { melee: ["Greataxe", "Greatsword", "Maul"], ranged: ["Longbow", "Heavy Crossbow"] },
+    Bard: { melee: ["Rapier", "Shortsword", "Longsword"], ranged: ["Shortbow", "Hand Crossbow"] },
+    Cleric: { melee: ["Mace", "Quarterstaff", "Warhammer"], ranged: ["Light Crossbow", "Heavy Crossbow"] },
+    Druid: { melee: ["Quarterstaff", "Scimitar", "Sickle"], ranged: ["Shortbow", "Light Crossbow"] },
+    Fighter: { melee: ["Greatsword", "Longsword", "Greataxe"], ranged: ["Longbow", "Heavy Crossbow"] },
+    Monk: { melee: ["Quarterstaff", "Shortsword", "Spear"], ranged: ["Shortbow", "Light Crossbow"] },
+    Paladin: { melee: ["Greatsword", "Longsword", "Warhammer"], ranged: ["Longbow", "Heavy Crossbow"] },
+    Ranger: { melee: ["Longsword", "Shortsword", "Scimitar"], ranged: ["Longbow", "Hand Crossbow"] },
+    Rogue: { melee: ["Shortsword", "Rapier", "Dagger"], ranged: ["Hand Crossbow", "Shortbow"] },
+    Sorcerer: { melee: ["Quarterstaff", "Dagger"], ranged: ["Light Crossbow", "Sling"] },
+    Warlock: { melee: ["Quarterstaff", "Dagger", "Rapier"], ranged: ["Light Crossbow", "Sling"] },
+    Wizard: { melee: ["Quarterstaff", "Dagger"], ranged: ["Light Crossbow", "Sling"] }
+};
 function pick(list) {
     if (!Array.isArray(list) || !list.length)
         return null;
@@ -418,13 +458,44 @@ function rollBackground() {
     return pick(data.backgrounds);
 }
 function rollRomance() { return pick(data.romances); }
+function rollCompanionBuild(romance = character.romance) {
+    const partyMember = (romance ?? "").trim().toLowerCase() === "no one"
+        ? pick(BASE_HIRELINGS) ?? BASE_HIRELINGS[0]
+        : {
+            name: romance ?? "Unknown companion",
+            defaultClass: COMPANION_DEFAULT_CLASSES[romance ?? ""] ?? "Fighter"
+        };
+    const usesDefaultClass = Math.random() < 0.5;
+    const classNames = Object.keys(data.classes);
+    const randomClassOptions = classNames.filter(className => className !== partyMember.defaultClass);
+    const className = usesDefaultClass
+        ? partyMember.defaultClass
+        : pick(randomClassOptions) ?? partyMember.defaultClass;
+    const subclass = pick(data.classes[className].subclasses);
+    const weapons = WEAPON_PREFERENCES[className];
+    const entries = [
+        { label: "Companion or hireling", value: partyMember.name },
+        { label: "Class choice", value: usesDefaultClass ? "Default class" : "Random class" },
+        { label: "Class", value: className },
+        { label: "Subclass", value: subclass }
+    ];
+    if (className === "Cleric") {
+        const deities = data.classes.Cleric.options?.["Deity"];
+        if (Array.isArray(deities))
+            entries.push({ label: "Deity", value: pick(deities) });
+    }
+    entries.push({ label: "Preferred melee weapon", value: pick(weapons.melee) });
+    entries.push({ label: "Preferred ranged weapon", value: pick(weapons.ranged) });
+    return entries;
+}
 const definitions = {
     darkUrge: { title: "Should I accept the tadpole?", wide: false, roll: rollDarkUrge },
     race: { title: "Race", wide: false, roll: rollRace },
     class: { title: "Class", wide: true, roll: rollClass },
     feats: { title: "Feat options", wide: false, roll: rollFeats },
     background: { title: "Background", wide: false, roll: rollBackground },
-    romance: { title: "Romance", wide: false, roll: rollRomance }
+    romance: { title: "Romance", wide: false, roll: rollRomance },
+    companionBuild: { title: "Companion Build", wide: false, roll: rollCompanionBuild }
 };
 function normalizeResult(value) {
     if (Array.isArray(value))
@@ -433,6 +504,8 @@ function normalizeResult(value) {
 }
 function reroll(key) {
     character = { ...character, [key]: definitions[key].roll() };
+    if (key === "romance")
+        character.companionBuild = rollCompanionBuild(character.romance);
     renderCards();
 }
 function generateAll() {
@@ -509,6 +582,8 @@ function loadCharacter() {
     if (!saved)
         return;
     character = structuredClone(saved.character);
+    if (!character.companionBuild)
+        character.companionBuild = rollCompanionBuild(character.romance);
     renderCards();
     document.getElementById("saveNotice").textContent = "Saved character loaded.";
 }
@@ -564,6 +639,9 @@ function renderCards() {
                 }
                 return entryHTML(entry);
             }).join("");
+        }
+        else if (key === "companionBuild") {
+            content = normalizeResult(value).map(entryHTML).join("");
         }
         else if (key === "feats") {
             content = entryHTML({ label: "", value: value });
