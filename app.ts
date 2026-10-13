@@ -271,7 +271,8 @@ const DEFAULT_DATA: GeneratorData = {
 
   backgrounds: [
     "Acolyte", "Charlatan", "Criminal", "Entertainer", "Folk Hero",
-    "Guild Artisan", "Noble", "Outlander", "Sage", "Soldier", "Urchin"
+    "Guild Artisan", "Noble", "Outlander", "Sage", "Soldier", "Urchin",
+    "The Haunted One"
   ],
 
   romances: ["Astarion", "Gale", "Halsin", "Karlach", "Lae'zel", "Minthara", "Shadowheart", "Wyll"],
@@ -490,14 +491,8 @@ function rollFeats(): string[] {
   return pickMany(data.feats, Number(data.settings?.featCount ?? 4), true);
 }
 
-function isAffirmativeDarkUrge(value: string | null | undefined): boolean {
-  return /^(yes\b|naturally\b)/i.test(String(value ?? "").trim());
-}
-
-function rollBackground(darkUrge: string | null | undefined = character.darkUrge): string | null {
-  const options = data.backgrounds.filter(background => background !== "The Haunted One");
-  if (isAffirmativeDarkUrge(darkUrge)) options.push("The Haunted One");
-  return pick(options);
+function rollBackground(): string | null {
+  return pick(data.backgrounds);
 }
 function rollRomance(): string | null { return pick(data.romances); }
 
@@ -517,10 +512,6 @@ function normalizeResult(value: unknown): ClassEntry[] {
 
 function reroll(key: CardKey): void {
   character = {...character, [key]: definitions[key].roll()} as Character;
-  if (key === "darkUrge" && character.background === "The Haunted One" &&
-      !isAffirmativeDarkUrge(character.darkUrge)) {
-    character.background = rollBackground(character.darkUrge);
-  }
   renderCards();
 }
 
