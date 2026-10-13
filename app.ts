@@ -551,13 +551,14 @@ function rollBackground(): string | null {
 function rollRomance(): string | null { return pick(data.romances); }
 
 function rollCompanionBuild(romance: string | null | undefined = character.romance): ClassEntry[] {
-  const partyMember = (romance ?? "").trim().toLowerCase() === "no one"
+  const isHireling = (romance ?? "").trim().toLowerCase() === "no one";
+  const partyMember = isHireling
     ? pick(BASE_HIRELINGS) ?? BASE_HIRELINGS[0]
     : {
         name: romance ?? "Unknown companion",
         defaultClass: COMPANION_DEFAULT_CLASSES[romance ?? ""] ?? "Fighter"
       };
-  const usesDefaultClass = Math.random() < 0.5;
+  const usesDefaultClass = isHireling || Math.random() < 0.5;
   const classNames = Object.keys(data.classes);
   const randomClassOptions = classNames.filter(className => className !== partyMember.defaultClass);
   const className = usesDefaultClass
@@ -567,7 +568,7 @@ function rollCompanionBuild(romance: string | null | undefined = character.roman
   const weapons = WEAPON_PREFERENCES[className];
   const entries: ClassEntry[] = [
     {label: "Companion or hireling", value: partyMember.name},
-    {label: "Class choice", value: usesDefaultClass ? "Default class" : "Random class"},
+    ...(!isHireling ? [{label: "Class choice", value: usesDefaultClass ? "Default class" : "Random class"}] : []),
     {label: "Class", value: className},
     {label: "Subclass", value: subclass}
   ];

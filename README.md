@@ -7,7 +7,7 @@ A small, browser-based character generator for Baldur's Gate 3. Generate a chara
 - Randomizes class, race, feats, background, romance, and the Dark Urge prompt.
 - Has an 8% chance to generate a multiclass build, marked clearly in the Class card.
 - Includes The Haunted One in the background pool regardless of the Dark Urge response.
-- Generates a companion or base-game hireling build with a default or randomized class, subclass, preferred weapons, and a deity for Clerics.
+- Generates a companion or base-game hireling build with a subclass, preferred weapons, and a deity for Clerics. Companions can keep their default class or roll a different one; hirelings keep their base-game class.
 - Saves, loads, and deletes builds using browser storage.
 - Runs as a static site with no server or account required.
 
