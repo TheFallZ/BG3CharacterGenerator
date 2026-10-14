@@ -49,9 +49,9 @@ const DEFAULT_DATA = {
         }
     },
     highElfCantrips: [
-        "Acid Splash", "Blade Ward", "Bone Chill", "Dancing Lights", "Fire Bolt",
-        "Friends", "Light", "Mage Hand", "Minor Illusion", "Poison Spray",
-        "Ray of Frost", "Shocking Grasp", "True Strike"
+        "Acid Splash", "Blade Ward", "Bone Chill", "Booming Blade", "Bursting Sinew", "Dancing Lights",
+        "Fire Bolt", "Friends", "Light", "Mage Hand", "Minor Illusion", "Poison Spray",
+        "Ray of Frost", "Shocking Grasp", "Toll the Dead", "True Strike"
     ],
     classes: {
         "Barbarian": {
@@ -60,8 +60,8 @@ const DEFAULT_DATA = {
             subclasses: ["Berserker", "Wildheart", "Wild Magic", "Path of the Giant"],
             options: {
                 "Wildheart": {
-                    "Animal Aspects": ["Badger", "Bear", "Chimpanzee", "Crocodile", "Eagle", "Elk", "Honey", "Stallion", "Tiger", "Wolf", "Wolverine"],
-                    "Bestial Heart": ["Bear", "Eagle", "Elk", "Tiger", "Wolf"]
+                    "Bestial Heart": ["Bear", "Eagle", "Elk", "Tiger", "Wolf"],
+                    "Aspect of the Beast": ["Bear", "Chimpanzee", "Crocodile", "Eagle", "Elk", "Honey Badger", "Stallion", "Tiger", "Wolf", "Wolverine"]
                 }
             }
         },
@@ -72,7 +72,7 @@ const DEFAULT_DATA = {
             options: {
                 "Starting Instrument": ["Flute", "Hand Drum", "Lute", "Lyre", "Violin"],
                 "College of Swords": {
-                    "Fighting Style": ["Dueling", "Two-Weapon Fighting"]
+                    "Fighting Style": ["Duelling", "Two-Weapon Fighting"]
                 }
             }
         },
@@ -81,7 +81,7 @@ const DEFAULT_DATA = {
             skillCount: 2,
             subclasses: ["Knowledge", "Life", "Light", "Nature", "Tempest", "Trickery", "War", "Death Domain"],
             options: {
-                "Deity": ["Bahamut", "Corellon Larethian", "Eilistraee", "Garl Glittergold", "Gruumsh", "Helm", "Ilmater", "Kelemvor", "Lathander", "Lolth", "Mielikki", "Moradin", "Mystra", "Oghma", "Selûne", "Talos", "Tempus", "Tiamat", "Tymora", "Tyr", "Yondalla"]
+                "Deity": ["Bahamut", "Corellon Larethian", "Eilistraee", "Garl Glittergold", "Gruumsh", "Helm", "Ilmater", "Kelemvor", "Laduguer", "Lathander", "Lolth", "Mielikki", "Moradin", "Mystra", "Oghma", "Selûne", "Talos", "Tempus", "Tiamat", "Tymora", "Tyr", "Vlaakith", "Yondalla"]
             }
         },
         "Druid": {
@@ -139,18 +139,18 @@ const DEFAULT_DATA = {
                 ],
                 "Favoured Enemy": ["Bounty Hunter", "Keeper of the Veil", "Mage Breaker", "Ranger Knight", "Sanctified Stalker"],
                 "Fighting Style": ["Archery", "Defence", "Duelling", "Two-Weapon Fighting"],
-                "Wisdom": ["Wisdom"],
                 "Beast Master": {
-                    "Preferred Companion": ["Bear", "Boar", "Giant Spider", "Raven", "Wolf"]
+                    "Ranger's Companion": ["Bear", "Boar", "Dire Raven", "Wolf", "Wolf Spider"]
                 },
                 "Hunter": {
+                    "Hunter's Prey": ["Colossus Slayer", "Giant Killer", "Horde Breaker"],
                     "Defensive Tactics": ["Escape the Horde", "Multiattack Defence", "Steel Will"],
-                    "Hunter's Prey": ["Colossus Slayer", "Giant Killer", "Horde Breaker"]
+                    "Multiattack": ["Volley", "Whirlwind Attack"]
                 }
             }
         },
         "Rogue": {
-            skills: ["Acrobatics", "Athletics", "Deception", "Insight", "Intimidation", "Investigation", "Perception", "Performance", "Persuasion", "Sleight of Hand", "Stealth", "Survival"],
+            skills: ["Acrobatics", "Athletics", "Deception", "Insight", "Intimidation", "Investigation", "Perception", "Performance", "Persuasion", "Sleight of Hand", "Stealth"],
             skillCount: 4,
             subclasses: ["Arcane Trickster", "Assassin", "Thief", "Swashbuckler"]
         },
@@ -174,20 +174,10 @@ const DEFAULT_DATA = {
             skillCount: 2,
             subclasses: ["The Archfey", "The Fiend", "The Great Old One", "Hexblade"],
             options: {
-                "Pact Boon": ["Pact Of The Blade", "Pact Of The Chain", "Pact Of The Tome"],
-                "Warlock Patron": ["The Archfey", "The Fiend", "The Great Old One", "Hexblade"],
+                "Pact Boon": ["Pact of the Blade", "Pact of the Chain", "Pact of the Tome"],
                 "Preferred Weapon": ["Battleaxe", "Glaive", "Greatsword", "Rapier", "Trident", "Warhammer"],
                 "Preferred Familiar": ["Animal Spirit", "Imp", "Quasit"],
-                "Eldritch Invocations (Level 2)": [
-                    "Agonizing Blast", "Armour of Shadows", "Beast Speech", "Beguiling Influence",
-                    "Devil's Sight", "Fiendish Vigor", "Mask of Many Faces", "One with Shadows",
-                    "Repelling Blast", "Thief of Five Fates"
-                ],
-                "Eldritch Invocations (Level 5)": ["Beast Speech", "Mire the Mind", "Sign of Ill Omen"],
-                "Eldritch Invocations (Level 7)": ["Agonizing Blast", "Book of Ancient Secrets", "Dreadful Word", "Sculptor of Flesh"],
-                "Eldritch Invocations (Level 9)": ["Armour of Shadows", "Minions of Chaos", "Otherworldly Leap", "Whispers of the Grave"],
-                "Eldritch Invocations (Level 12)": ["Lifedrinker", "Mask of Many Faces"],
-                "Mystic Arcanum": ["Arcane Gate", "Circle of Death", "Eyebite", "Flesh to Stone"]
+                "Mystic Arcanum": ["Arcane Gate", "Circle of Death", "Create Undead", "Eyebite", "Flesh to Stone"]
             }
         },
         "Wizard": {
@@ -197,35 +187,22 @@ const DEFAULT_DATA = {
         }
     },
     feats: [
-        "Ability Improvements", "Actor", "Alert", "Athlete", "Charger: Charge",
-        "Charger: Shove", "Crossbow Expert: Point-Blank", "Crossbow Expert: Wounding",
-        "Defensive Duellist", "Dual Wielder", "Dungeon Delver: Detection",
-        "Dungeon Delver: Resistance", "Durable", "Elemental Adept: Acid",
-        "Elemental Adept: Cold", "Elemental Adept: Fire", "Elemental Adept: Lightning",
-        "Elemental Adept: Thunder", "Great Weapon Master", "Heavily Armoured",
-        "Heavy Armour Master", "Lightly Armoured", "Lucky", "Mage Slayer: Break Concentration",
-        "Mage Slayer: Protect Against Spells", "Magic Initiate: Bard", "Magic Initiate: Cleric",
-        "Magic Initiate: Druid", "Magic Initiate: Sorcerer", "Magic Initiate: Warlock",
-        "Magic Initiate: Wizard", "Martial Adept", "Medium Armour Master", "Mobile: Evade Opportunity Attack",
-        "Mobile: Increased Movement Speed", "Moderately Armoured", "Performer",
-        "Polearm Master: Bonus Attack", "Polearm Master: Opportunity Attack",
-        "Resilient: Charisma", "Resilient: Constitution", "Resilient: Dexterity",
-        "Resilient: Intelligence", "Resilient: Strength", "Resilient: Wisdom",
-        "Ritual Caster", "Savage Attacker", "Sentinel", "Sentinel: Snare",
-        "Sharpshooter: Low Ground", "Sharpshooter: Ranged Attacks",
-        "Shield Master: Shield Bash", "Shield Master: Shield Master",
-        "Skilled", "Spell Sniper", "Tavern Brawler", "Tough",
-        "War Caster", "Weapon Master"
+        "Ability Improvement", "Actor", "Alert", "Athlete", "Charger", "Crossbow Expert",
+        "Defensive Duellist", "Dual Wielder", "Dungeon Delver", "Durable", "Elemental Adept",
+        "Great Weapon Master", "Heavily Armoured", "Heavy Armour Master", "Lightly Armoured",
+        "Lucky", "Mage Slayer", "Magic Initiate", "Martial Adept", "Medium Armour Master",
+        "Mobile", "Moderately Armoured", "Performer", "Polearm Master", "Resilient",
+        "Ritual Caster", "Savage Attacker", "Sentinel", "Sharpshooter", "Shield Master",
+        "Skilled", "Spell Sniper", "Tavern Brawler", "Tough", "War Caster", "Weapon Master"
     ],
     backgrounds: [
         "Acolyte", "Charlatan", "Criminal", "Entertainer", "Folk Hero",
         "Guild Artisan", "Noble", "Outlander", "Sage", "Soldier", "Urchin",
         "The Haunted One"
     ],
-    romances: ["Astarion", "Gale", "Halsin", "Karlach", "Lae'zel", "Minthara", "Shadowheart", "Wyll", "Jaheriah", "Minsc", "No One"],
+    romances: ["Astarion", "Gale", "Halsin", "Karlach", "Lae'zel", "Minthara", "Shadowheart", "Wyll", "Jaheira", "Minsc", "No One"],
     settings: {
-        multiclassChance: 8,
-        featCount: 4
+        multiclassChance: 8
     }
 };
 const BACKGROUND_SKILLS = {
@@ -278,11 +255,97 @@ const SUBCLASS_PROFICIENCIES = {
         "College of Valour": ["Medium Armour", "Shields", "Martial Weapons"]
     },
     Cleric: {
+        "Death Domain": ["Martial Weapons"],
         Life: ["Heavy Armour"],
         Nature: ["Heavy Armour"],
         Tempest: ["Heavy Armour", "Martial Weapons"],
         War: ["Heavy Armour", "Martial Weapons"]
+    },
+    Warlock: {
+        Hexblade: ["Medium Armour", "Shields", "Martial Weapons"]
+    },
+    Wizard: {
+        Bladesinging: ["Light Armour", "Daggers", "Longswords", "Rapiers", "Scimitars", "Shortswords", "Sickles"]
     }
+};
+// Skill proficiencies granted by a subclass itself.
+const SUBCLASS_SKILLS = {
+    Wizard: { Bladesinging: ["Performance"] }
+};
+// Levels at which BG3 grants each class its subclass.
+const SUBCLASS_LEVELS = {
+    Barbarian: 3, Bard: 3, Cleric: 1, Druid: 2, Fighter: 3, Monk: 3,
+    Paladin: 1, Ranger: 3, Rogue: 3, Sorcerer: 1, Warlock: 1, Wizard: 2
+};
+const SUBCLASS_LABELS = {
+    Barbarian: "Barbarian Subclass", Bard: "Bard College", Cleric: "Cleric Domain", Druid: "Druid Circle",
+    Fighter: "Fighter Subclass", Monk: "Monastic Tradition", Paladin: "Paladin Oath", Ranger: "Ranger Subclass",
+    Rogue: "Rogue Subclass", Sorcerer: "Sorcerer Subclass", Warlock: "Warlock Patron", Wizard: "Wizard School"
+};
+// Armour a character gets from its starting (first) class.
+const CLASS_ARMOUR = {
+    Barbarian: ["Light Armour", "Medium Armour", "Shields"],
+    Bard: ["Light Armour"],
+    Cleric: ["Light Armour", "Medium Armour", "Shields"],
+    Druid: ["Light Armour", "Medium Armour", "Shields"],
+    Fighter: ["Light Armour", "Medium Armour", "Heavy Armour", "Shields"],
+    Monk: [],
+    Paladin: ["Light Armour", "Medium Armour", "Heavy Armour", "Shields"],
+    Ranger: ["Light Armour", "Medium Armour", "Shields"],
+    Rogue: ["Light Armour"],
+    Sorcerer: [],
+    Warlock: ["Light Armour"],
+    Wizard: []
+};
+// Every class gets a feat at levels 4, 8 and 12; Fighters also at 6, Rogues also at 10.
+const FEAT_LEVELS = {
+    Fighter: [4, 6, 8, 12],
+    Rogue: [4, 8, 10, 12]
+};
+const DEFAULT_FEAT_LEVELS = [4, 8, 12];
+const FEAT_CHOICES = {
+    "Elemental Adept": ["Acid", "Cold", "Fire", "Lightning", "Thunder"],
+    "Magic Initiate": ["Bard", "Cleric", "Druid", "Sorcerer", "Warlock", "Wizard"],
+    "Resilient": ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"]
+};
+// Armour feats need the armour below them, and are pointless if you already have what they grant.
+const FEAT_ARMOUR_RULES = {
+    "Lightly Armoured": { grants: "Light Armour" },
+    "Moderately Armoured": { requires: "Light Armour", grants: "Medium Armour" },
+    "Heavily Armoured": { requires: "Medium Armour", grants: "Heavy Armour" },
+    "Medium Armour Master": { requires: "Medium Armour" },
+    "Heavy Armour Master": { requires: "Heavy Armour" }
+};
+// BG3 has no pact or cantrip prerequisites; Agonising and Repelling Blast are only offered here
+// when the warlock knows Eldritch Blast, since they do nothing without it.
+const INVOCATIONS = [
+    { name: "Agonising Blast", level: 2, needsEldritchBlast: true },
+    { name: "Armour of Shadows", level: 2 },
+    { name: "Beast Speech", level: 2 },
+    { name: "Beguiling Influence", level: 2 },
+    { name: "Devil's Sight", level: 2 },
+    { name: "Fiendish Vigour", level: 2 },
+    { name: "Mask of Many Faces", level: 2 },
+    { name: "One with Shadows", level: 2 },
+    { name: "Repelling Blast", level: 2, needsEldritchBlast: true },
+    { name: "Thief of Five Fates", level: 2 },
+    { name: "Mire the Mind", level: 5 },
+    { name: "Sign of Ill Omen", level: 5 },
+    { name: "Book of Ancient Secrets", level: 7 },
+    { name: "Dreadful Word", level: 7 },
+    { name: "Sculptor of Flesh", level: 7 },
+    { name: "Minions of Chaos", level: 9 },
+    { name: "Otherworldly Leap", level: 9 },
+    { name: "Whispers of the Grave", level: 9 },
+    { name: "Lifedrinker", level: 12 }
+];
+// New invocations learned at each warlock level (2 at level 2, then one more at 5, 7, 9 and 12).
+const INVOCATION_GAINS = [[2, 2], [5, 1], [7, 1], [9, 1], [12, 1]];
+// Deities only some races may follow.
+const DEITY_RACES = {
+    Laduguer: "Duergar",
+    Lolth: "Lolth-Sworn Drow",
+    Vlaakith: "Githyanki"
 };
 const KNOWLEDGE_DOMAIN_SKILLS = ["Arcana", "History", "Nature", "Religion"];
 const NATURE_DOMAIN_SKILLS = ["Animal Handling", "Nature", "Survival"];
@@ -298,40 +361,40 @@ const STARTING_MAGIC = {
         cantripCount: 2,
         cantrips: ["Blade Ward", "Dancing Lights", "Friends", "Light", "Mage Hand", "Minor Illusion", "True Strike", "Vicious Mockery"],
         spellCount: 4,
-        spells: ["Animal Friendship", "Bane", "Charm Person", "Cure Wounds", "Dissonant Whispers", "Faerie Fire", "Healing Word", "Longstrider", "Sleep", "Speak with Animals", "Tasha's Hideous Laughter", "Thunderwave"]
+        spells: ["Animal Friendship", "Bane", "Charm Person", "Cure Wounds", "Disguise Self", "Dissonant Whispers", "Faerie Fire", "Feather Fall", "Healing Word", "Heroism", "Longstrider", "Sleep", "Speak with Animals", "Tasha's Hideous Laughter", "Thunderwave"]
     },
     Cleric: {
         cantripCount: 3,
-        cantrips: ["Guidance", "Light", "Resistance", "Sacred Flame", "Thaumaturgy", "Toll the Dead"],
+        cantrips: ["Blade Ward", "Bursting Sinew", "Guidance", "Light", "Produce Flame", "Resistance", "Sacred Flame", "Thaumaturgy", "Toll the Dead"],
         spellCount: 4,
         spellLabel: "Prepared Level 1 Spells",
-        spells: ["Bane", "Bless", "Command", "Cure Wounds", "Guiding Bolt", "Healing Word", "Inflict Wounds", "Sanctuary", "Shield of Faith"]
+        spells: ["Bane", "Bless", "Command", "Create or Destroy Water", "Cure Wounds", "Guiding Bolt", "Healing Word", "Inflict Wounds", "Protection from Evil and Good", "Sanctuary", "Shield of Faith"]
     },
     Druid: {
         cantripCount: 2,
         cantrips: ["Guidance", "Poison Spray", "Produce Flame", "Resistance", "Shillelagh", "Thorn Whip"],
         spellCount: 4,
         spellLabel: "Prepared Level 1 Spells",
-        spells: ["Animal Friendship", "Charm Person", "Cure Wounds", "Entangle", "Faerie Fire", "Goodberry", "Healing Word", "Longstrider", "Speak with Animals", "Thunderwave"]
+        spells: ["Animal Friendship", "Charm Person", "Create or Destroy Water", "Cure Wounds", "Enhance Leap", "Entangle", "Faerie Fire", "Fog Cloud", "Goodberry", "Healing Word", "Ice Knife", "Longstrider", "Speak with Animals", "Thunderwave"]
     },
     Sorcerer: {
         cantripCount: 4,
-        cantrips: ["Acid Splash", "Blade Ward", "Bone Chill", "Dancing Lights", "Fire Bolt", "Friends", "Light", "Mage Hand", "Minor Illusion", "Poison Spray", "Ray of Frost", "Shocking Grasp", "True Strike"],
+        cantrips: ["Acid Splash", "Blade Ward", "Bone Chill", "Booming Blade", "Bursting Sinew", "Dancing Lights", "Fire Bolt", "Friends", "Light", "Mage Hand", "Minor Illusion", "Poison Spray", "Ray of Frost", "Shocking Grasp", "True Strike"],
         spellCount: 2,
-        spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Colour Spray", "Expeditious Retreat", "False Life", "Mage Armour", "Magic Missile", "Shield", "Sleep", "Thunderwave", "Witch Bolt"]
+        spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Colour Spray", "Disguise Self", "Enhance Leap", "Expeditious Retreat", "False Life", "Feather Fall", "Fog Cloud", "Ice Knife", "Mage Armour", "Magic Missile", "Ray of Sickness", "Shield", "Sleep", "Thunderwave", "Witch Bolt"]
     },
     Warlock: {
         cantripCount: 2,
-        cantrips: ["Blade Ward", "Bone Chill", "Eldritch Blast", "Friends", "Mage Hand", "Minor Illusion", "Poison Spray", "True Strike"],
+        cantrips: ["Blade Ward", "Bone Chill", "Booming Blade", "Eldritch Blast", "Friends", "Mage Hand", "Minor Illusion", "Poison Spray", "Toll the Dead", "True Strike"],
         spellCount: 2,
         spells: ["Armour of Agathys", "Arms of Hadar", "Charm Person", "Expeditious Retreat", "Hellish Rebuke", "Hex", "Protection from Evil and Good", "Witch Bolt"]
     },
     Wizard: {
         cantripCount: 3,
-        cantrips: ["Acid Splash", "Blade Ward", "Bone Chill", "Dancing Lights", "Fire Bolt", "Friends", "Light", "Mage Hand", "Minor Illusion", "Poison Spray", "Ray of Frost", "Shocking Grasp", "True Strike"],
+        cantrips: ["Acid Splash", "Blade Ward", "Bone Chill", "Booming Blade", "Bursting Sinew", "Dancing Lights", "Fire Bolt", "Friends", "Light", "Mage Hand", "Minor Illusion", "Poison Spray", "Ray of Frost", "Shocking Grasp", "Toll the Dead", "True Strike"],
         spellCount: 6,
         spellLabel: "Level 1 Spellbook Picks",
-        spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Colour Spray", "Disguise Self", "Expeditious Retreat", "False Life", "Find Familiar", "Fog Cloud", "Grease", "Mage Armour", "Magic Missile", "Shield", "Sleep", "Tasha's Hideous Laughter", "Thunderwave", "Witch Bolt"]
+        spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Colour Spray", "Disguise Self", "Enhance Leap", "Expeditious Retreat", "False Life", "Feather Fall", "Find Familiar", "Fog Cloud", "Grease", "Ice Knife", "Longstrider", "Mage Armour", "Magic Missile", "Protection from Evil and Good", "Ray of Sickness", "Shield", "Sleep", "Tasha's Hideous Laughter", "Thunderwave", "Witch Bolt"]
     }
 };
 const COMPANION_DEFAULT_CLASSES = {
@@ -343,34 +406,46 @@ const COMPANION_DEFAULT_CLASSES = {
     Minthara: "Paladin",
     Shadowheart: "Cleric",
     Wyll: "Warlock",
-    Jaheriah: "Druid",
+    Jaheira: "Druid",
     Minsc: "Ranger"
 };
+const COMPANION_RACES = {
+    Astarion: "High Elf",
+    Gale: "Human",
+    Halsin: "Wood Elf",
+    Karlach: "Zariel Tiefling",
+    "Lae'zel": "Githyanki",
+    Minthara: "Lolth-Sworn Drow",
+    Shadowheart: "High Half-Elf",
+    Wyll: "Human",
+    Jaheira: "High Half-Elf",
+    Minsc: "Human"
+};
 const BASE_HIRELINGS = [
-    { name: "Brinna Brightsong", defaultClass: "Bard" },
-    { name: "Danton", defaultClass: "Druid" },
-    { name: "Eldra Luthrinn", defaultClass: "Barbarian" },
-    { name: "Sir Fuzzalump", defaultClass: "Wizard" },
-    { name: "Jacelyn", defaultClass: "Sorcerer" },
-    { name: "Kerz", defaultClass: "Paladin" },
-    { name: "Kree Derryck", defaultClass: "Warlock" },
-    { name: "Maddala Deadeye", defaultClass: "Rogue" },
-    { name: "Sina'zith", defaultClass: "Monk" },
-    { name: "Varanna Sunblossom", defaultClass: "Fighter" },
-    { name: "Ver'yll Wenkiir", defaultClass: "Ranger" },
-    { name: "Zenith Feur'sel", defaultClass: "Cleric" }
+    { name: "Brinna Brightsong", defaultClass: "Bard", race: "Lightfoot Halfling" },
+    { name: "Danton", defaultClass: "Druid", race: "Mephistopheles Tiefling" },
+    { name: "Eldra Luthrinn", defaultClass: "Barbarian", race: "Gold Dwarf" },
+    { name: "Sir Fuzzalump", defaultClass: "Wizard", race: "Rock Gnome" },
+    { name: "Jacelyn", defaultClass: "Sorcerer", race: "High Half-Elf" },
+    { name: "Kerz", defaultClass: "Paladin", race: "Half-Orc" },
+    { name: "Kree Derryck", defaultClass: "Warlock", race: "Duergar" },
+    { name: "Maddala Deadeye", defaultClass: "Rogue", race: "Human" },
+    { name: "Sina'zith", defaultClass: "Monk", race: "Githyanki" },
+    { name: "Varanna Sunblossom", defaultClass: "Fighter", race: "Wood Half-Elf" },
+    { name: "Ver'yll Wenkiir", defaultClass: "Ranger", race: "Seldarine Drow" },
+    { name: "Zenith Feur'sel", defaultClass: "Cleric", race: "High Elf" }
 ];
 const WEAPON_PREFERENCES = {
     Barbarian: { melee: ["Greataxe", "Greatsword", "Maul"], ranged: ["Longbow", "Heavy Crossbow"] },
     Bard: { melee: ["Rapier", "Shortsword", "Longsword"], ranged: ["Shortbow", "Hand Crossbow"] },
-    Cleric: { melee: ["Mace", "Quarterstaff", "Warhammer"], ranged: ["Light Crossbow", "Heavy Crossbow"] },
-    Druid: { melee: ["Quarterstaff", "Scimitar", "Sickle"], ranged: ["Shortbow", "Light Crossbow"] },
+    Cleric: { melee: ["Mace", "Morningstar", "Flail", "Quarterstaff"], ranged: ["Light Crossbow", "Shortbow"] },
+    Druid: { melee: ["Quarterstaff", "Scimitar", "Sickle", "Spear"], ranged: ["Javelin"] },
     Fighter: { melee: ["Greatsword", "Longsword", "Greataxe"], ranged: ["Longbow", "Heavy Crossbow"] },
     Monk: { melee: ["Quarterstaff", "Shortsword", "Spear"], ranged: ["Shortbow", "Light Crossbow"] },
     Paladin: { melee: ["Greatsword", "Longsword", "Warhammer"], ranged: ["Longbow", "Heavy Crossbow"] },
     Ranger: { melee: ["Longsword", "Shortsword", "Scimitar"], ranged: ["Longbow", "Hand Crossbow"] },
     Rogue: { melee: ["Shortsword", "Rapier", "Dagger"], ranged: ["Hand Crossbow", "Shortbow"] },
-    Sorcerer: { melee: ["Quarterstaff", "Dagger"], ranged: ["Light Crossbow", "Sling"] },
-    Warlock: { melee: ["Quarterstaff", "Dagger", "Rapier"], ranged: ["Light Crossbow", "Sling"] },
-    Wizard: { melee: ["Quarterstaff", "Dagger"], ranged: ["Light Crossbow", "Sling"] }
+    Sorcerer: { melee: ["Quarterstaff", "Dagger"], ranged: ["Light Crossbow"] },
+    Warlock: { melee: ["Quarterstaff", "Dagger", "Mace"], ranged: ["Light Crossbow", "Shortbow"] },
+    Wizard: { melee: ["Quarterstaff", "Dagger"], ranged: ["Light Crossbow"] }
 };

@@ -5,7 +5,11 @@ A small, browser-based character generator for Baldur's Gate 3. Generate a chara
 ## Features
 
 - Randomizes class, race, feats, background, romance, and the Dark Urge prompt.
-- Has an 8% chance to generate a multiclass build, marked clearly in the Class card.
+- Builds a level 12 character. There is an 8% chance of a multiclass build, which splits the 12 levels (the starting class keeps 6 to 11), marked clearly in the Class card.
+- Only gives each class what it has at its own level: subclasses appear at the level BG3 grants them, and choices such as invocations, manoeuvres, metamagic, fighting styles and Wildheart aspects follow the class level.
+- Picks one feat for each feat level (4, 8 and 12; Fighters also at 6 and Rogues at 10, counted per class in a multiclass). Feats don't repeat except Ability Improvement, and armour feats need the armour below them.
+- Warlock invocations never repeat, and Agonising and Repelling Blast are only picked when the warlock knows Eldritch Blast.
+- Cleric deities respect BG3's race restrictions (Laduguer, Lolth and Vlaakith).
 - Applies BG3 multiclass proficiency grants separately from starting-class skill choices, including multiclass-only skill picks.
 - Avoids duplicate skill proficiencies from race, background, and class while preserving each class's starting skill count.
 - Adds class-specific starting cantrip and spell picks for spellcasting classes, including companion and hireling builds. Cleric and Druid prepared-spell picks use a four-spell baseline (+3 Wisdom modifier); the actual count depends on Wisdom.
@@ -13,7 +17,7 @@ A small, browser-based character generator for Baldur's Gate 3. Generate a chara
 - Includes The Haunted One in the background pool regardless of the Dark Urge response.
 - Generates a companion or base-game hireling build with a subclass, preferred weapons, and a deity for Clerics. Companions can keep their default class or roll a different one; hirelings keep their base-game class.
 - Lets you lock any card so Generate and rerolls keep it. Race and Background avoid skills that would duplicate a locked Class, and locking Companion Build also keeps its Romance. Locks are remembered in the browser.
-- Saves, loads, and deletes builds using browser storage.
+- Saves, loads, renames, and deletes builds using browser storage.
 - Runs as a static site with no server or account required.
 
 ## Run Locally

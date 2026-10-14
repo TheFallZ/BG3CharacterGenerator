@@ -3,6 +3,8 @@
 let data: GeneratorData = structuredClone(DEFAULT_DATA);
 let character: Character = {};
 
+const MAX_LEVEL = 12;
+
 function rollStartingMagic(className: string): ClassEntry[] {
   const magic = STARTING_MAGIC[className];
   if (!magic) return [];
@@ -17,15 +19,19 @@ function pick<T>(list: T[] | null | undefined): T | null {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-function pickMany<T>(list: T[] | null | undefined, count: number, allowDuplicates = false): T[] {
+function pickMany<T>(list: T[] | null | undefined, count: number): T[] {
   if (!Array.isArray(list) || !list.length) return [];
-  if (allowDuplicates) return Array.from({length: count}, () => pick(list) as T);
   const pool = [...list];
   const result = [];
   while (pool.length && result.length < count) {
     result.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
   }
   return result;
+}
+
+function entryValues(entry: ClassEntry | undefined): string[] {
+  if (!entry) return [];
+  return Array.isArray(entry.value) ? entry.value : typeof entry.value === "string" ? [entry.value] : [];
 }
 
 function randomSkills(className: string, count: number, excludedSkills: string[] = [], reservedSkills: string[] = [], reservedCount = 0): string[] {
@@ -47,8 +53,7 @@ function getRacialSkillProficiencies(race: Character["race"] = character.race): 
   const racialEntries = race || [];
   const skills = racialEntries.flatMap(entry => {
     if (entry.label !== "Racial Proficiencies" && entry.label !== "Additional Skill Proficiency") return [];
-    const values = Array.isArray(entry.value) ? entry.value : [entry.value];
-    return values.filter((skill): skill is string => typeof skill === "string" && skillNames.has(skill));
+    return entryValues(entry).filter(skill => skillNames.has(skill));
   });
   return [...new Set(skills)];
 }
@@ -64,15 +69,30 @@ function getBackgroundSkillProficiencies(background: Character["background"] = c
   return typeof backgroundName === "string" ? BACKGROUND_SKILLS[backgroundName] || [] : [];
 }
 
+const CLASS_SKILL_LABELS = ["Skill Proficiencies", "Multiclass Skill Proficiencies", "Nature Domain Skill Proficiency", "Subclass Skill Proficiency"];
+
 function getClassSkillProficiencies(classEntries: Character["class"] = character.class): string[] {
-  const skillLabels = ["Skill Proficiencies", "Multiclass Skill Proficiencies", "Nature Domain Skill Proficiency"];
   return (classEntries || [])
-    .filter(entry => skillLabels.includes(entry.label))
-    .flatMap(entry => Array.isArray(entry.value) ? entry.value : typeof entry.value === "string" ? [entry.value] : []);
+    .filter(entry => CLASS_SKILL_LABELS.includes(entry.label))
+    .flatMap(entryValues);
 }
 
 function getExistingSkillProficiencies(): string[] {
   return [...new Set([...getRacialSkillProficiencies(), ...getBackgroundSkillProficiencies()])];
+}
+
+// Each class in the build with its level, in the order the classes were taken.
+// Builds saved before levels existed have no "Level" entry and count as level 12.
+function getClassLevels(classEntries: Character["class"] = character.class): {className: string; level: number}[] {
+  const result: {className: string; level: number}[] = [];
+  for (const entry of classEntries || []) {
+    if (entry.label === "Class" && typeof entry.value === "string") {
+      result.push({className: entry.value, level: MAX_LEVEL});
+    } else if (entry.label === "Level" && result.length) {
+      result[result.length - 1].level = Number(entry.value) || MAX_LEVEL;
+    }
+  }
+  return result;
 }
 
 function rollDarkUrge(): string | null {
@@ -124,107 +144,109 @@ function rollRaceAvoiding(avoidSkills: string[]): ClassEntry[] {
   return race;
 }
 
-function addOptionEntries(entries: ClassEntry[], options?: Record<string, any>): void {
-  if (!options) return;
-  for (const [label, values] of Object.entries(options)) {
-    if (Array.isArray(values)) {
-      entries.push({label, value: pick(values)});
-    }
-  }
+// Race and subrace names, used for race-locked deities.
+function raceNames(race: Character["race"] = character.race): string[] {
+  return (race || [])
+    .filter(entry => entry.label === "Race" || entry.label === "Subrace")
+    .flatMap(entryValues);
 }
 
-function rollClassOptions(className: string, subclass: string | null): ClassEntry[] {
-  const cls = data.classes[className];
-  const entries: ClassEntry[] = [];
-  const options = cls?.options || {};
+function rollDeity(races: string[]): string | null {
+  const deities = (data.classes.Cleric.options?.["Deity"] || []) as string[];
+  return pick(deities.filter(deity => !DEITY_RACES[deity] || races.includes(DEITY_RACES[deity])));
+}
 
-  if (className === "Warlock") {
-    const patron = pick(options["Warlock Patron"] || []) as string | null;
-    const pact = pick(options["Pact Boon"] || []) as string | null;
-    entries.push({label: "Mystic Arcanum", value: pick(options["Mystic Arcanum"] || [])});
-    entries.push({label: "Eldritch Invocations (Level 12)", value: pick(options["Eldritch Invocations (Level 12)"] || [])});
-    entries.push({label: "Eldritch Invocations (Level 9)", value: pick(options["Eldritch Invocations (Level 9)"] || [])});
-    entries.push({label: "Eldritch Invocations (Level 7)", value: pick(options["Eldritch Invocations (Level 7)"] || [])});
-    entries.push({label: "Eldritch Invocations (Level 5)", value: pick(options["Eldritch Invocations (Level 5)"] || [])});
-    entries.push({label: "Eldritch Invocations (Level 2)", value: pickMany(options["Eldritch Invocations (Level 2)"] || [], 2)});
-    entries.push({label: "Pact Boon", value: pact});
-    if (pact === "Pact Of The Blade") {
-      entries.push({label: "Preferred Weapon", value: pick(options["Preferred Weapon"] || [])});
-    }
-    if (pact === "Pact Of The Chain") {
-      entries.push({label: "Preferred Familiar", value: pick(options["Preferred Familiar"] || [])});
-    }
-    entries.push({label: "Warlock Patron", value: patron});
-    return entries;
+function rollInvocations(level: number, knowsEldritchBlast: boolean): ClassEntry[] {
+  const entries: ClassEntry[] = [];
+  const known = new Set<string>();
+  for (const [gainLevel, count] of INVOCATION_GAINS) {
+    if (level < gainLevel) break;
+    const options = INVOCATIONS
+      .filter(invocation => invocation.level <= gainLevel && !known.has(invocation.name))
+      .filter(invocation => knowsEldritchBlast || !invocation.needsEldritchBlast)
+      .map(invocation => invocation.name);
+    const picks = pickMany(options, count);
+    picks.forEach(name => known.add(name));
+    entries.push({label: `Eldritch Invocations (Level ${gainLevel})`, value: count > 1 ? picks : picks[0] ?? null});
+  }
+  return entries;
+}
+
+function rollClassOptions(className: string, subclass: string | null, level: number, cantrips: string[]): ClassEntry[] {
+  const options = data.classes[className]?.options || {};
+  const entries: ClassEntry[] = [];
+
+  if (className === "Barbarian" && subclass === "Wildheart") {
+    entries.push({label: "Bestial Heart", value: pick(options.Wildheart["Bestial Heart"])});
+    const aspectCount = (level >= 6 ? 1 : 0) + (level >= 10 ? 1 : 0);
+    if (aspectCount) entries.push({label: "Aspect of the Beast", value: pickMany(options.Wildheart["Aspect of the Beast"], aspectCount)});
   }
 
   if (className === "Bard") {
-    entries.push({label: "Starting Instrument", value: pick(options["Starting Instrument"] || [])});
+    entries.push({label: "Starting Instrument", value: pick(options["Starting Instrument"])});
     if (subclass === "College of Swords") {
       entries.push({label: "Fighting Style", value: pick(options["College of Swords"]["Fighting Style"])});
     }
-    return entries;
   }
 
   if (className === "Cleric") {
-    entries.push({label: "Deity", value: pick(options["Deity"] || [])});
-    return entries;
+    entries.push({label: "Deity", value: rollDeity(raceNames())});
   }
 
-  if (className === "Druid") {
-    if (subclass === "Circle of the Land") {
-      entries.push({label: "Land", value: pick(options["Circle of the Land"]["Land"])});
-    }
-    return entries;
+  if (className === "Druid" && subclass === "Circle of the Land") {
+    entries.push({label: "Land", value: pick(options["Circle of the Land"]["Land"])});
   }
 
   if (className === "Fighter") {
-    entries.push({label: "Fighting Style", value: pick(options["Fighting Style"] || [])});
-    if (subclass === "Champion") {
-      entries.push({label: "Second Fighting Style", value: pick(options.Champion["Second Fighting Style"])});
+    const [style, secondStyle] = pickMany(options["Fighting Style"] as string[], 2);
+    entries.push({label: "Fighting Style", value: style});
+    if (subclass === "Champion" && level >= 10) {
+      entries.push({label: "Additional Fighting Style", value: secondStyle});
     }
     if (subclass === "Battle Master") {
-      entries.push({label: "Manoeuvres", value: pickMany(options["Battle Master"]["Manoeuvres"], 7)});
+      const manoeuvres = level >= 10 ? 7 : level >= 7 ? 5 : 3;
+      entries.push({label: "Manoeuvres", value: pickMany(options["Battle Master"]["Manoeuvres"], manoeuvres)});
     }
-    return entries;
   }
 
   if (className === "Paladin") {
-    addOptionEntries(entries, {
-      "What if I break my Oath?": options["What if I break my Oath?"],
-      "How devoted to my oath should I be?": options["How devoted to my oath should I be?"],
-      "Fighting Style": options["Fighting Style"]
-    });
-    return entries;
+    entries.push({label: "What if I break my Oath?", value: pick(options["What if I break my Oath?"])});
+    entries.push({label: "How devoted to my oath should I be?", value: pick(options["How devoted to my oath should I be?"])});
+    if (level >= 2) entries.push({label: "Fighting Style", value: pick(options["Fighting Style"])});
   }
 
   if (className === "Ranger") {
-    entries.push({label: "Natural Explorer", value: pickMany(options["Natural Explorer"], 3)});
-    entries.push({label: "Favoured Enemy", value: pickMany(options["Favoured Enemy"], 3)});
-    entries.push({label: "Fighting Style", value: pick(options["Fighting Style"])});
-    entries.push({label: "Wisdom", value: pick(options["Wisdom"])});
+    const picks = 1 + (level >= 6 ? 1 : 0) + (level >= 10 ? 1 : 0);
+    entries.push({label: "Favoured Enemy", value: pickMany(options["Favoured Enemy"], picks)});
+    entries.push({label: "Natural Explorer", value: pickMany(options["Natural Explorer"], picks)});
+    if (level >= 2) entries.push({label: "Fighting Style", value: pick(options["Fighting Style"])});
     if (subclass === "Beast Master") {
-      entries.push({label: "Preferred Companion", value: pick(options["Beast Master"]["Preferred Companion"])});
+      entries.push({label: "Ranger's Companion", value: pick(options["Beast Master"]["Ranger's Companion"])});
     }
     if (subclass === "Hunter") {
-      entries.push({label: "Defensive Tactics", value: pick(options.Hunter["Defensive Tactics"])});
       entries.push({label: "Hunter's Prey", value: pick(options.Hunter["Hunter's Prey"])});
+      if (level >= 7) entries.push({label: "Defensive Tactics", value: pick(options.Hunter["Defensive Tactics"])});
+      if (level >= 11) entries.push({label: "Multiattack", value: pick(options.Hunter["Multiattack"])});
     }
-    return entries;
   }
 
   if (className === "Sorcerer") {
-    entries.push({label: "Metamagic", value: pickMany(options["Metamagic"], 4)});
+    const metamagic = level >= 10 ? 4 : level >= 3 ? 3 : level >= 2 ? 2 : 0;
+    if (metamagic) entries.push({label: "Metamagic", value: pickMany(options["Metamagic"], metamagic)});
     if (subclass === "Draconic Bloodline") {
       entries.push({label: "Draconic Ancestry", value: pick(options["Draconic Bloodline"]["Draconic Ancestry"])});
     }
-    return entries;
   }
 
-  if (className === "Barbarian" && subclass === "Wildheart") {
-    entries.push({label: "Animal Aspects", value: pickMany(options.Wildheart["Animal Aspects"], 2)});
-    entries.push({label: "Bestial Heart", value: pick(options.Wildheart["Bestial Heart"])});
-    return entries;
+  if (className === "Warlock") {
+    if (level >= 3) {
+      const pact = pick(options["Pact Boon"] as string[]);
+      entries.push({label: "Pact Boon", value: pact});
+      if (pact === "Pact of the Blade") entries.push({label: "Preferred Weapon", value: pick(options["Preferred Weapon"])});
+      if (pact === "Pact of the Chain") entries.push({label: "Preferred Familiar", value: pick(options["Preferred Familiar"])});
+    }
+    entries.push(...rollInvocations(level, cantrips.includes("Eldritch Blast")));
+    if (level >= 11) entries.push({label: "Mystic Arcanum", value: pick(options["Mystic Arcanum"])});
   }
 
   return entries;
@@ -235,6 +257,10 @@ function rollSubclassProficiencies(className: string, subclass: string | null, e
   const proficiencies = SUBCLASS_PROFICIENCIES[className]?.[subclass ?? ""] || [];
   if (proficiencies.length) {
     entries.push({label: "Subclass Proficiencies", value: proficiencies});
+  }
+  const skills = SUBCLASS_SKILLS[className]?.[subclass ?? ""] || [];
+  if (skills.length) {
+    entries.push({label: "Subclass Skill Proficiency", value: skills});
   }
 
   if (className === "Cleric" && subclass === "Knowledge") {
@@ -247,15 +273,16 @@ function rollSubclassProficiencies(className: string, subclass: string | null, e
   return entries;
 }
 
-function rollSingleClass(className: string, isMulticlass = false, excludedSkills: string[] = [], reservedSkills: string[] = [], reservedCount = 0): ClassEntry[] {
+function rollSingleClass(className: string, level: number, isMulticlass = false, excludedSkills: string[] = [], reservedSkills: string[] = [], reservedCount = 0): ClassEntry[] {
   const cls = data.classes[className];
-  const subclass = pick(cls.subclasses || []);
-  const entries: ClassEntry[] = [{label: "Class", value: className}];
+  const entries: ClassEntry[] = [{label: "Class", value: className}, {label: "Level", value: String(level)}];
 
+  let skills: string[] = [];
   if (isMulticlass) {
     const skillCount = MULTICLASS_SKILL_COUNTS[className] || 0;
     if (skillCount) {
-      entries.push({label: "Multiclass Skill Proficiencies", value: randomSkills(className, skillCount, excludedSkills)});
+      skills = randomSkills(className, skillCount, excludedSkills);
+      entries.push({label: "Multiclass Skill Proficiencies", value: skills});
     }
     entries.push({
       label: "Multiclass Proficiencies",
@@ -264,62 +291,114 @@ function rollSingleClass(className: string, isMulticlass = false, excludedSkills
         : ["None"]
     });
   } else {
-    entries.push({label: "Skill Proficiencies", value: randomSkills(className, cls.skillCount || 2, excludedSkills, reservedSkills, reservedCount)});
+    skills = randomSkills(className, cls.skillCount || 2, excludedSkills, reservedSkills, reservedCount);
+    entries.push({label: "Skill Proficiencies", value: skills});
   }
 
-  entries.push(...rollStartingMagic(className));
-  entries.push(
-    {label: className === "Wizard" ? "Wizard School" :
-             className === "Monk" ? "Monastic Tradition" :
-             className === "Sorcerer" ? "Sorcerer Subclass" :
-             className === "Bard" ? "Bard College" :
-             className === "Cleric" ? "Cleric Domain" :
-             className === "Barbarian" ? "Barbarian Subclass" :
-             className === "Ranger" ? "Ranger Subclass" :
-             className === "Fighter" ? "Fighter Subclass" :
-             className === "Rogue" ? "Rogue Subclass" :
-             className === "Paladin" ? "Paladin Oath" :
-             className === "Warlock" ? "Warlock Patron" : "Subclass", value: subclass}
+  const magic = rollStartingMagic(className);
+  entries.push(...magic);
+
+  // Skip subclasses whose own skill grant would duplicate one the character already has.
+  const ownedSkills = [...excludedSkills, ...skills];
+  const subclassOptions = (cls.subclasses || []).filter(name =>
+    !(SUBCLASS_SKILLS[className]?.[name] || []).some(skill => ownedSkills.includes(skill))
   );
+  const subclass = level >= (SUBCLASS_LEVELS[className] ?? 3) ? pick(subclassOptions) : null;
+  if (subclass) entries.push({label: SUBCLASS_LABELS[className] ?? "Subclass", value: subclass});
 
-  const extra = rollClassOptions(className, subclass);
-  for (const entry of extra) {
-    if (entry.label === "Warlock Patron") continue;
-    entries.push(entry);
-  }
-  entries.push(...rollSubclassProficiencies(className, subclass, excludedSkills));
+  const cantrips = magic.length ? entryValues(magic[0]) : [];
+  entries.push(...rollClassOptions(className, subclass, level, cantrips));
+  if (subclass) entries.push(...rollSubclassProficiencies(className, subclass, excludedSkills));
   return entries;
 }
 
 function rollClass(): ClassEntry[] {
   const names = Object.keys(data.classes);
   const primary = pick(names) ?? names[0];
-  const entries: ClassEntry[] = [];
   const existingSkills = getExistingSkillProficiencies();
   const multi = Math.random() * 100 < Number(data.settings?.multiclassChance ?? 8);
 
-  if (multi) {
-    const remaining = names.filter(n => n !== primary);
-    const secondary = pick(remaining) ?? primary;
-    const secondarySkillCount = MULTICLASS_SKILL_COUNTS[secondary] || 0;
-    const secondarySkills = secondarySkillCount
-      ? (data.classes[secondary]?.skills || []).filter(skill => !existingSkills.includes(skill))
-      : [];
-    const first = rollSingleClass(primary, false, existingSkills, secondarySkills, secondarySkillCount);
-    const firstSkills = first
-      .filter(entry => entry.label === "Skill Proficiencies" || entry.label === "Nature Domain Skill Proficiency")
-      .flatMap(entry => Array.isArray(entry.value) ? entry.value : typeof entry.value === "string" ? [entry.value] : []);
-    const second = rollSingleClass(secondary, true, [...existingSkills, ...firstSkills]);
-    entries.push(...first, ...second);
-  } else {
-    entries.push(...rollSingleClass(primary, false, existingSkills));
-  }
+  if (!multi) return rollSingleClass(primary, MAX_LEVEL, false, existingSkills);
 
-  return entries;
+  // The starting class keeps at least half of the 12 levels.
+  const primaryLevel = 6 + Math.floor(Math.random() * 6);
+  const secondary = pick(names.filter(n => n !== primary)) ?? primary;
+  const secondarySkillCount = MULTICLASS_SKILL_COUNTS[secondary] || 0;
+  const secondarySkills = secondarySkillCount
+    ? (data.classes[secondary]?.skills || []).filter(skill => !existingSkills.includes(skill))
+    : [];
+  const first = rollSingleClass(primary, primaryLevel, false, existingSkills, secondarySkills, secondarySkillCount);
+  const second = rollSingleClass(secondary, MAX_LEVEL - primaryLevel, true, [...existingSkills, ...getClassSkillProficiencies(first)]);
+  return [...first, ...second];
 }
 
-function rollFeats(): string[] {
-  return pickMany(data.feats, Number(data.settings?.featCount ?? 4), true);
+// Armour proficiencies from race, starting class, multiclass grants and subclasses.
+function getArmourProficiencies(): Set<string> {
+  const armour = new Set<string>();
+  const classLevels = getClassLevels();
+  for (const value of (character.race || []).filter(entry => entry.label === "Racial Proficiencies").flatMap(entryValues)) armour.add(value);
+  (CLASS_ARMOUR[classLevels[0]?.className ?? ""] || []).forEach(value => armour.add(value));
+  for (const entry of character.class || []) {
+    if (entry.label === "Multiclass Proficiencies" || entry.label === "Subclass Proficiencies") {
+      entryValues(entry).forEach(value => armour.add(value));
+    }
+  }
+  return armour;
+}
+
+function featLevels(): {label: string; className: string; level: number}[] {
+  const classLevels = getClassLevels();
+  return classLevels.flatMap(({className, level}) =>
+    (FEAT_LEVELS[className] ?? DEFAULT_FEAT_LEVELS)
+      .filter(featLevel => featLevel <= level)
+      .map(featLevel => ({
+        label: classLevels.length > 1 ? `${className} level ${featLevel}` : `Level ${featLevel}`,
+        className,
+        level: featLevel
+      }))
+  );
+}
+
+function featName(value: string): string {
+  return value.split(":")[0].trim();
+}
+
+// Rolls one feat that the character can take, given the feats already taken.
+function rollFeat(taken: string[], armour: Set<string>): string | null {
+  const takenNames = new Set(taken.map(featName));
+  const options = data.feats.filter(feat => {
+    if (feat !== "Ability Improvement" && takenNames.has(feat)) return false;
+    const rule = FEAT_ARMOUR_RULES[feat];
+    if (rule?.requires && !armour.has(rule.requires)) return false;
+    if (rule?.grants && armour.has(rule.grants)) return false;
+    return true;
+  });
+  const feat = pick(options);
+  if (!feat) return null;
+  const grants = FEAT_ARMOUR_RULES[feat]?.grants;
+  if (grants) armour.add(grants);
+  const choice = pick(FEAT_CHOICES[feat]);
+  return choice ? `${feat}: ${choice}` : feat;
+}
+
+// Keeps the given feats (in order) and fills any remaining feat levels with new ones.
+function rollFeats(keep: string[] = []): ClassEntry[] {
+  const armour = getArmourProficiencies();
+  const taken: string[] = [];
+  return featLevels().map((slot, index) => {
+    const feat = index < keep.length ? keep[index] : rollFeat(taken, armour);
+    if (feat) {
+      taken.push(feat);
+      const grants = FEAT_ARMOUR_RULES[featName(feat)]?.grants;
+      if (grants) armour.add(grants);
+    }
+    return {label: slot.label, value: feat};
+  });
+}
+
+// Feat names from either the current format or an older saved list of names.
+function featValues(feats: Character["feats"] = character.feats): string[] {
+  return (feats || []).flatMap(feat => typeof feat === "string" ? [feat] : entryValues(feat));
 }
 
 function rollBackground(avoidSkills: string[] = []): ClassEntry[] {
@@ -337,11 +416,12 @@ function rollRomance(): string | null { return pick(data.romances); }
 
 function rollCompanionBuild(romance: string | null | undefined = character.romance): ClassEntry[] {
   const isHireling = (romance ?? "").trim().toLowerCase() === "no one";
-  const partyMember = isHireling
+  const partyMember: PartyMemberProfile = isHireling
     ? pick(BASE_HIRELINGS) ?? BASE_HIRELINGS[0]
     : {
         name: romance ?? "Unknown companion",
-        defaultClass: COMPANION_DEFAULT_CLASSES[romance ?? ""] ?? "Fighter"
+        defaultClass: COMPANION_DEFAULT_CLASSES[romance ?? ""] ?? "Fighter",
+        race: COMPANION_RACES[romance ?? ""] ?? ""
       };
   const usesDefaultClass = isHireling || Math.random() < 0.5;
   const classNames = Object.keys(data.classes);
@@ -360,8 +440,11 @@ function rollCompanionBuild(romance: string | null | undefined = character.roman
   entries.push(...rollStartingMagic(className));
 
   if (className === "Cleric") {
-    const deities = data.classes.Cleric.options?.["Deity"];
-    if (Array.isArray(deities)) entries.push({label: "Deity", value: pick(deities as string[])});
+    // Shadowheart's faith is fixed by her story; other clerics follow a deity their race allows.
+    const deity = partyMember.name === "Shadowheart"
+      ? "Shar or Selûne (set by her story)"
+      : rollDeity([partyMember.race, ...partyMember.race.split(" ")]);
+    entries.push({label: "Deity", value: deity});
   }
 
   entries.push({label: "Preferred melee weapon", value: pick(weapons.melee)});

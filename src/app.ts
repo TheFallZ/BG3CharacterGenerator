@@ -8,7 +8,7 @@ const definitions: Record<CardKey, { title: string; roll: () => GeneratorResult 
   darkUrge: {title: "Should I accept the tadpole?", roll: rollDarkUrge},
   race: {title: "Race", roll: rollRace},
   class: {title: "Class", roll: rollClass},
-  feats: {title: "Feat options", roll: rollFeats},
+  feats: {title: "Feats", roll: () => rollFeats()},
   background: {title: "Background", roll: rollBackground},
   romance: {title: "Romance", roll: rollRomance},
   companionBuild: {title: "Companion Build", roll: rollCompanionBuild}
@@ -65,9 +65,16 @@ function rollCards(keys: CardKey[]): void {
       character.background = rollBackground(keptClassSkills);
     } else if (key === "companionBuild") {
       character.companionBuild = rollCompanionBuild(character.romance);
+    } else if (key === "feats") {
+      character.feats = rollFeats();
     } else {
       character = {...character, [key]: definitions[key].roll()} as Character;
     }
+  }
+
+  // Locked feats survive a new class, trimmed or topped up to the new number of feat levels.
+  if (targets.has("class") && !targets.has("feats")) {
+    character.feats = rollFeats(featValues());
   }
 
   rolledCards = targets;
@@ -79,9 +86,11 @@ function normalizeResult(value: unknown): ClassEntry[] {
   return [{label: "", value: value as string | null}];
 }
 
+// Feats follow the class levels, and race and class decide which armour feats are allowed.
 function reroll(key: CardKey): void {
-  if (key === "race") rollCards(["race", "background", "class"]);
-  else if (key === "background") rollCards(["background", "class"]);
+  if (key === "race") rollCards(["race", "background", "class", "feats"]);
+  else if (key === "background") rollCards(["background", "class", "feats"]);
+  else if (key === "class") rollCards(["class", "feats"]);
   else if (key === "romance") rollCards(["romance", "companionBuild"]);
   else rollCards([key]);
 }
@@ -115,8 +124,15 @@ function entryText(entries: ClassEntry[] | undefined, label: string): string[] {
 
 function describeCharacter(saved: Character): string {
   const race = entryText(saved.race, "Subrace")[0] ?? entryText(saved.race, "Race")[0];
-  const classes = entryText(saved.class, "Class").join(" / ");
+  const classLevels = getClassLevels(saved.class);
+  const classes = classLevels
+    .map(({className, level}) => classLevels.length > 1 ? `${className} ${level}` : className)
+    .join(" / ");
   return [race, classes].filter(Boolean).join(" · ") || "Character";
+}
+
+function savedTitle(item: SavedCharacter): string {
+  return item.name || describeCharacter(item.character);
 }
 
 function savedDate(item: SavedCharacter): string {
@@ -136,9 +152,10 @@ function renderSavedCharacters(): void {
   const saved = getSavedCharacters();
   strip.hidden = !saved.length;
   list.replaceChildren(...saved.map(item => {
-    const title = describeCharacter(item.character);
+    const title = savedTitle(item);
     const li = document.createElement("li");
     li.className = "saved-item";
+    li.dataset.id = item.id;
 
     const load = document.createElement("button");
     load.className = "saved-load";
@@ -148,8 +165,15 @@ function renderSavedCharacters(): void {
     name.textContent = title;
     const meta = document.createElement("span");
     meta.className = "saved-meta";
-    meta.textContent = savedDate(item);
+    // A named build still shows what it is under the name.
+    meta.textContent = item.name ? `${describeCharacter(item.character)} · ${savedDate(item)}` : savedDate(item);
     load.append(name, meta);
+
+    const rename = document.createElement("button");
+    rename.className = "saved-rename";
+    rename.dataset.rename = item.id;
+    rename.setAttribute("aria-label", `Rename ${title}`);
+    rename.textContent = "Rename";
 
     const remove = document.createElement("button");
     remove.className = "saved-delete";
@@ -157,7 +181,7 @@ function renderSavedCharacters(): void {
     remove.setAttribute("aria-label", `Delete ${title}`);
     remove.textContent = "×";
 
-    li.append(load, remove);
+    li.append(load, rename, remove);
     return li;
   }));
 }
@@ -191,9 +215,57 @@ function loadCharacter(id: string): void {
   setSaveNotice("Saved character loaded.");
 }
 
+function startRename(id: string): void {
+  const item = getSavedCharacters().find(saved => saved.id === id);
+  const li = document.querySelector<HTMLElement>(`.saved-item[data-id="${CSS.escape(id)}"]`);
+  const load = li?.querySelector<HTMLButtonElement>(".saved-load");
+  if (!item || !li || !load) return;
+
+  const input = document.createElement("input");
+  input.className = "saved-name-input";
+  input.value = item.name ?? "";
+  input.placeholder = describeCharacter(item.character);
+  input.maxLength = 60;
+  input.setAttribute("aria-label", "Build name");
+  load.replaceWith(input);
+  li.querySelector<HTMLButtonElement>(".saved-rename")!.hidden = true;
+  input.focus();
+  input.select();
+
+  let done = false;
+  const finish = (save: boolean) => {
+    if (done) return;
+    done = true;
+    if (save) renameCharacter(id, input.value);
+    else renderSavedCharacters();
+  };
+  input.addEventListener("keydown", event => {
+    if (event.key === "Enter") finish(true);
+    else if (event.key === "Escape") finish(false);
+  });
+  input.addEventListener("blur", () => finish(true));
+}
+
+// An empty name goes back to the automatic race and class description.
+function renameCharacter(id: string, name: string): void {
+  try {
+    const saved = getSavedCharacters().map(item => {
+      if (item.id !== id) return item;
+      const {name: _old, ...rest} = item;
+      return name.trim() ? {...rest, name: name.trim()} : rest;
+    });
+    localStorage.setItem(SAVED_CHARACTERS_KEY, JSON.stringify(saved));
+    setSaveNotice("Build renamed.");
+  } catch {
+    setSaveNotice("Could not rename the saved build.");
+  }
+  renderSavedCharacters();
+  document.querySelector<HTMLButtonElement>(`.saved-item[data-id="${CSS.escape(id)}"] .saved-rename`)?.focus();
+}
+
 function deleteCharacter(id: string): void {
   const item = getSavedCharacters().find(saved => saved.id === id);
-  if (!item || !confirm(`Delete "${describeCharacter(item.character)}"?`)) return;
+  if (!item || !confirm(`Delete "${savedTitle(item)}"?`)) return;
 
   try {
     const saved = getSavedCharacters().filter(saved => saved.id !== id);
@@ -248,18 +320,28 @@ function renderCards(): void {
 
     if (key === "class" || key === "race") {
       let classCount = 0;
-      content = normalizeResult(value).map(entry => {
+      const entries = normalizeResult(value);
+      content = entries.map((entry, index) => {
+        if (entry.label === "Level") return "";
+        // Show each class with its level, e.g. "Sorcerer, level 8".
+        const level = entries[index + 1]?.label === "Level" ? entries[index + 1].value : null;
+        const shown = key === "class" && entry.label === "Class" && level ? {...entry, value: `${entry.value}, level ${level}`} : entry;
         if (key === "class" && entry.label === "Class" && ++classCount === 2) {
-          return `<div class="class-divider">Second class</div>${entryHTML({...entry, label: ""})}`;
+          return `<div class="class-divider">Second class</div>${entryHTML({...shown, label: ""})}`;
         }
-        return entryHTML(entry);
+        return entryHTML(shown);
       }).join("");
     } else if (key === "companionBuild") {
       content = normalizeResult(value).map(entryHTML).join("");
     } else if (key === "background") {
       content = normalizeResult(value).map(entryHTML).join("");
     } else if (key === "feats") {
-      content = entryHTML({label: "", value: value as string | string[] | null});
+      const feats = (value || []) as ClassEntry[] | string[];
+      content = feats.length && typeof feats[0] === "string"
+        ? entryHTML({label: "", value: feats as string[]})
+        : feats.length
+          ? (feats as ClassEntry[]).map(entryHTML).join("")
+          : entryHTML({label: "", value: "No feats before level 4"});
     } else {
       content = entryHTML({label: "", value: value as string | null});
     }
@@ -290,6 +372,7 @@ document.getElementById("saveCharacter")!.addEventListener("click", saveCharacte
 document.getElementById("savedCharacters")!.addEventListener("click", event => {
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>("button");
   if (button?.dataset.load) loadCharacter(button.dataset.load);
+  else if (button?.dataset.rename) startRename(button.dataset.rename);
   else if (button?.dataset.delete) deleteCharacter(button.dataset.delete);
 });
 

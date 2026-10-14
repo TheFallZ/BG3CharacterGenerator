@@ -177,7 +177,7 @@ button.primary:hover {
 .saved-load {
   display: grid;
   gap: 1px;
-  max-width: 260px;
+  max-width: 360px;
   border: 0;
   border-radius: 0;
   padding: 7px 10px;
@@ -209,7 +209,28 @@ button.primary:hover {
   font-size: 20px;
 }
 
+.saved-rename {
+  border: 0;
+  border-left: 1px solid var(--control-border);
+  border-radius: 0;
+  padding: 0 10px;
+  background: transparent;
+  color: var(--page-ink);
+}
+
+.saved-name-input {
+  width: 220px;
+  margin: 6px 8px;
+  border: 1px solid var(--control-border-hover);
+  border-radius: 4px;
+  padding: 5px 8px;
+  color: var(--control-ink);
+  background: var(--page);
+  font: inherit;
+}
+
 .saved-load:hover,
+.saved-rename:hover,
 .saved-delete:hover {
   background: var(--control-bg-hover);
 }
