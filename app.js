@@ -417,9 +417,9 @@ function randomSkills(className, count, excludedSkills = [], reservedSkills = []
     const overlappingPicks = pickMany(overlappingSkills, Math.min(count - safePicks.length, overlapCapacity));
     return [...safePicks, ...overlappingPicks];
 }
-function getRacialSkillProficiencies() {
+function getRacialSkillProficiencies(race = character.race) {
     const skillNames = new Set(Object.values(data.classes).flatMap(classInfo => classInfo.skills));
-    const racialEntries = character.race || [];
+    const racialEntries = race || [];
     const skills = racialEntries.flatMap(entry => {
         if (entry.label !== "Racial Proficiencies" && entry.label !== "Additional Skill Proficiency")
             return [];
@@ -438,6 +438,12 @@ function getBackgroundSkillProficiencies(background = character.background) {
         return skillEntry.value.filter((skill) => typeof skill === "string");
     const backgroundName = background.find(entry => entry.label === "Background")?.value;
     return typeof backgroundName === "string" ? BACKGROUND_SKILLS[backgroundName] || [] : [];
+}
+function getClassSkillProficiencies(classEntries = character.class) {
+    const skillLabels = ["Skill Proficiencies", "Multiclass Skill Proficiencies", "Nature Domain Skill Proficiency"];
+    return (classEntries || [])
+        .filter(entry => skillLabels.includes(entry.label))
+        .flatMap(entry => Array.isArray(entry.value) ? entry.value : typeof entry.value === "string" ? [entry.value] : []);
 }
 function getExistingSkillProficiencies() {
     return [...new Set([...getRacialSkillProficiencies(), ...getBackgroundSkillProficiencies()])];
@@ -476,6 +482,13 @@ function rollRace() {
         result.push({ label: info.extra.label, value: pick(info.extra.options) });
     }
     return result;
+}
+function rollRaceAvoiding(avoidSkills) {
+    let race = rollRace();
+    for (let attempt = 0; attempt < 50 && getRacialSkillProficiencies(race).some(skill => avoidSkills.includes(skill)); attempt++) {
+        race = rollRace();
+    }
+    return race;
 }
 function addOptionEntries(entries, options) {
     if (!options)
@@ -656,9 +669,9 @@ function rollClass() {
 function rollFeats() {
     return pickMany(data.feats, Number(data.settings?.featCount ?? 4), true);
 }
-function rollBackground() {
-    const racialSkills = new Set(getRacialSkillProficiencies());
-    const availableBackgrounds = data.backgrounds.filter(background => (BACKGROUND_SKILLS[background] || []).every(skill => !racialSkills.has(skill)));
+function rollBackground(avoidSkills = []) {
+    const takenSkills = new Set([...getRacialSkillProficiencies(), ...avoidSkills]);
+    const availableBackgrounds = data.backgrounds.filter(background => (BACKGROUND_SKILLS[background] || []).every(skill => !takenSkills.has(skill)));
     const background = pick(availableBackgrounds.length ? availableBackgrounds : data.backgrounds) ?? data.backgrounds[0];
     return [
         { label: "Background", value: background },
@@ -707,34 +720,96 @@ const definitions = {
     romance: { title: "Romance", wide: false, roll: rollRomance },
     companionBuild: { title: "Companion Build", wide: false, roll: rollCompanionBuild }
 };
+const CARD_ICONS = {
+    darkUrge: '<path d="M2.5 10s3-5 7.5-5 7.5 5 7.5 5-3 5-7.5 5-7.5-5-7.5-5z"/><circle cx="10" cy="10" r="2.2"/>',
+    race: '<circle cx="10" cy="6.5" r="3"/><path d="M4 17c.8-3.4 3.1-5 6-5s5.2 1.6 6 5"/>',
+    class: '<path d="M14.5 3.5h2v2L8 14l-2-2z"/><path d="M5 11l4 4M3.5 16.5l2.5-2.5"/>',
+    feats: '<path d="M10 3l2.1 4.3 4.7.7-3.4 3.3.8 4.7L10 13.8 5.8 16l.8-4.7L3.2 8l4.7-.7z"/>',
+    background: '<path d="M5 3.5h10v13H5z"/><path d="M8 7.5h4M8 10.5h4M8 13.5h2"/>',
+    romance: '<path d="M10 16.5s-6-3.7-6-8A3.3 3.3 0 0 1 10 6.3 3.3 3.3 0 0 1 16 8.5c0 4.3-6 8-6 8z"/>',
+    companionBuild: '<circle cx="7.5" cy="7" r="2.5"/><circle cx="13.5" cy="7.5" r="2"/><path d="M3 16c.6-2.8 2.4-4.2 4.5-4.2S11.4 13.2 12 16M12.5 11.8c2.2 0 3.8 1.3 4.5 4.2"/>'
+};
+const LOCK_ICONS = {
+    locked: '<rect x="4.5" y="9" width="11" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/>',
+    unlocked: '<rect x="4.5" y="9" width="11" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 0 1 5.8-1.1"/>'
+};
+// Rolled in dependency order: background avoids racial skills, class avoids both.
+const ROLL_ORDER = ["darkUrge", "race", "background", "class", "feats", "romance", "companionBuild"];
+const LOCKED_CARDS_KEY = "bg3-character-generator-locked-cards";
+let lockedCards = loadLockedCards();
+let rolledCards = new Set();
+function loadLockedCards() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(LOCKED_CARDS_KEY) || "[]");
+        return new Set(Array.isArray(saved) ? saved.filter((key) => cardOrder.includes(key)) : []);
+    }
+    catch {
+        return new Set();
+    }
+}
+// The companion comes from the romance, so a locked companion build keeps its romance too.
+function isLockedByCompanion(key) {
+    return key === "romance" && lockedCards.has("companionBuild");
+}
+function isLocked(key) {
+    return lockedCards.has(key) || isLockedByCompanion(key);
+}
+function toggleLock(key) {
+    if (lockedCards.has(key))
+        lockedCards.delete(key);
+    else
+        lockedCards.add(key);
+    try {
+        localStorage.setItem(LOCKED_CARDS_KEY, JSON.stringify([...lockedCards]));
+    }
+    catch {
+        // Locks still work for this visit without storage.
+    }
+    rolledCards = new Set();
+    renderCards();
+    document.querySelector(`[data-lock="${key}"]`)?.focus();
+}
+function rollCards(keys) {
+    // A locked card with nothing to keep yet (first page load) still gets rolled.
+    const targets = new Set(keys.filter(key => !isLocked(key) || character[key] === undefined));
+    const keptClassSkills = targets.has("class") ? [] : getClassSkillProficiencies();
+    for (const key of ROLL_ORDER) {
+        if (!targets.has(key))
+            continue;
+        if (key === "race") {
+            const keptBackgroundSkills = targets.has("background") ? [] : getBackgroundSkillProficiencies();
+            character.race = rollRaceAvoiding([...keptClassSkills, ...keptBackgroundSkills]);
+        }
+        else if (key === "background") {
+            character.background = rollBackground(keptClassSkills);
+        }
+        else if (key === "companionBuild") {
+            character.companionBuild = rollCompanionBuild(character.romance);
+        }
+        else {
+            character = { ...character, [key]: definitions[key].roll() };
+        }
+    }
+    rolledCards = targets;
+    renderCards();
+}
 function normalizeResult(value) {
     if (Array.isArray(value))
         return value;
     return [{ label: "", value: value }];
 }
 function reroll(key) {
-    character = { ...character, [key]: definitions[key].roll() };
-    if (key === "race") {
-        character.background = rollBackground();
-        character.class = rollClass();
-    }
-    if (key === "background")
-        character.class = rollClass();
-    if (key === "romance")
-        character.companionBuild = rollCompanionBuild(character.romance);
-    renderCards();
+    if (key === "race")
+        rollCards(["race", "background", "class"]);
+    else if (key === "background")
+        rollCards(["background", "class"]);
+    else if (key === "romance")
+        rollCards(["romance", "companionBuild"]);
+    else
+        rollCards([key]);
 }
 function generateAll() {
-    character.darkUrge = rollDarkUrge();
-    character.race = rollRace();
-    character.background = rollBackground();
-    character.class = rollClass();
-    for (const key of cardOrder) {
-        if (key !== "darkUrge" && key !== "class" && key !== "race" && key !== "background") {
-            character = { ...character, [key]: definitions[key].roll() };
-        }
-    }
-    renderCards();
+    rollCards(ROLL_ORDER);
 }
 function isSavedCharacter(value) {
     if (typeof value !== "object" || value === null)
@@ -753,29 +828,52 @@ function getSavedCharacters() {
         return [];
     }
 }
-function renderSavedCharacters(selectedId = "") {
-    const select = document.getElementById("savedCharacters");
+function entryText(entries, label) {
+    return (entries || [])
+        .filter(entry => entry.label === label && typeof entry.value === "string")
+        .map(entry => entry.value);
+}
+function describeCharacter(saved) {
+    const race = entryText(saved.race, "Subrace")[0] ?? entryText(saved.race, "Race")[0];
+    const classes = entryText(saved.class, "Class").join(" / ");
+    return [race, classes].filter(Boolean).join(" · ") || "Character";
+}
+function savedDate(item) {
+    const savedAt = Number(item.id.split("-")[0]);
+    return Number.isFinite(savedAt) && savedAt > 0
+        ? new Date(savedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+        : item.label;
+}
+function setSaveNotice(message) {
+    document.getElementById("saveNotice").textContent = message;
+}
+function renderSavedCharacters() {
+    const strip = document.getElementById("savedStrip");
+    const list = document.getElementById("savedCharacters");
     const saved = getSavedCharacters();
-    select.replaceChildren();
-    if (!saved.length) {
-        const option = document.createElement("option");
-        option.value = "";
-        option.textContent = "No saved results";
-        select.append(option);
-    }
-    else {
-        for (const item of saved) {
-            const option = document.createElement("option");
-            option.value = item.id;
-            option.textContent = item.label;
-            select.append(option);
-        }
-        if (saved.some(item => item.id === selectedId))
-            select.value = selectedId;
-    }
-    const hasSelection = Boolean(select.value);
-    document.getElementById("loadCharacter").disabled = !hasSelection;
-    document.getElementById("deleteCharacter").disabled = !hasSelection;
+    strip.hidden = !saved.length;
+    list.replaceChildren(...saved.map(item => {
+        const title = describeCharacter(item.character);
+        const li = document.createElement("li");
+        li.className = "saved-item";
+        const load = document.createElement("button");
+        load.className = "saved-load";
+        load.dataset.load = item.id;
+        const name = document.createElement("span");
+        name.className = "saved-title";
+        name.textContent = title;
+        const meta = document.createElement("span");
+        meta.className = "saved-meta";
+        meta.textContent = savedDate(item);
+        load.append(name, meta);
+        const remove = document.createElement("button");
+        remove.className = "saved-delete";
+        remove.dataset.delete = item.id;
+        remove.setAttribute("aria-label", `Delete ${title}`);
+        remove.textContent = "×";
+        li.append(load, remove);
+        return li;
+    }));
 }
 function saveCharacter() {
     const saved = getSavedCharacters();
@@ -783,42 +881,41 @@ function saveCharacter() {
     const id = `${savedAt.getTime()}-${Math.random().toString(36).slice(2, 8)}`;
     saved.unshift({
         id,
-        label: `Character · ${savedAt.toLocaleString()}`,
+        label: `${describeCharacter(character)} · ${savedAt.toLocaleString()}`,
         character: structuredClone(character)
     });
     try {
         localStorage.setItem(SAVED_CHARACTERS_KEY, JSON.stringify(saved));
-        renderSavedCharacters(id);
-        document.getElementById("saveNotice").textContent = "Character saved on this device.";
+        renderSavedCharacters();
+        setSaveNotice("Character saved on this device.");
     }
     catch {
-        document.getElementById("saveNotice").textContent = "Could not save. Browser storage may be full or unavailable.";
+        setSaveNotice("Could not save. Browser storage may be full or unavailable.");
     }
 }
-function loadCharacter() {
-    const id = document.getElementById("savedCharacters").value;
+function loadCharacter(id) {
     const saved = getSavedCharacters().find(item => item.id === id);
     if (!saved)
         return;
     character = structuredClone(saved.character);
     if (!character.companionBuild)
         character.companionBuild = rollCompanionBuild(character.romance);
+    rolledCards = new Set(cardOrder);
     renderCards();
-    document.getElementById("saveNotice").textContent = "Saved character loaded.";
+    setSaveNotice("Saved character loaded.");
 }
-function deleteCharacter() {
-    const select = document.getElementById("savedCharacters");
-    const id = select.value;
-    if (!id)
+function deleteCharacter(id) {
+    const item = getSavedCharacters().find(saved => saved.id === id);
+    if (!item || !confirm(`Delete "${describeCharacter(item.character)}"?`))
         return;
     try {
-        const saved = getSavedCharacters().filter(item => item.id !== id);
+        const saved = getSavedCharacters().filter(saved => saved.id !== id);
         localStorage.setItem(SAVED_CHARACTERS_KEY, JSON.stringify(saved));
         renderSavedCharacters();
-        document.getElementById("saveNotice").textContent = "Saved character deleted.";
+        setSaveNotice("Saved character deleted.");
     }
     catch {
-        document.getElementById("saveNotice").textContent = "Could not delete the saved character.";
+        setSaveNotice("Could not delete the saved character.");
     }
 }
 function entryHTML(entry) {
@@ -842,13 +939,32 @@ function escapeHTML(value) {
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
     })[char] ?? char);
 }
+function iconSVG(paths, className) {
+    return `<svg class="${className}" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+}
 function renderCards() {
     const host = document.getElementById("cards");
+    let rollIndex = 0;
     host.innerHTML = cardOrder.map(key => {
         const def = definitions[key];
         const value = character[key];
         const isMulticlass = key === "class" &&
             normalizeResult(value).filter(entry => entry.label === "Class").length > 1;
+        const primaryClass = key === "class" ? entryText(character.class, "Class")[0] ?? "" : "";
+        const locked = isLocked(key);
+        const lockedByCompanion = isLockedByCompanion(key);
+        const lockLabel = lockedByCompanion
+            ? `${def.title} is kept because Companion Build is locked`
+            : `${locked ? "Unlock" : "Lock"} ${def.title}`;
+        const classes = ["card", `card-${key}`];
+        if (def.wide)
+            classes.push("wide");
+        if (isMulticlass)
+            classes.push("card-multiclass");
+        if (locked)
+            classes.push("is-locked");
+        if (rolledCards.has(key))
+            classes.push("card-rolled");
         let content = "";
         if (key === "class" || key === "race") {
             let classCount = 0;
@@ -871,11 +987,14 @@ function renderCards() {
         else {
             content = entryHTML({ label: "", value: value });
         }
-        return `<article class="card card-${key} ${def.wide ? "wide" : ""} ${isMulticlass ? "card-multiclass" : ""}">
+        return `<article class="${classes.join(" ")}"${primaryClass ? ` data-class="${escapeHTML(primaryClass)}"` : ""}${rolledCards.has(key) ? ` style="--roll-index: ${rollIndex++}"` : ""}>
       <div class="card-head">
-        <h2>${escapeHTML(def.title)}</h2>
+        <h2>${iconSVG(CARD_ICONS[key], "card-icon")}<span>${escapeHTML(def.title)}</span></h2>
         ${isMulticlass ? '<span class="multiclass-badge">Multiclass</span>' : ""}
-        <button class="small reroll-button" data-reroll="${key}" aria-label="Reroll ${escapeHTML(def.title)}"><span class="reroll-icon" aria-hidden="true">↻</span>Reroll</button>
+        <div class="card-actions">
+          <button class="small lock-button" data-lock="${key}" aria-pressed="${locked}" aria-label="${escapeHTML(lockLabel)}" title="${escapeHTML(lockLabel)}"${lockedByCompanion ? " disabled" : ""}>${iconSVG(locked ? LOCK_ICONS.locked : LOCK_ICONS.unlocked, "lock-icon")}</button>
+          <button class="small reroll-button" data-reroll="${key}" aria-label="Reroll ${escapeHTML(def.title)}"${locked ? " disabled" : ""}><span class="reroll-icon" aria-hidden="true">↻</span>Reroll</button>
+        </div>
       </div>
       <div class="card-body">${content}</div>
     </article>`;
@@ -883,12 +1002,18 @@ function renderCards() {
     host.querySelectorAll("[data-reroll]").forEach(button => {
         button.addEventListener("click", () => reroll(button.dataset.reroll));
     });
+    host.querySelectorAll("[data-lock]").forEach(button => {
+        button.addEventListener("click", () => toggleLock(button.dataset.lock));
+    });
 }
 document.getElementById("generateAll").addEventListener("click", generateAll);
 document.getElementById("saveCharacter").addEventListener("click", saveCharacter);
-document.getElementById("loadCharacter").addEventListener("click", loadCharacter);
-document.getElementById("deleteCharacter").addEventListener("click", deleteCharacter);
-const savedCharactersSelect = document.getElementById("savedCharacters");
-savedCharactersSelect.addEventListener("change", () => renderSavedCharacters(savedCharactersSelect.value));
+document.getElementById("savedCharacters").addEventListener("click", event => {
+    const button = event.target.closest("button");
+    if (button?.dataset.load)
+        loadCharacter(button.dataset.load);
+    else if (button?.dataset.delete)
+        deleteCharacter(button.dataset.delete);
+});
 generateAll();
 renderSavedCharacters();

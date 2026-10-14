@@ -12,6 +12,7 @@ A small, browser-based character generator for Baldur's Gate 3. Generate a chara
 - Shows racial, background, and supported subclass proficiencies; Githyanki Astral Knowledge is labeled as a temporary grant.
 - Includes The Haunted One in the background pool regardless of the Dark Urge response.
 - Generates a companion or base-game hireling build with a subclass, preferred weapons, and a deity for Clerics. Companions can keep their default class or roll a different one; hirelings keep their base-game class.
+- Lets you lock any card so Generate and rerolls keep it. Race and Background avoid skills that would duplicate a locked Class, and locking Companion Build also keeps its Romance. Locks are remembered in the browser.
 - Saves, loads, and deletes builds using browser storage.
 - Runs as a static site with no server or account required.
 
@@ -25,7 +26,7 @@ npm.cmd run typecheck
 npm.cmd run build
 ```
 
-Then open `index.html`. `bg3gen.html` is also available as an alternate local entry page.
+Then open `index.html`.
 
 ## Host on GitHub Pages
 
