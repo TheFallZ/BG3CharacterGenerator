@@ -10,17 +10,13 @@
   --ink: #302628;
   --muted: #756467;
   --frame: #92787b;
-  --chip-border: #c7b0b2;
-  --chip-bg: rgba(250, 240, 239, .48);
-  --chip-ink: #493b3e;
+  --rule: rgba(106, 76, 81, .36);
 
   /* Accent */
   --accent: #e9a5bb;
   --accent-hover: #dc8fa9;
   --accent-ink: #432d36;
-  --accent-pale: #eee2e3;
-  --accent-pale-hover: #e2d1d3;
-  --accent-pale-border: #ab9094;
+  --accent-deep: #a8506e;
 
   /* Dark controls */
   --control-bg: #25211e;
@@ -33,12 +29,10 @@
   --multiclass: #718577;
   --multiclass-ink: #344b3b;
   --multiclass-divider: #435b49;
-  --multiclass-pale: rgba(220, 232, 218, .72);
 
   /* Type */
-  --font-ui: "Trebuchet MS", "Segoe UI", sans-serif;
-  --font-display: "Cinzel", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
-  --font-body: "EB Garamond", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  --font: "Alegreya", Georgia, "Times New Roman", serif;
+  --font-display: "Alegreya SC", Georgia, "Times New Roman", serif;
 
   --shadow: 0 5px 16px rgba(0, 0, 0, .3);
 }
@@ -50,7 +44,7 @@ body {
   background: radial-gradient(ellipse at 50% 0, var(--page-glow) 0, var(--page-mid) 38%, var(--page) 75%);
   background-attachment: fixed;
   color: var(--ink);
-  font: 14px/1.5 var(--font-ui);
+  font: 16.5px/1.5 var(--font);
 }
 
 button, input, select, textarea { font: inherit; }
@@ -89,7 +83,7 @@ main {
 
 .save-notice {
   color: var(--accent);
-  font-size: 12px;
+  font-size: 15.5px;
 }
 
 .save-notice:empty {
@@ -102,7 +96,7 @@ button {
   padding: 7px 11px;
   color: var(--control-ink);
   background: var(--control-bg);
-  font-size: 12px;
+  font-size: 15.5px;
   transition: background .15s ease, border-color .15s ease, transform .15s ease, opacity .15s ease;
 }
 
@@ -136,23 +130,12 @@ button.primary:hover {
 }
 
 #generateAll {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 15px;
-  border-radius: 7px;
-  font-size: 13px;
-  letter-spacing: .01em;
-}
-
-.generate-icon {
-  width: 17px;
-  height: 17px;
-}
-
-button.small {
-  padding: 3px 7px;
-  font-size: 11px;
+  font-family: var(--font-display);
+  padding: 9px 18px;
+  border-radius: 5px;
+  font-size: 16.5px;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 /* Saved builds */
@@ -162,13 +145,11 @@ button.small {
 }
 
 .saved-heading {
-  margin: 0 0 7px;
-  color: var(--page-ink);
   font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+  margin: 0 0 6px;
+  color: var(--page-ink);
+  font-size: 17.5px;
+  font-weight: 600;
 }
 
 .saved-list {
@@ -206,8 +187,7 @@ button.small {
 
 .saved-title {
   overflow: hidden;
-  font-family: var(--font-body);
-  font-size: 15px;
+  font-size: 16.5px;
   font-weight: 600;
   line-height: 1.2;
   text-overflow: ellipsis;
@@ -216,7 +196,7 @@ button.small {
 
 .saved-meta {
   color: var(--accent);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .saved-delete {
@@ -226,7 +206,7 @@ button.small {
   padding: 0 10px;
   background: transparent;
   color: var(--page-ink);
-  font-size: 16px;
+  font-size: 20px;
 }
 
 .saved-load:hover,
@@ -236,17 +216,49 @@ button.small {
 
 /* Cards */
 
+/* Phones get one column in page order; wider screens place cards by area. */
 .cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 9px;
   align-items: stretch;
 }
 
+@media (min-width: 561px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "class class"
+      "race background"
+      "feats feats"
+      "darkUrge romance"
+      "companionBuild companionBuild";
+    gap: 12px;
+  }
+
+  .card-class { grid-area: class; }
+  .card-race { grid-area: race; }
+  .card-background { grid-area: background; }
+  .card-feats { grid-area: feats; }
+  .card-darkUrge { grid-area: darkUrge; }
+  .card-romance { grid-area: romance; }
+  .card-companionBuild { grid-area: companionBuild; }
+}
+
+/* Tadpole and Romance stack beside the companion that Romance picks. */
+@media (min-width: 901px) {
+  .cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      "class class class"
+      "race background feats"
+      "darkUrge companionBuild companionBuild"
+      "romance companionBuild companionBuild";
+  }
+}
+
 .card {
-  --card-accent: var(--frame);
   min-width: 0;
-  min-height: 180px;
   background-color: var(--card);
   background-image:
     linear-gradient(180deg, rgba(83, 57, 62, .25), rgba(241, 225, 224, .42) 5px, transparent 19px),
@@ -257,7 +269,7 @@ button.small {
     repeating-linear-gradient(2deg, rgba(95, 67, 69, .04) 0, rgba(95, 67, 69, .04) .7px, transparent .7px, transparent 5px),
     repeating-linear-gradient(93deg, rgba(255, 245, 238, .08) 0, rgba(255, 245, 238, .08) .6px, transparent .6px, transparent 8px);
   border: 1px solid var(--frame);
-  border-top: 4px solid var(--card-accent);
+  border-top: 4px solid var(--frame);
   border-bottom: 3px solid var(--frame);
   border-radius: 8px 5px 9px 4px / 12px 5px 10px 6px;
   box-shadow: var(--shadow), inset 0 0 26px rgba(83, 57, 62, .16), inset 0 1px 3px rgba(255, 246, 239, .52);
@@ -265,30 +277,9 @@ button.small {
   transition: box-shadow .18s ease, transform .18s ease;
 }
 
-.card-darkUrge { --card-accent: #8c3b45; }
-.card-race { --card-accent: #66798c; }
-.card-feats { --card-accent: #9a7d3f; }
-.card-background { --card-accent: #7d6a55; }
-.card-romance { --card-accent: #b05f7a; }
-.card-companionBuild { --card-accent: var(--multiclass); }
-
-/* Class card takes the colour of its (first) class */
-.card-class[data-class="Barbarian"] { --card-accent: #a8553f; }
-.card-class[data-class="Bard"] { --card-accent: #b4608c; }
-.card-class[data-class="Cleric"] { --card-accent: #a89052; }
-.card-class[data-class="Druid"] { --card-accent: #6f8a4c; }
-.card-class[data-class="Fighter"] { --card-accent: #8a6a4a; }
-.card-class[data-class="Monk"] { --card-accent: #4f8a8a; }
-.card-class[data-class="Paladin"] { --card-accent: #c2a04a; }
-.card-class[data-class="Ranger"] { --card-accent: #4d7a55; }
-.card-class[data-class="Rogue"] { --card-accent: #5a5a66; }
-.card-class[data-class="Sorcerer"] { --card-accent: #b0453f; }
-.card-class[data-class="Warlock"] { --card-accent: #7a4f99; }
-.card-class[data-class="Wizard"] { --card-accent: #4a6aa8; }
-
 .card-multiclass {
   border-color: var(--multiclass);
-  border-top-color: var(--card-accent);
+  border-top-color: var(--multiclass);
   border-bottom-color: var(--multiclass);
   box-shadow: var(--shadow), inset 0 0 0 3px rgba(88, 119, 98, .2), inset 0 0 26px rgba(83, 57, 62, .16);
 }
@@ -300,14 +291,6 @@ button.small {
   }
 }
 
-.card.wide {
-  grid-column: span 2;
-}
-
-.card.card-class {
-  grid-column: 1 / -1;
-}
-
 .card-head {
   display: flex;
   justify-content: space-between;
@@ -315,107 +298,72 @@ button.small {
   gap: 6px;
   padding: 9px 11px;
   background: linear-gradient(180deg, rgba(117, 81, 87, .14), rgba(229, 210, 210, .22));
-  border-bottom: 1px solid rgba(106, 76, 81, .36);
+  border-bottom: 1px solid var(--rule);
 }
 
 .card-head h2 {
-  display: flex;
-  align-items: center;
-  gap: 7px;
+  font-family: var(--font-display);
   min-width: 0;
   margin: 0 auto 0 0;
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: .02em;
-}
-
-.card-icon {
-  flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
-  color: var(--card-accent);
+  font-size: 18.5px;
+  font-weight: 600;
+  line-height: 1.15;
 }
 
 .card-actions {
   display: flex;
   flex: 0 0 auto;
-  gap: 5px;
+  gap: 12px;
 }
 
 .multiclass-badge {
   flex: 0 0 auto;
-  padding: 3px 8px;
-  border: 1px solid var(--multiclass);
-  border-radius: 999px;
-  background: var(--multiclass-pale);
   color: var(--multiclass-ink);
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .05em;
-  text-transform: uppercase;
+  font-size: 14.5px;
 }
 
-button.reroll-button,
-button.lock-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 9px;
-  border-color: var(--accent-pale-border);
-  border-radius: 999px;
-  color: var(--chip-ink);
-  background: var(--accent-pale);
-  font-size: 11px;
+button.text-button {
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 15.5px;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
 }
 
-button.lock-button {
-  padding: 4px 6px;
+button.text-button:hover {
+  background: none;
+  color: var(--ink);
+  text-decoration-color: currentColor;
 }
 
-button.reroll-button:hover,
-button.lock-button:hover {
-  background: var(--accent-pale-hover);
-  border-color: var(--accent-pale-border);
-}
-
-button.reroll-button:disabled:hover,
-button.lock-button:disabled:hover {
-  background: var(--accent-pale);
+button.text-button:disabled:hover {
+  color: var(--muted);
+  text-decoration-color: transparent;
 }
 
 button.lock-button[aria-pressed="true"] {
-  color: var(--accent-pale);
-  background: var(--card-accent);
-  border-color: var(--card-accent);
-}
-
-.lock-icon {
-  width: 14px;
-  height: 14px;
-}
-
-.reroll-icon {
-  font-family: Georgia, serif;
-  font-size: 16px;
-  line-height: .8;
+  color: var(--accent-deep);
+  font-weight: 700;
 }
 
 .card.is-locked .card-head {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--card-accent) 22%, transparent), rgba(229, 210, 210, .22));
+  background: linear-gradient(180deg, rgba(168, 80, 110, .16), rgba(229, 210, 210, .22));
 }
 
 /* Roll animation for cards that just changed */
 .card.card-rolled {
-  animation: card-roll .45s cubic-bezier(.2, .7, .3, 1) backwards;
-  animation-delay: calc(var(--roll-index, 0) * 45ms);
+  animation: card-roll .3s ease-out backwards;
+  animation-delay: calc(var(--roll-index, 0) * 30ms);
 }
 
 @keyframes card-roll {
   from {
     opacity: 0;
-    transform: perspective(800px) rotateX(-14deg) translateY(10px);
+    transform: translateY(6px);
   }
 }
 
@@ -426,15 +374,16 @@ button.lock-button[aria-pressed="true"] {
 }
 
 .card-body {
-  padding: 11px;
-  font-family: var(--font-body);
-  font-size: 16.5px;
-  font-weight: 600;
-  line-height: 1.45;
+  padding: 11px 13px 13px;
+  font-size: 17.5px;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
-.card-class .card-body {
+.card-class .card-body,
+.card-companionBuild .card-body {
   display: grid;
+  align-content: start;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px 14px;
 }
@@ -446,11 +395,7 @@ button.lock-button[aria-pressed="true"] {
   gap: 10px;
   margin: 3px 0;
   color: var(--multiclass-divider);
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+  font-size: 14.5px;
 }
 
 .class-divider::before,
@@ -460,7 +405,8 @@ button.lock-button[aria-pressed="true"] {
   border-top: 1px solid rgba(88, 119, 98, .65);
 }
 
-.card-class .entry {
+.card-class .entry,
+.card-companionBuild .entry {
   min-width: 0;
   margin: 0;
 }
@@ -476,12 +422,9 @@ button.lock-button[aria-pressed="true"] {
 .entry-label {
   display: block;
   color: var(--muted);
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  margin-bottom: 4px;
+  font-size: 14.5px;
+  font-weight: 400;
+  line-height: 1.25;
 }
 
 .entry-value {
@@ -489,39 +432,31 @@ button.lock-button[aria-pressed="true"] {
 }
 
 .entry-value ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin: 5px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .entry-value li {
-  padding: 2px 8px;
-  border: 1px solid var(--chip-border);
-  border-radius: 4px;
-  background: var(--chip-bg);
-  color: var(--chip-ink);
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.35;
+  display: inline;
+}
+
+.entry-value li:not(:last-child)::after {
+  content: ", ";
+}
+
+/* Feat names contain colons, so they read better one per line. */
+.card-feats .entry-value li {
+  display: block;
+}
+
+.card-feats .entry-value li::after {
+  content: none;
 }
 
 .empty {
   color: var(--muted);
   font-style: italic;
-}
-
-/* Medium screens */
-@media (max-width: 900px) {
-  .cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .card.wide {
-    grid-column: 1 / -1;
-  }
 }
 
 /* Phones */
@@ -530,20 +465,8 @@ button.lock-button[aria-pressed="true"] {
     width: calc(100% - 24px);
   }
 
-  .cards {
-    grid-template-columns: 1fr;
-    gap: 9px;
-  }
-
-  .card {
-    min-height: 0;
-  }
-
-  .card.wide {
-    grid-column: auto;
-  }
-
-  .card-class .card-body {
+  .card-class .card-body,
+  .card-companionBuild .card-body {
     gap: 7px 10px;
   }
 

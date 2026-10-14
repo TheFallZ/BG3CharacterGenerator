@@ -6,14 +6,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=EB+Garamond:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;500;700&family=Alegreya+SC:wght@500;700&display=swap">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <main>
   <div class="toolbar">
-    <button class="primary" id="generateAll"><svg class="generate-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.7"/><circle cx="7" cy="7" r="1" fill="currentColor"/><circle cx="13" cy="13" r="1" fill="currentColor"/><circle cx="13" cy="7" r="1" fill="currentColor"/><circle cx="7" cy="13" r="1" fill="currentColor"/></svg>Generate character</button>
+    <button class="primary" id="generateAll">Generate character</button>
     <div class="save-controls">
       <div class="save-notice" id="saveNotice" role="status" aria-live="polite"></div>
       <button id="saveCharacter">Save build</button>
@@ -29,6 +29,8 @@
 
 </main>
 
-<script src="app.js" defer></script>
+<script src="js/data.js" defer></script>
+<script src="js/generator.js" defer></script>
+<script src="js/app.js" defer></script>
 </body>
 </html>

@@ -30,16 +30,26 @@ Then open `index.html`.
 
 ## Host on GitHub Pages
 
-1. Run `npm.cmd run build` and commit the generated `app.js` along with `index.html` and `styles.css`.
+1. Run `npm.cmd run build` and commit the generated `js/` folder along with `index.html` and `styles.css`.
 2. Push the project to GitHub. The `node_modules` folder is excluded by `.gitignore` and is not needed for the hosted site.
 3. In the repository, open **Settings → Pages**.
 4. Under **Build and deployment**, choose **Deploy from a branch**, select the `main` branch and `/ (root)`, then save.
 
 GitHub Pages will publish the site and show its URL in the Pages settings. The page uses `index.html` as its entry point.
 
+## Project Layout
+
+- `src/data.ts`: game data and rule tables (races, classes, backgrounds, spells, proficiencies, companions).
+- `src/generator.ts`: the rolling rules that turn that data into a character.
+- `src/app.ts`: the page: cards, locks, and saved builds.
+- `js/`: compiled output loaded by `index.html`. Do not edit it by hand; it is overwritten on every build.
+- `styles.css`: all styling. Colours are named tokens at the top of the file.
+
+The source files are plain scripts that share one global scope, loaded in order by `index.html`, rather than ES modules. That keeps the page working when `index.html` is opened directly from disk, where browsers block module imports.
+
 ## TypeScript
 
-Edit `app.ts`; `app.js` is the compiled file loaded by the browser. Check types and rebuild with:
+Edit the files in `src/`. Check types and rebuild with:
 
 ```powershell
 npm.cmd run typecheck

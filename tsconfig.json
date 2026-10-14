@@ -5,7 +5,9 @@
     "lib": ["ES2022", "DOM"],
     "strict": true,
     "noEmitOnError": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "outDir": "js"
   },
-  "include": ["app.ts"]
+  "include": ["src/*.ts"]
 }
