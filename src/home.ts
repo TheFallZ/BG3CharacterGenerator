@@ -197,7 +197,7 @@ function undo(): void {
   if (!previous) return;
   clearSharedBuildLink();
   showBuild(previous.character, previous.savedId, previous.sharedName);
-  setNotice("Went back to the previous build.");
+  setNotice("Previous build restored.");
 }
 
 function setShareMenu(open: boolean): void {
