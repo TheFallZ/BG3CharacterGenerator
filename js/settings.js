@@ -42,7 +42,6 @@ function renderSettings() {
     </section>
     <section class="settings-section settings-pools">
       <h2>Classes and races</h2>
-      <p class="settings-intro">Untick anything you don't want to roll for your character.</p>
       <div class="settings-row">
         <fieldset class="settings-group settings-list">
           <legend>Classes</legend>
