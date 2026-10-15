@@ -104,7 +104,7 @@ const DEFAULT_DATA = {
                     "Second Fighting Style": ["Archery", "Defense", "Dueling", "Great Weapon Fighting", "Protection", "Two-Weapon Fighting"]
                 },
                 "Battle Master": {
-                    "Maneuveres": ["Commander's Strike", "Disarming Attack", "Distracting Strike", "Evasive Footwork", "Feinting Attack", "Goading Attack", "Menacing Attack", "Maneuvering Attack", "Pushing Attack", "Precision Attack", "Rally", "Riposte", "Sweeping Attack", "Trip Attack"]
+                    "Maneuvers": ["Commander's Strike", "Disarming Attack", "Distracting Strike", "Evasive Footwork", "Feinting Attack", "Goading Attack", "Menacing Attack", "Maneuvering Attack", "Pushing Attack", "Precision Attack", "Rally", "Riposte", "Sweeping Attack", "Trip Attack"]
                 }
             }
         },
@@ -316,10 +316,10 @@ const FEAT_ARMOR_RULES = {
     "Medium Armor Master": { requires: "Medium Armor" },
     "Heavy Armor Master": { requires: "Heavy Armor" }
 };
-// BG3 has no pact or cantrip prerequisites; Agonising and Repelling Blast are only offered here
+// BG3 has no pact or cantrip prerequisites; Agonizing and Repelling Blast are only offered here
 // when the warlock knows Eldritch Blast, since they do nothing without it.
 const INVOCATIONS = [
-    { name: "Agonising Blast", level: 2, needsEldritchBlast: true },
+    { name: "Agonizing Blast", level: 2, needsEldritchBlast: true },
     { name: "Armor of Shadows", level: 2 },
     { name: "Beast Speech", level: 2 },
     { name: "Beguiling Influence", level: 2 },

@@ -6,9 +6,9 @@ A small, browser-based character generator for Baldur's Gate 3. Generate a chara
 
 - Randomizes class, race, feats, background, romance, and the Dark Urge prompt.
 - Builds a level 12 character. There is an 8% chance of a multiclass build, which splits the 12 levels (the starting class keeps 6 to 11), marked clearly in the Class card.
-- Only gives each class what it has at its own level: subclasses appear at the level BG3 grants them, and choices such as invocations, maneuveres, metamagic, fighting styles and Wildheart aspects follow the class level.
+- Only gives each class what it has at its own level: subclasses appear at the level BG3 grants them, and choices such as invocations, maneuvers, metamagic, fighting styles and Wildheart aspects follow the class level.
 - Picks one feat for each feat level (4, 8 and 12; Fighters also at 6 and Rogues at 10, counted per class in a multiclass). Feats don't repeat except Ability Improvement, and armor feats need the armor below them.
-- Warlock invocations never repeat, and Agonising and Repelling Blast are only picked when the warlock knows Eldritch Blast.
+- Warlock invocations never repeat, and Agonizing and Repelling Blast are only picked when the warlock knows Eldritch Blast.
 - Cleric deities respect BG3's race restrictions (Laduguer, Lolth and Vlaakith).
 - Applies BG3 multiclass proficiency grants separately from starting-class skill choices, including multiclass-only skill picks.
 - Avoids duplicate skill proficiencies from race, background, and class while preserving each class's starting skill count.

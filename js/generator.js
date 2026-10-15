@@ -184,8 +184,8 @@ function rollClassOptions(className, subclass, level, cantrips) {
             entries.push({ label: "Additional Fighting Style", value: secondStyle });
         }
         if (subclass === "Battle Master") {
-            const maneuveres = level >= 10 ? 7 : level >= 7 ? 5 : 3;
-            entries.push({ label: "Maneuveres", value: pickMany(options["Battle Master"]["Maneuveres"], maneuveres) });
+            const maneuvers = level >= 10 ? 7 : level >= 7 ? 5 : 3;
+            entries.push({ label: "Maneuvers", value: pickMany(options["Battle Master"]["Maneuvers"], maneuvers) });
         }
     }
     if (className === "Paladin") {
