@@ -982,6 +982,16 @@ button.danger:hover {
   margin: 0;
 }
 
+.update-banner strong {
+  margin-right: 8px;
+  color: var(--accent);
+}
+
+.update-banner a {
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
 .update-banner a {
   color: var(--accent);
 }
