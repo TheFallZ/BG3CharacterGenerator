@@ -17,7 +17,7 @@ function renderSettings() {
     <fieldset class="settings-group">
       <legend>Origin</legend>
       <label class="check"><input type="checkbox" name="originCharacters"${settings.originCharacters ? " checked" : ""}> Allow origin characters</label>
-      <p class="settings-note">Adds an Origin card that can make you the Dark Urge or Astarion, Gale, Karlach, Lae'zel, Shadowheart or Wyll. When it's off, you always play a custom character.</p>
+      <p class="settings-note">Sometimes you'll play as the Dark Urge or an origin character like Karlach or Astarion instead of a custom character.</p>
     </fieldset>
     <fieldset class="settings-group">
       <legend>Companions</legend>
