@@ -40,20 +40,24 @@ function renderSavedPage(): void {
     const id = escapeHTML(item.id);
     // A named build still shows what it is under the name.
     const summary = item.name ? describeCharacter(item.character) : "";
+    const romance = item.character.romance && item.character.romance !== "No One" ? `Romance: ${item.character.romance}` : "";
+    const meta = [romance, `Saved ${savedDate(item)}`].filter(Boolean).join(" · ");
     return `<li class="saved-card" data-id="${id}">
       <div class="saved-card-text">
         <h2 class="saved-card-title">${escapeHTML(title)}</h2>
         ${summary ? `<p class="saved-card-summary">${escapeHTML(summary)}</p>` : ""}
-        <p class="saved-card-date">Saved ${escapeHTML(savedDate(item))}</p>
+        <p class="saved-card-date">${escapeHTML(meta)}</p>
         ${item.note ? `<p class="saved-card-note">${escapeHTML(item.note)}</p>` : ""}
       </div>
       <div class="saved-card-actions">
-        <button class="primary" data-open="${id}">Open</button>
-        <button data-copy-link="${id}">Copy link</button>
-        <button data-copy-text="${id}">Copy text</button>
-        <button data-rename="${id}">Rename</button>
-        <button data-note="${id}">${item.note ? "Edit note" : "Add note"}</button>
-        <button data-delete="${id}" aria-label="Delete ${escapeHTML(title)}">Delete</button>
+        <button class="primary saved-open" data-open="${id}">Open</button>
+        <div class="saved-links">
+          <button class="text-button" data-copy-link="${id}">Copy link</button>
+          <button class="text-button" data-copy-text="${id}">Copy text</button>
+          <button class="text-button" data-rename="${id}">Rename</button>
+          <button class="text-button" data-note="${id}" aria-label="${item.note ? "Edit note" : "Add note"}">Note</button>
+          <button class="text-button saved-delete-link" data-delete="${id}" aria-label="Delete ${escapeHTML(title)}">Delete</button>
+        </div>
       </div>
     </li>`;
   }).join("");

@@ -725,7 +725,6 @@ kbd {
 .saved-card {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   gap: 12px;
   border: 1px solid var(--frame);
   border-top: 4px solid var(--frame);
@@ -794,14 +793,40 @@ kbd {
   font-size: 15px;
 }
 
+/* Open is the one real button; the rest are quiet links, all pinned to the bottom of the card. */
 .saved-card-actions {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px 12px;
+  margin-top: auto;
+  border-top: 1px solid var(--rule);
+  padding-top: 10px;
 }
 
-.saved-card-actions button {
+.saved-open {
+  order: 2;
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 5px 14px;
+  font-size: 15px;
+}
+
+.saved-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  min-width: 0;
+}
+
+.saved-links .text-button {
+  font-size: 14px;
+}
+
+.saved-links .saved-delete-link:hover {
+  color: var(--accent-deep);
+}
+
+.saved-card-actions > button:not(.saved-open) {
   padding: 5px 10px;
   font-size: 15px;
 }
