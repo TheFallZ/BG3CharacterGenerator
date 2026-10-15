@@ -38,29 +38,72 @@ function renderSavedPage(): void {
   list.innerHTML = saved.map(item => {
     const title = savedTitle(item);
     const id = escapeHTML(item.id);
-    // A named build still shows what it is under the name.
-    const summary = item.name ? describeCharacter(item.character) : "";
-    const romance = item.character.romance && item.character.romance !== "No One" ? `Romance: ${item.character.romance}` : "";
-    const meta = [romance, `Saved ${savedDate(item)}`].filter(Boolean).join(" · ");
+    const tags = [
+      item.character.romance && item.character.romance !== "No One" ? `♥ ${item.character.romance}` : "",
+      backgroundName(item),
+      `Saved ${shortDate(item)}`
+    ].filter(Boolean);
     return `<li class="saved-card" data-id="${id}">
-      <div class="saved-card-text">
+      <div class="saved-card-head">
         <h2 class="saved-card-title">${escapeHTML(title)}</h2>
-        ${summary ? `<p class="saved-card-summary">${escapeHTML(summary)}</p>` : ""}
-        <p class="saved-card-date">${escapeHTML(meta)}</p>
+        <div class="saved-menu-wrap">
+          <button class="saved-more" data-menu="${id}" aria-haspopup="true" aria-expanded="false" aria-label="More actions for ${escapeHTML(title)}">⋯</button>
+          <div class="saved-menu" hidden>
+            <button data-copy-link="${id}">Copy link</button>
+            <button data-copy-text="${id}">Copy text</button>
+            <button data-rename="${id}">Rename</button>
+            <button data-note="${id}">${item.note ? "Edit note" : "Add note"}</button>
+            <button class="saved-menu-danger" data-delete="${id}">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div class="saved-card-text">
+        <p class="saved-card-sub">${escapeHTML(savedSubtitle(item))}</p>
+        <div class="saved-tags">${tags.map(tag => `<span>${escapeHTML(tag)}</span>`).join("")}</div>
         ${item.note ? `<p class="saved-card-note">${escapeHTML(item.note)}</p>` : ""}
       </div>
       <div class="saved-card-actions">
         <button class="primary saved-open" data-open="${id}">Open</button>
-        <div class="saved-links">
-          <button class="text-button" data-copy-link="${id}">Copy link</button>
-          <button class="text-button" data-copy-text="${id}">Copy text</button>
-          <button class="text-button" data-rename="${id}">Rename</button>
-          <button class="text-button" data-note="${id}" aria-label="${item.note ? "Edit note" : "Add note"}">Note</button>
-          <button class="text-button saved-delete-link" data-delete="${id}" aria-label="Delete ${escapeHTML(title)}">Delete</button>
-        </div>
       </div>
     </li>`;
   }).join("");
+}
+
+// Under the title: a named build says what it is; an unnamed one (whose title already
+// is its race and class) shows its subclass instead.
+function savedSubtitle(item: SavedCharacter): string {
+  const levels = getClassLevels(item.character.class);
+  const classes = levels.map(({className, level}) => `${className} ${level}`).join(" / ");
+  if (item.name) return [entryText(item.character.race, "Subrace")[0] ?? entryText(item.character.race, "Race")[0], classes].filter(Boolean).join(" · ");
+  return primaryClassAndSubclass(item.character.class).subclass ?? classes;
+}
+
+function backgroundName(item: SavedCharacter): string {
+  const background = item.character.background;
+  if (typeof background === "string") return background;
+  return entryText(background ?? undefined, "Background")[0] ?? "";
+}
+
+function shortDate(item: SavedCharacter): string {
+  const savedAt = savedTime(item);
+  return savedAt ? new Date(savedAt).toLocaleDateString(undefined, {month: "short", day: "numeric"}) : savedDate(item);
+}
+
+// The ⋯ menu on each card holds everything except Open. One menu is open at a time.
+function closeMenus(): void {
+  document.querySelectorAll<HTMLElement>(".saved-menu").forEach(menu => { menu.hidden = true; });
+  document.querySelectorAll<HTMLElement>(".saved-more").forEach(button => button.setAttribute("aria-expanded", "false"));
+}
+
+function toggleMenu(id: string): void {
+  const card = savedCard(id);
+  const menu = card?.querySelector<HTMLElement>(".saved-menu");
+  if (!card || !menu) return;
+  const opening = menu.hidden;
+  closeMenus();
+  menu.hidden = !opening;
+  card.querySelector(".saved-more")!.setAttribute("aria-expanded", String(opening));
+  if (opening) menu.querySelector<HTMLButtonElement>("button")?.focus();
 }
 
 function savedCard(id: string): HTMLElement | null {
@@ -288,6 +331,11 @@ try {
 document.getElementById("savedList")!.addEventListener("click", event => {
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>("button");
   const set = button?.dataset ?? {};
+  if (set.menu) {
+    toggleMenu(set.menu);
+    return;
+  }
+  closeMenus();
   if (set.open) openSaved(set.open);
   else if (set.copyLink) copySavedLink(set.copyLink);
   else if (set.copyText) copySavedText(set.copyText);
@@ -296,6 +344,13 @@ document.getElementById("savedList")!.addEventListener("click", event => {
   else if (set.delete) askToDelete(set.delete);
   else if (set.confirmDelete) deleteSaved(set.confirmDelete);
   else if (set.cancelDelete) cancelDelete(set.cancelDelete);
+});
+
+document.addEventListener("click", event => {
+  if (!(event.target as HTMLElement).closest(".saved-menu-wrap")) closeMenus();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeMenus();
 });
 
 renderSavedPage();
