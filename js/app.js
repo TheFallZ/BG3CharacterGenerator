@@ -273,7 +273,18 @@ function savedDate(item) {
 function setSaveNotice(message) {
     document.getElementById("saveNotice").textContent = message;
 }
+// A named build gets a title over the cards; unnamed builds don't.
+function renderBuildTitle() {
+    const header = document.getElementById("buildTitle");
+    const name = currentBuildName();
+    header.hidden = !name;
+    if (!name)
+        return;
+    document.getElementById("buildName").textContent = name;
+    document.getElementById("buildSummary").textContent = describeCharacter(character);
+}
 function renderSavedCharacters() {
+    renderBuildTitle();
     const strip = document.getElementById("savedStrip");
     const list = document.getElementById("savedCharacters");
     const saved = getSavedCharacters();
@@ -571,7 +582,7 @@ async function loadSharedBuild() {
     sharedName = match[1] ? slugToName(match[1]) : null;
     rolledCards = new Set(cardOrder);
     renderCards();
-    setSaveNotice(sharedName ? `Shared build loaded: ${sharedName}` : "Shared build loaded.");
+    setSaveNotice("Shared build loaded.");
     return true;
 }
 async function copyToClipboard(text, message) {
@@ -651,6 +662,7 @@ function gridAreas(columns, visible) {
 }
 const CLASS_DIVIDERS = ["", "Second class", "Third class"];
 function renderCards() {
+    renderBuildTitle();
     const host = document.getElementById("cards");
     const visible = visibleCards();
     host.style.setProperty("--areas-2", gridAreas(2, visible));

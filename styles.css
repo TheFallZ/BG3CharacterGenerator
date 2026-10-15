@@ -484,6 +484,44 @@ button.primary:hover {
   background: var(--control-bg-hover);
 }
 
+/* Build title */
+
+.build-title {
+  margin: 4px 0 14px;
+  text-align: center;
+}
+
+.build-title[hidden] {
+  display: none;
+}
+
+.build-title h1 {
+  margin: 0;
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 40px);
+  font-weight: 700;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+  text-shadow: 0 2px 12px rgba(233, 165, 187, .25);
+}
+
+.build-title p {
+  margin: 4px 0 0;
+  color: var(--page-ink);
+  font-size: 16.5px;
+}
+
+.build-title p::before,
+.build-title p::after {
+  content: "";
+  display: inline-block;
+  width: 40px;
+  margin: 0 12px;
+  vertical-align: middle;
+  border-top: 1px solid var(--control-border);
+}
+
 /* Cards */
 
 /* Phones get one column in page order; wider screens place cards by area. */

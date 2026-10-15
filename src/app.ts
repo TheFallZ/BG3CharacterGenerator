@@ -289,7 +289,18 @@ function setSaveNotice(message: string): void {
   (document.getElementById("saveNotice") as HTMLElement).textContent = message;
 }
 
+// A named build gets a title over the cards; unnamed builds don't.
+function renderBuildTitle(): void {
+  const header = document.getElementById("buildTitle") as HTMLElement;
+  const name = currentBuildName();
+  header.hidden = !name;
+  if (!name) return;
+  (document.getElementById("buildName") as HTMLElement).textContent = name;
+  (document.getElementById("buildSummary") as HTMLElement).textContent = describeCharacter(character);
+}
+
 function renderSavedCharacters(): void {
+  renderBuildTitle();
   const strip = document.getElementById("savedStrip") as HTMLElement;
   const list = document.getElementById("savedCharacters") as HTMLElement;
   const saved = getSavedCharacters();
@@ -586,7 +597,7 @@ async function loadSharedBuild(): Promise<boolean> {
   sharedName = match[1] ? slugToName(match[1]) : null;
   rolledCards = new Set(cardOrder);
   renderCards();
-  setSaveNotice(sharedName ? `Shared build loaded: ${sharedName}` : "Shared build loaded.");
+  setSaveNotice("Shared build loaded.");
   return true;
 }
 
@@ -668,6 +679,7 @@ function gridAreas(columns: 2 | 3, visible: CardKey[]): string {
 const CLASS_DIVIDERS = ["", "Second class", "Third class"];
 
 function renderCards(): void {
+  renderBuildTitle();
   const host = document.getElementById("cards") as HTMLElement;
   const visible = visibleCards();
   host.style.setProperty("--areas-2", gridAreas(2, visible));
