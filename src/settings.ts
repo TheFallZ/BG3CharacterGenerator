@@ -63,7 +63,7 @@ function renderSettings(): void {
     </section>
     <div class="settings-foot">
       <p class="settings-note">Your settings save automatically and take effect the next time you generate a character.</p>
-      <button type="button" id="resetSettings">Reset to defaults</button>
+      <button type="button" id="resetSettings">Reset to default</button>
     </div>`;
   updateSettingsControls();
 }
