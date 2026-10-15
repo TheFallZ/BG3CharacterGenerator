@@ -83,7 +83,7 @@ function normalizeResult(value) {
         return value;
     return [{ label: "", value: value }];
 }
-// Feats follow the class levels, and race and class decide which armour feats are allowed.
+// Feats follow the class levels, and race and class decide which armor feats are allowed.
 function reroll(key) {
     if (key === "race")
         rollCards(["race", "background", "class", "feats"]);

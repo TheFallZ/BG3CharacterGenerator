@@ -6,8 +6,8 @@ A small, browser-based character generator for Baldur's Gate 3. Generate a chara
 
 - Randomizes class, race, feats, background, romance, and the Dark Urge prompt.
 - Builds a level 12 character. There is an 8% chance of a multiclass build, which splits the 12 levels (the starting class keeps 6 to 11), marked clearly in the Class card.
-- Only gives each class what it has at its own level: subclasses appear at the level BG3 grants them, and choices such as invocations, manoeuvres, metamagic, fighting styles and Wildheart aspects follow the class level.
-- Picks one feat for each feat level (4, 8 and 12; Fighters also at 6 and Rogues at 10, counted per class in a multiclass). Feats don't repeat except Ability Improvement, and armour feats need the armour below them.
+- Only gives each class what it has at its own level: subclasses appear at the level BG3 grants them, and choices such as invocations, maneuveres, metamagic, fighting styles and Wildheart aspects follow the class level.
+- Picks one feat for each feat level (4, 8 and 12; Fighters also at 6 and Rogues at 10, counted per class in a multiclass). Feats don't repeat except Ability Improvement, and armor feats need the armor below them.
 - Warlock invocations never repeat, and Agonising and Repelling Blast are only picked when the warlock knows Eldritch Blast.
 - Cleric deities respect BG3's race restrictions (Laduguer, Lolth and Vlaakith).
 - Applies BG3 multiclass proficiency grants separately from starting-class skill choices, including multiclass-only skill picks.
@@ -47,7 +47,7 @@ GitHub Pages will publish the site and show its URL in the Pages settings. The p
 - `src/generator.ts`: the rolling rules that turn that data into a character.
 - `src/app.ts`: the page: cards, locks, and saved builds.
 - `js/`: compiled output loaded by `index.html`. Do not edit it by hand; it is overwritten on every build.
-- `styles.css`: all styling. Colours are named tokens at the top of the file.
+- `styles.css`: all styling. Colors are named tokens at the top of the file.
 
 The source files are plain scripts that share one global scope, loaded in order by `index.html`, rather than ES modules. That keeps the page working when `index.html` is opened directly from disk, where browsers block module imports.
 

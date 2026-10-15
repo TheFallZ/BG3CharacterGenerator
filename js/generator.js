@@ -184,8 +184,8 @@ function rollClassOptions(className, subclass, level, cantrips) {
             entries.push({ label: "Additional Fighting Style", value: secondStyle });
         }
         if (subclass === "Battle Master") {
-            const manoeuvres = level >= 10 ? 7 : level >= 7 ? 5 : 3;
-            entries.push({ label: "Manoeuvres", value: pickMany(options["Battle Master"]["Manoeuvres"], manoeuvres) });
+            const maneuveres = level >= 10 ? 7 : level >= 7 ? 5 : 3;
+            entries.push({ label: "Maneuveres", value: pickMany(options["Battle Master"]["Maneuveres"], maneuveres) });
         }
     }
     if (className === "Paladin") {
@@ -196,7 +196,7 @@ function rollClassOptions(className, subclass, level, cantrips) {
     }
     if (className === "Ranger") {
         const picks = 1 + (level >= 6 ? 1 : 0) + (level >= 10 ? 1 : 0);
-        entries.push({ label: "Favoured Enemy", value: pickMany(options["Favoured Enemy"], picks) });
+        entries.push({ label: "Favored Enemy", value: pickMany(options["Favored Enemy"], picks) });
         entries.push({ label: "Natural Explorer", value: pickMany(options["Natural Explorer"], picks) });
         if (level >= 2)
             entries.push({ label: "Fighting Style", value: pick(options["Fighting Style"]) });
@@ -307,19 +307,19 @@ function rollClass() {
     const second = rollSingleClass(secondary, MAX_LEVEL - primaryLevel, true, [...existingSkills, ...getClassSkillProficiencies(first)]);
     return [...first, ...second];
 }
-// Armour proficiencies from race, starting class, multiclass grants and subclasses.
-function getArmourProficiencies() {
-    const armour = new Set();
+// Armor proficiencies from race, starting class, multiclass grants and subclasses.
+function getArmorProficiencies() {
+    const armor = new Set();
     const classLevels = getClassLevels();
     for (const value of (character.race || []).filter(entry => entry.label === "Racial Proficiencies").flatMap(entryValues))
-        armour.add(value);
-    (CLASS_ARMOUR[classLevels[0]?.className ?? ""] || []).forEach(value => armour.add(value));
+        armor.add(value);
+    (CLASS_ARMOR[classLevels[0]?.className ?? ""] || []).forEach(value => armor.add(value));
     for (const entry of character.class || []) {
         if (entry.label === "Multiclass Proficiencies" || entry.label === "Subclass Proficiencies") {
-            entryValues(entry).forEach(value => armour.add(value));
+            entryValues(entry).forEach(value => armor.add(value));
         }
     }
-    return armour;
+    return armor;
 }
 function featLevels() {
     const classLevels = getClassLevels();
@@ -335,38 +335,38 @@ function featName(value) {
     return value.split(":")[0].trim();
 }
 // Rolls one feat that the character can take, given the feats already taken.
-function rollFeat(taken, armour) {
+function rollFeat(taken, armor) {
     const takenNames = new Set(taken.map(featName));
     const options = data.feats.filter(feat => {
         if (feat !== "Ability Improvement" && takenNames.has(feat))
             return false;
-        const rule = FEAT_ARMOUR_RULES[feat];
-        if (rule?.requires && !armour.has(rule.requires))
+        const rule = FEAT_ARMOR_RULES[feat];
+        if (rule?.requires && !armor.has(rule.requires))
             return false;
-        if (rule?.grants && armour.has(rule.grants))
+        if (rule?.grants && armor.has(rule.grants))
             return false;
         return true;
     });
     const feat = pick(options);
     if (!feat)
         return null;
-    const grants = FEAT_ARMOUR_RULES[feat]?.grants;
+    const grants = FEAT_ARMOR_RULES[feat]?.grants;
     if (grants)
-        armour.add(grants);
+        armor.add(grants);
     const choice = pick(FEAT_CHOICES[feat]);
     return choice ? `${feat}: ${choice}` : feat;
 }
 // Keeps the given feats (in order) and fills any remaining feat levels with new ones.
 function rollFeats(keep = []) {
-    const armour = getArmourProficiencies();
+    const armor = getArmorProficiencies();
     const taken = [];
     return featLevels().map((slot, index) => {
-        const feat = index < keep.length ? keep[index] : rollFeat(taken, armour);
+        const feat = index < keep.length ? keep[index] : rollFeat(taken, armor);
         if (feat) {
             taken.push(feat);
-            const grants = FEAT_ARMOUR_RULES[featName(feat)]?.grants;
+            const grants = FEAT_ARMOR_RULES[featName(feat)]?.grants;
             if (grants)
-                armour.add(grants);
+                armor.add(grants);
         }
         return { label: slot.label, value: feat };
     });

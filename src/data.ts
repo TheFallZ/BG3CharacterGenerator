@@ -132,11 +132,11 @@ const DEFAULT_DATA: GeneratorData = {
     "Bard": {
       skills: ["Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", "Insight", "Intimidation", "Investigation", "Medicine", "Nature", "Perception", "Performance", "Persuasion", "Religion", "Sleight of Hand", "Stealth", "Survival"],
       skillCount: 3,
-      subclasses: ["College of Lore", "College of Valour", "College of Swords", "College of Glamour"],
+      subclasses: ["College of Lore", "College of Valor", "College of Swords", "College of Glamour"],
       options: {
         "Starting Instrument": ["Flute", "Hand Drum", "Lute", "Lyre", "Violin"],
         "College of Swords": {
-          "Fighting Style": ["Duelling", "Two-Weapon Fighting"]
+          "Fighting Style": ["Dueling", "Two-Weapon Fighting"]
         }
       }
     },
@@ -163,12 +163,12 @@ const DEFAULT_DATA: GeneratorData = {
       skillCount: 2,
       subclasses: ["Battle Master", "Champion", "Eldritch Knight", "Arcane Archer"],
       options: {
-        "Fighting Style": ["Archery", "Defence", "Duelling", "Great Weapon Fighting", "Protection", "Two-Weapon Fighting"],
+        "Fighting Style": ["Archery", "Defense", "Dueling", "Great Weapon Fighting", "Protection", "Two-Weapon Fighting"],
         "Champion": {
-          "Second Fighting Style": ["Archery", "Defence", "Duelling", "Great Weapon Fighting", "Protection", "Two-Weapon Fighting"]
+          "Second Fighting Style": ["Archery", "Defense", "Dueling", "Great Weapon Fighting", "Protection", "Two-Weapon Fighting"]
         },
         "Battle Master": {
-          "Manoeuvres": ["Commander's Strike", "Disarming Attack", "Distracting Strike", "Evasive Footwork", "Feinting Attack", "Goading Attack", "Menacing Attack", "Manoeuvring Attack", "Pushing Attack", "Precision Attack", "Rally", "Riposte", "Sweeping Attack", "Trip Attack"]
+          "Maneuveres": ["Commander's Strike", "Disarming Attack", "Distracting Strike", "Evasive Footwork", "Feinting Attack", "Goading Attack", "Menacing Attack", "Maneuvering Attack", "Pushing Attack", "Precision Attack", "Rally", "Riposte", "Sweeping Attack", "Trip Attack"]
         }
       }
     },
@@ -189,7 +189,7 @@ const DEFAULT_DATA: GeneratorData = {
           "You are devoted to your oath, but you are not a zealot",
           "You are absolutely devoted to your oath"
         ],
-        "Fighting Style": ["Defence", "Duelling", "Great Weapon Fighting", "Protection"]
+        "Fighting Style": ["Defense", "Dueling", "Great Weapon Fighting", "Protection"]
       }
     },
     "Ranger": {
@@ -201,14 +201,14 @@ const DEFAULT_DATA: GeneratorData = {
           "Wasteland Wanderer: Cold", "Wasteland Wanderer: Fire", "Wasteland Wanderer: Poison",
           "Urban Tracker", "Beast Tamer"
         ],
-        "Favoured Enemy": ["Bounty Hunter", "Keeper of the Veil", "Mage Breaker", "Ranger Knight", "Sanctified Stalker"],
-        "Fighting Style": ["Archery", "Defence", "Duelling", "Two-Weapon Fighting"],
+        "Favored Enemy": ["Bounty Hunter", "Keeper of the Veil", "Mage Breaker", "Ranger Knight", "Sanctified Stalker"],
+        "Fighting Style": ["Archery", "Defense", "Dueling", "Two-Weapon Fighting"],
         "Beast Master": {
           "Ranger's Companion": ["Bear", "Boar", "Dire Raven", "Wolf", "Wolf Spider"]
         },
         "Hunter": {
           "Hunter's Prey": ["Colossus Slayer", "Giant Killer", "Horde Breaker"],
-          "Defensive Tactics": ["Escape the Horde", "Multiattack Defence", "Steel Will"],
+          "Defensive Tactics": ["Escape the Horde", "Multiattack Defense", "Steel Will"],
           "Multiattack": ["Volley", "Whirlwind Attack"]
         }
       }
@@ -253,10 +253,10 @@ const DEFAULT_DATA: GeneratorData = {
 
   feats: [
     "Ability Improvement", "Actor", "Alert", "Athlete", "Charger", "Crossbow Expert",
-    "Defensive Duellist", "Dual Wielder", "Dungeon Delver", "Durable", "Elemental Adept",
-    "Great Weapon Master", "Heavily Armoured", "Heavy Armour Master", "Lightly Armoured",
-    "Lucky", "Mage Slayer", "Magic Initiate", "Martial Adept", "Medium Armour Master",
-    "Mobile", "Moderately Armoured", "Performer", "Polearm Master", "Resilient",
+    "Defensive Duelist", "Dual Wielder", "Dungeon Delver", "Durable", "Elemental Adept",
+    "Great Weapon Master", "Heavily Armored", "Heavy Armor Master", "Lightly Armored",
+    "Lucky", "Mage Slayer", "Magic Initiate", "Martial Adept", "Medium Armor Master",
+    "Mobile", "Moderately Armored", "Performer", "Polearm Master", "Resilient",
     "Ritual Caster", "Savage Attacker", "Sentinel", "Sharpshooter", "Shield Master",
     "Skilled", "Spell Sniper", "Tavern Brawler", "Tough", "War Caster", "Weapon Master"
   ],
@@ -291,27 +291,27 @@ const BACKGROUND_SKILLS: Record<string, string[]> = {
 
 const RACIAL_PROFICIENCIES: Record<string, Record<string, string[]>> = {
   Drow: {"*": ["Perception", "Rapiers", "Shortswords", "Hand Crossbows"]},
-  Dwarf: {"*": ["Battleaxes", "Handaxes", "Light Hammers", "Warhammers"], "Shield Dwarf": ["Light Armour", "Medium Armour"]},
+  Dwarf: {"*": ["Battleaxes", "Handaxes", "Light Hammers", "Warhammers"], "Shield Dwarf": ["Light Armor", "Medium Armor"]},
   Elf: {"*": ["Perception", "Longswords", "Shortswords", "Longbows", "Shortbows"], "Wood Elf": ["Stealth"]},
-  Githyanki: {"*": ["Light Armour", "Medium Armour", "Greatswords", "Longswords", "Shortswords"]},
+  Githyanki: {"*": ["Light Armor", "Medium Armor", "Greatswords", "Longswords", "Shortswords"]},
   Gnome: {"Rock Gnome": ["Expertise in History"]},
-  "Half-Elf": {"*": ["Light Armour", "Shields", "Pikes", "Spears", "Halberds", "Glaives"]},
+  "Half-Elf": {"*": ["Light Armor", "Shields", "Pikes", "Spears", "Halberds", "Glaives"]},
   "Half-Orc": {"*": ["Intimidation"]},
-  Human: {"*": ["Light Armour", "Shields", "Pikes", "Spears", "Halberds", "Glaives"]}
+  Human: {"*": ["Light Armor", "Shields", "Pikes", "Spears", "Halberds", "Glaives"]}
 };
 
 const MULTICLASS_PROFICIENCIES: Record<string, string[]> = {
   Barbarian: ["Shields", "Simple Weapons", "Martial Weapons"],
-  Bard: ["Light Armour", "Musical Instruments"],
-  Cleric: ["Light Armour", "Medium Armour", "Shields", "Flails", "Morningstars"],
-  Druid: ["Light Armour", "Medium Armour", "Shields"],
-  Fighter: ["Light Armour", "Medium Armour", "Shields", "Simple Weapons", "Martial Weapons"],
+  Bard: ["Light Armor", "Musical Instruments"],
+  Cleric: ["Light Armor", "Medium Armor", "Shields", "Flails", "Morningstars"],
+  Druid: ["Light Armor", "Medium Armor", "Shields"],
+  Fighter: ["Light Armor", "Medium Armor", "Shields", "Simple Weapons", "Martial Weapons"],
   Monk: ["Simple Weapons", "Shortswords"],
-  Paladin: ["Light Armour", "Medium Armour", "Shields", "Simple Weapons", "Martial Weapons"],
-  Ranger: ["Light Armour", "Medium Armour", "Shields", "Simple Weapons", "Martial Weapons"],
-  Rogue: ["Light Armour"],
+  Paladin: ["Light Armor", "Medium Armor", "Shields", "Simple Weapons", "Martial Weapons"],
+  Ranger: ["Light Armor", "Medium Armor", "Shields", "Simple Weapons", "Martial Weapons"],
+  Rogue: ["Light Armor"],
   Sorcerer: [],
-  Warlock: ["Light Armour", "Simple Weapons"],
+  Warlock: ["Light Armor", "Simple Weapons"],
   Wizard: []
 };
 
@@ -324,21 +324,21 @@ const MULTICLASS_SKILL_COUNTS: Record<string, number> = {
 
 const SUBCLASS_PROFICIENCIES: Record<string, Record<string, string[]>> = {
   Bard: {
-    "College of Swords": ["Medium Armour", "Scimitars"],
-    "College of Valour": ["Medium Armour", "Shields", "Martial Weapons"]
+    "College of Swords": ["Medium Armor", "Scimitars"],
+    "College of Valor": ["Medium Armor", "Shields", "Martial Weapons"]
   },
   Cleric: {
     "Death Domain": ["Martial Weapons"],
-    Life: ["Heavy Armour"],
-    Nature: ["Heavy Armour"],
-    Tempest: ["Heavy Armour", "Martial Weapons"],
-    War: ["Heavy Armour", "Martial Weapons"]
+    Life: ["Heavy Armor"],
+    Nature: ["Heavy Armor"],
+    Tempest: ["Heavy Armor", "Martial Weapons"],
+    War: ["Heavy Armor", "Martial Weapons"]
   },
   Warlock: {
-    Hexblade: ["Medium Armour", "Shields", "Martial Weapons"]
+    Hexblade: ["Medium Armor", "Shields", "Martial Weapons"]
   },
   Wizard: {
-    Bladesinging: ["Light Armour", "Daggers", "Longswords", "Rapiers", "Scimitars", "Shortswords", "Sickles"]
+    Bladesinging: ["Light Armor", "Daggers", "Longswords", "Rapiers", "Scimitars", "Shortswords", "Sickles"]
   }
 };
 
@@ -359,19 +359,19 @@ const SUBCLASS_LABELS: Record<string, string> = {
   Rogue: "Rogue Subclass", Sorcerer: "Sorcerer Subclass", Warlock: "Warlock Patron", Wizard: "Wizard School"
 };
 
-// Armour a character gets from its starting (first) class.
-const CLASS_ARMOUR: Record<string, string[]> = {
-  Barbarian: ["Light Armour", "Medium Armour", "Shields"],
-  Bard: ["Light Armour"],
-  Cleric: ["Light Armour", "Medium Armour", "Shields"],
-  Druid: ["Light Armour", "Medium Armour", "Shields"],
-  Fighter: ["Light Armour", "Medium Armour", "Heavy Armour", "Shields"],
+// Armor a character gets from its starting (first) class.
+const CLASS_ARMOR: Record<string, string[]> = {
+  Barbarian: ["Light Armor", "Medium Armor", "Shields"],
+  Bard: ["Light Armor"],
+  Cleric: ["Light Armor", "Medium Armor", "Shields"],
+  Druid: ["Light Armor", "Medium Armor", "Shields"],
+  Fighter: ["Light Armor", "Medium Armor", "Heavy Armor", "Shields"],
   Monk: [],
-  Paladin: ["Light Armour", "Medium Armour", "Heavy Armour", "Shields"],
-  Ranger: ["Light Armour", "Medium Armour", "Shields"],
-  Rogue: ["Light Armour"],
+  Paladin: ["Light Armor", "Medium Armor", "Heavy Armor", "Shields"],
+  Ranger: ["Light Armor", "Medium Armor", "Shields"],
+  Rogue: ["Light Armor"],
   Sorcerer: [],
-  Warlock: ["Light Armour"],
+  Warlock: ["Light Armor"],
   Wizard: []
 };
 
@@ -388,24 +388,24 @@ const FEAT_CHOICES: Record<string, string[]> = {
   "Resilient": ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"]
 };
 
-// Armour feats need the armour below them, and are pointless if you already have what they grant.
-const FEAT_ARMOUR_RULES: Record<string, {requires?: string; grants?: string}> = {
-  "Lightly Armoured": {grants: "Light Armour"},
-  "Moderately Armoured": {requires: "Light Armour", grants: "Medium Armour"},
-  "Heavily Armoured": {requires: "Medium Armour", grants: "Heavy Armour"},
-  "Medium Armour Master": {requires: "Medium Armour"},
-  "Heavy Armour Master": {requires: "Heavy Armour"}
+// Armor feats need the armor below them, and are pointless if you already have what they grant.
+const FEAT_ARMOR_RULES: Record<string, {requires?: string; grants?: string}> = {
+  "Lightly Armored": {grants: "Light Armor"},
+  "Moderately Armored": {requires: "Light Armor", grants: "Medium Armor"},
+  "Heavily Armored": {requires: "Medium Armor", grants: "Heavy Armor"},
+  "Medium Armor Master": {requires: "Medium Armor"},
+  "Heavy Armor Master": {requires: "Heavy Armor"}
 };
 
 // BG3 has no pact or cantrip prerequisites; Agonising and Repelling Blast are only offered here
 // when the warlock knows Eldritch Blast, since they do nothing without it.
 const INVOCATIONS: {name: string; level: number; needsEldritchBlast?: boolean}[] = [
   {name: "Agonising Blast", level: 2, needsEldritchBlast: true},
-  {name: "Armour of Shadows", level: 2},
+  {name: "Armor of Shadows", level: 2},
   {name: "Beast Speech", level: 2},
   {name: "Beguiling Influence", level: 2},
   {name: "Devil's Sight", level: 2},
-  {name: "Fiendish Vigour", level: 2},
+  {name: "Fiendish Vigor", level: 2},
   {name: "Mask of Many Faces", level: 2},
   {name: "One with Shadows", level: 2},
   {name: "Repelling Blast", level: 2, needsEldritchBlast: true},
@@ -465,20 +465,20 @@ const STARTING_MAGIC: Record<string, {cantrips: string[]; cantripCount: number; 
     cantripCount: 4,
     cantrips: ["Acid Splash", "Blade Ward", "Bone Chill", "Booming Blade", "Bursting Sinew", "Dancing Lights", "Fire Bolt", "Friends", "Light", "Mage Hand", "Minor Illusion", "Poison Spray", "Ray of Frost", "Shocking Grasp", "True Strike"],
     spellCount: 2,
-    spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Colour Spray", "Disguise Self", "Enhance Leap", "Expeditious Retreat", "False Life", "Feather Fall", "Fog Cloud", "Ice Knife", "Mage Armour", "Magic Missile", "Ray of Sickness", "Shield", "Sleep", "Thunderwave", "Witch Bolt"]
+    spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Color Spray", "Disguise Self", "Enhance Leap", "Expeditious Retreat", "False Life", "Feather Fall", "Fog Cloud", "Ice Knife", "Mage Armor", "Magic Missile", "Ray of Sickness", "Shield", "Sleep", "Thunderwave", "Witch Bolt"]
   },
   Warlock: {
     cantripCount: 2,
     cantrips: ["Blade Ward", "Bone Chill", "Booming Blade", "Eldritch Blast", "Friends", "Mage Hand", "Minor Illusion", "Poison Spray", "Toll the Dead", "True Strike"],
     spellCount: 2,
-    spells: ["Armour of Agathys", "Arms of Hadar", "Charm Person", "Expeditious Retreat", "Hellish Rebuke", "Hex", "Protection from Evil and Good", "Witch Bolt"]
+    spells: ["Armor of Agathys", "Arms of Hadar", "Charm Person", "Expeditious Retreat", "Hellish Rebuke", "Hex", "Protection from Evil and Good", "Witch Bolt"]
   },
   Wizard: {
     cantripCount: 3,
     cantrips: ["Acid Splash", "Blade Ward", "Bone Chill", "Booming Blade", "Bursting Sinew", "Dancing Lights", "Fire Bolt", "Friends", "Light", "Mage Hand", "Minor Illusion", "Poison Spray", "Ray of Frost", "Shocking Grasp", "Toll the Dead", "True Strike"],
     spellCount: 6,
     spellLabel: "Level 1 Spellbook Picks",
-    spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Colour Spray", "Disguise Self", "Enhance Leap", "Expeditious Retreat", "False Life", "Feather Fall", "Find Familiar", "Fog Cloud", "Grease", "Ice Knife", "Longstrider", "Mage Armour", "Magic Missile", "Protection from Evil and Good", "Ray of Sickness", "Shield", "Sleep", "Tasha's Hideous Laughter", "Thunderwave", "Witch Bolt"]
+    spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Color Spray", "Disguise Self", "Enhance Leap", "Expeditious Retreat", "False Life", "Feather Fall", "Find Familiar", "Fog Cloud", "Grease", "Ice Knife", "Longstrider", "Mage Armor", "Magic Missile", "Protection from Evil and Good", "Ray of Sickness", "Shield", "Sleep", "Tasha's Hideous Laughter", "Thunderwave", "Witch Bolt"]
   }
 };
 
