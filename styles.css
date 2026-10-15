@@ -316,6 +316,53 @@ button.primary:hover {
   margin: 0;
 }
 
+/* Copy fallback */
+
+.copy-box {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  padding: 12px 14px 14px;
+  color: var(--control-ink);
+  background: var(--control-bg);
+}
+
+.copy-box[hidden] {
+  display: none;
+}
+
+.copy-box-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.copy-box h2 {
+  margin: 0;
+  color: var(--page-ink);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.copy-box .settings-note {
+  margin: 0;
+}
+
+.copy-box textarea {
+  width: 100%;
+  border: 1px solid var(--control-border-hover);
+  border-radius: 4px;
+  padding: 8px 10px;
+  color: var(--control-ink);
+  background: var(--page);
+  font: 14.5px/1.4 var(--font);
+  resize: vertical;
+}
+
 /* Saved builds */
 
 .saved-strip {
@@ -407,6 +454,30 @@ button.primary:hover {
   font: inherit;
 }
 
+.saved-confirm {
+  align-self: center;
+  padding: 7px 10px;
+  color: var(--control-ink);
+  font-size: 15.5px;
+  white-space: nowrap;
+}
+
+.saved-confirm-yes,
+.saved-confirm-no {
+  border: 0;
+  border-left: 1px solid var(--control-border);
+  border-radius: 0;
+  padding: 0 12px;
+  background: transparent;
+}
+
+.saved-confirm-yes {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.saved-confirm-yes:hover,
+.saved-confirm-no:hover,
 .saved-load:hover,
 .saved-rename:hover,
 .saved-delete:hover {

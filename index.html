@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;500;700&family=Alegreya+SC:wght@500;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=7">
+<link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
 
@@ -27,6 +27,15 @@
 
   <section class="settings-panel" id="settingsPanel" aria-label="Settings" hidden></section>
 
+  <section class="copy-box" id="copyBox" aria-labelledby="copyHeading" hidden>
+    <div class="copy-box-head">
+      <h2 id="copyHeading">Copy this</h2>
+      <button type="button" id="copyClose">Close</button>
+    </div>
+    <p class="settings-note">Your browser blocked automatic copying. The text below is selected, so press Ctrl+C (or long-press and copy on a phone).</p>
+    <textarea id="copyField" readonly></textarea>
+  </section>
+
   <section class="saved-strip" id="savedStrip" aria-labelledby="savedHeading" hidden>
     <h2 class="saved-heading" id="savedHeading">Saved builds</h2>
     <ul class="saved-list" id="savedCharacters"></ul>
@@ -42,8 +51,8 @@
 
 </main>
 
-<script src="js/data.js?v=7" defer></script>
-<script src="js/generator.js?v=7" defer></script>
-<script src="js/app.js?v=7" defer></script>
+<script src="js/data.js?v=8" defer></script>
+<script src="js/generator.js?v=8" defer></script>
+<script src="js/app.js?v=8" defer></script>
 </body>
 </html>

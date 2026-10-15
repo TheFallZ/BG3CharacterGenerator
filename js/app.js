@@ -363,10 +363,35 @@ function renameCharacter(id, name) {
     renderSavedCharacters();
     document.querySelector(`.saved-item[data-id="${CSS.escape(id)}"] .saved-rename`)?.focus();
 }
-function deleteCharacter(id) {
+// Asks on the page rather than with confirm(), which some in-app browsers block.
+function askToDelete(id) {
     const item = getSavedCharacters().find(saved => saved.id === id);
-    if (!item || !confirm(`Delete "${savedTitle(item)}"?`))
+    const li = document.querySelector(`.saved-item[data-id="${CSS.escape(id)}"]`);
+    if (!item || !li)
         return;
+    const question = document.createElement("span");
+    question.className = "saved-confirm";
+    question.textContent = `Delete "${savedTitle(item)}"?`;
+    const yes = document.createElement("button");
+    yes.className = "saved-confirm-yes";
+    yes.dataset.confirmDelete = id;
+    yes.textContent = "Delete";
+    const no = document.createElement("button");
+    no.className = "saved-confirm-no";
+    no.dataset.cancelDelete = id;
+    no.textContent = "Keep";
+    li.replaceChildren(question, yes, no);
+    li.addEventListener("keydown", event => {
+        if (event.key === "Escape")
+            cancelDelete(id);
+    });
+    no.focus();
+}
+function cancelDelete(id) {
+    renderSavedCharacters();
+    document.querySelector(`.saved-item[data-id="${CSS.escape(id)}"] .saved-delete`)?.focus();
+}
+function deleteCharacter(id) {
     try {
         const saved = getSavedCharacters().filter(saved => saved.id !== id);
         localStorage.setItem(SAVED_CHARACTERS_KEY, JSON.stringify(saved));
@@ -514,12 +539,26 @@ async function loadSharedBuild() {
 async function copyToClipboard(text, message) {
     try {
         await navigator.clipboard.writeText(text);
+        hideCopyBox();
         setSaveNotice(message);
     }
     catch {
-        // Clipboard access can be blocked; let the visitor copy it by hand.
-        prompt("Copy this:", text);
+        // Clipboard access can be blocked; show the text on the page to copy by hand.
+        showCopyBox(text);
     }
+}
+function showCopyBox(text) {
+    const box = document.getElementById("copyBox");
+    const field = document.getElementById("copyField");
+    field.value = text;
+    field.rows = Math.min(12, text.split("\n").length + 1);
+    box.hidden = false;
+    setSaveNotice("");
+    field.focus();
+    field.select();
+}
+function hideCopyBox() {
+    document.getElementById("copyBox").hidden = true;
 }
 async function copyShareLink() {
     await copyToClipboard(await shareLink(), "Build link copied.");
@@ -640,6 +679,7 @@ document.getElementById("settingsPanel").addEventListener("click", event => {
     renderCards();
 });
 window.addEventListener("hashchange", loadSharedBuild);
+document.getElementById("copyClose").addEventListener("click", hideCopyBox);
 document.getElementById("savedCharacters").addEventListener("click", event => {
     const button = event.target.closest("button");
     if (button?.dataset.load)
@@ -647,7 +687,11 @@ document.getElementById("savedCharacters").addEventListener("click", event => {
     else if (button?.dataset.rename)
         startRename(button.dataset.rename);
     else if (button?.dataset.delete)
-        deleteCharacter(button.dataset.delete);
+        askToDelete(button.dataset.delete);
+    else if (button?.dataset.confirmDelete)
+        deleteCharacter(button.dataset.confirmDelete);
+    else if (button?.dataset.cancelDelete)
+        cancelDelete(button.dataset.cancelDelete);
 });
 settings = loadSettings();
 renderSettings();
