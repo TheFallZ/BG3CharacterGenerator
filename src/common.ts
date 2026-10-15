@@ -366,9 +366,16 @@ async function buildText(build: Character, name: string | null): Promise<string>
   return lines.join("\n");
 }
 
+// Messages like "Build link copied." clear themselves after a few seconds.
+const NOTICE_SECONDS = 4;
+let noticeTimer: number | undefined;
+
 function setNotice(message: string): void {
   const notice = document.getElementById("notice");
-  if (notice) notice.textContent = message;
+  if (!notice) return;
+  clearTimeout(noticeTimer);
+  notice.textContent = message;
+  if (message) noticeTimer = window.setTimeout(() => { notice.textContent = ""; }, NOTICE_SECONDS * 1000);
 }
 
 async function copyToClipboard(text: string, message: string): Promise<void> {

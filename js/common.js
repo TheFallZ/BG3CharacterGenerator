@@ -346,10 +346,17 @@ async function buildText(build, name) {
     lines.push(`[Open this build in the BG3 Character Generator](${await buildLink(build, name)})`);
     return lines.join("\n");
 }
+// Messages like "Build link copied." clear themselves after a few seconds.
+const NOTICE_SECONDS = 4;
+let noticeTimer;
 function setNotice(message) {
     const notice = document.getElementById("notice");
-    if (notice)
-        notice.textContent = message;
+    if (!notice)
+        return;
+    clearTimeout(noticeTimer);
+    notice.textContent = message;
+    if (message)
+        noticeTimer = window.setTimeout(() => { notice.textContent = ""; }, NOTICE_SECONDS * 1000);
 }
 async function copyToClipboard(text, message) {
     try {
