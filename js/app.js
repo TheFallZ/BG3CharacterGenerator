@@ -18,7 +18,31 @@ let lockedCards = loadLockedCards();
 let rolledCards = new Set();
 const SETTINGS_KEY = "bg3-character-generator-settings";
 const SITE_URL = "https://thefallz.github.io/BG3CharacterGenerator/";
-const SHARE_PREFIX = "#build=";
+// Share links look like "#build=<code>", or "#Karlach-Tank&build=<code>" for a named build.
+const SHARE_PATTERN = /^#(?:([^&]*)&)?build=(.+)$/;
+const MAX_NAME_LENGTH = 60;
+// The build on screen keeps a name while it is a saved build or came from a named link;
+// any roll makes it a new, unnamed build.
+let currentSavedId = null;
+let sharedName = null;
+function currentBuildName() {
+    if (currentSavedId)
+        return getSavedCharacters().find(item => item.id === currentSavedId)?.name ?? null;
+    return sharedName;
+}
+// Spaces become hyphens so the name reads cleanly in the link; real hyphens stay encoded.
+function nameToSlug(name) {
+    return encodeURIComponent(name.replace(/-/g, "%2D")).replace(/%252D/g, "%2D").replace(/%20/g, "-");
+}
+function slugToName(slug) {
+    try {
+        const name = decodeURIComponent(slug.replace(/-/g, "%20")).trim().slice(0, MAX_NAME_LENGTH);
+        return name || null;
+    }
+    catch {
+        return null;
+    }
+}
 // Story cards a visitor can hide; the build cards always show.
 const HIDEABLE_CARDS = [
     { key: "romance", label: "Romance" },
@@ -181,6 +205,8 @@ function rollCards(keys) {
         character.feats = rollFeats(featValues());
     }
     rolledCards = targets;
+    currentSavedId = null;
+    sharedName = null;
     clearSharedBuildLink();
     renderCards();
 }
@@ -286,13 +312,18 @@ function saveCharacter() {
     const saved = getSavedCharacters();
     const savedAt = new Date();
     const id = `${savedAt.getTime()}-${Math.random().toString(36).slice(2, 8)}`;
+    // A build opened from a named link keeps its name when saved.
+    const name = currentBuildName();
     saved.unshift({
         id,
         label: `${describeCharacter(character)} · ${savedAt.toLocaleString()}`,
+        ...(name ? { name } : {}),
         character: structuredClone(character)
     });
     try {
         localStorage.setItem(SAVED_CHARACTERS_KEY, JSON.stringify(saved));
+        currentSavedId = id;
+        sharedName = null;
         renderSavedCharacters();
         setSaveNotice("Character saved on this device.");
     }
@@ -307,6 +338,9 @@ function loadCharacter(id) {
     character = structuredClone(saved.character);
     if (!character.companionBuild)
         character.companionBuild = rollCompanionBuild(character.romance);
+    currentSavedId = id;
+    sharedName = null;
+    clearSharedBuildLink();
     rolledCards = new Set(cardOrder);
     renderCards();
     setSaveNotice("Saved character loaded.");
@@ -321,7 +355,7 @@ function startRename(id) {
     input.className = "saved-name-input";
     input.value = item.name ?? "";
     input.placeholder = describeCharacter(item.character);
-    input.maxLength = 60;
+    input.maxLength = MAX_NAME_LENGTH;
     input.setAttribute("aria-label", "Build name");
     load.replaceWith(input);
     li.querySelector(".saved-rename").hidden = true;
@@ -511,19 +545,21 @@ async function decodeBuild(code) {
 // Links point at this page when it's served over the web, and at the live site when opened from disk.
 async function shareLink() {
     const base = location.protocol.startsWith("http") ? location.origin + location.pathname : SITE_URL;
-    return base + SHARE_PREFIX + await encodeBuild(character);
+    const name = currentBuildName();
+    return `${base}#${name ? `${nameToSlug(name)}&` : ""}build=${await encodeBuild(character)}`;
 }
 // A new roll no longer matches the shared build in the address bar.
 function clearSharedBuildLink() {
-    if (!location.hash.startsWith(SHARE_PREFIX))
+    if (!SHARE_PATTERN.test(location.hash))
         return;
     history.replaceState(null, "", location.pathname + location.search);
     setSaveNotice("");
 }
 async function loadSharedBuild() {
-    if (!location.hash.startsWith(SHARE_PREFIX))
+    const match = SHARE_PATTERN.exec(location.hash);
+    if (!match)
         return false;
-    const shared = await decodeBuild(location.hash.slice(SHARE_PREFIX.length));
+    const shared = await decodeBuild(match[2]);
     if (!shared) {
         setSaveNotice("That build link couldn't be read.");
         return false;
@@ -531,9 +567,11 @@ async function loadSharedBuild() {
     character = shared;
     if (!character.companionBuild)
         character.companionBuild = rollCompanionBuild(character.romance);
+    currentSavedId = null;
+    sharedName = match[1] ? slugToName(match[1]) : null;
     rolledCards = new Set(cardOrder);
     renderCards();
-    setSaveNotice("Shared build loaded.");
+    setSaveNotice(sharedName ? `Shared build loaded: ${sharedName}` : "Shared build loaded.");
     return true;
 }
 async function copyToClipboard(text, message) {
@@ -565,7 +603,10 @@ async function copyShareLink() {
 }
 // Markdown-friendly text for Reddit and Discord: a bold heading per card and a bullet per entry.
 async function copyBuildText() {
-    const lines = [`**${describeCharacter(character)}**`, ""];
+    const name = currentBuildName();
+    const lines = name
+        ? [`**${name}**`, describeCharacter(character), ""]
+        : [`**${describeCharacter(character)}**`, ""];
     for (const key of visibleCards()) {
         lines.push(`**${definitions[key].title}**`, "");
         for (const entry of cardEntries(key)) {
