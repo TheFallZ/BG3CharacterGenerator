@@ -958,6 +958,44 @@ button.danger:hover {
   font-weight: 700;
 }
 
+/* Update banner: a slim notice at the top of the Generator after a release. */
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  border: 1px solid var(--control-border);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--page-ink);
+  background: var(--control-bg);
+  font-size: 15.5px;
+}
+
+.update-banner[hidden] {
+  display: none;
+}
+
+.update-banner p {
+  margin: 0;
+}
+
+.update-banner a {
+  color: var(--accent);
+}
+
+.update-banner button.text-button {
+  color: var(--page-ink);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.update-banner button.text-button:hover {
+  color: var(--accent);
+}
+
 /* Build title */
 
 .build-title {

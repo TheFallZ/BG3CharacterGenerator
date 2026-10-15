@@ -30,6 +30,8 @@ When you change `styles.css` or the scripts, bump the `?v=` number on their link
 - `src/settings.ts`: the Settings page (`settings/index.html`).
 - `about/index.html`: the About page. It's plain HTML and only loads the shared scripts for the header.
 - `whats-new/index.html`: the What's new page, also plain HTML. Add a section at the top for each release.
+
+For each release, add a section to the top of the What's new page, update the banner text in `index.html` (`#updateBanner`), and change `LATEST_UPDATE` in `src/home.ts` so visitors who dismissed the last banner see the new one.
 - `js/`: compiled output loaded by the pages. Do not edit it by hand; it is overwritten on every build.
 - `styles.css`: all styling. Colors are named tokens at the top of the file.
 

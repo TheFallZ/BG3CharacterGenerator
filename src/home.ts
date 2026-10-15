@@ -394,6 +394,29 @@ document.addEventListener("keydown", event => {
 });
 window.addEventListener("hashchange", loadSharedBuild);
 
+// The update banner shows until dismissed. Change LATEST_UPDATE with each release to show it again.
+const LATEST_UPDATE = "2026-10-big-update";
+const DISMISSED_UPDATE_KEY = "bg3-character-generator-dismissed-update";
+
+function showUpdateBanner(): void {
+  const banner = document.getElementById("updateBanner") as HTMLElement;
+  try {
+    banner.hidden = localStorage.getItem(DISMISSED_UPDATE_KEY) === LATEST_UPDATE;
+  } catch {
+    banner.hidden = false;
+  }
+}
+
+document.getElementById("dismissUpdate")!.addEventListener("click", () => {
+  (document.getElementById("updateBanner") as HTMLElement).hidden = true;
+  try {
+    localStorage.setItem(DISMISSED_UPDATE_KEY, LATEST_UPDATE);
+  } catch {
+    // It just shows again next visit.
+  }
+});
+showUpdateBanner();
+
 // A link wins; otherwise come back to this tab's last build, or roll a new one.
 loadSharedBuild().then(loaded => {
   if (loaded) return;
