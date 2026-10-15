@@ -313,26 +313,64 @@ button.primary:hover {
 .settings-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 14px 22px;
+  gap: 12px;
   margin-bottom: 14px;
+}
+
+/* Each kind of setting gets its own box. */
+.settings-section {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
   border: 1px solid var(--control-border);
   border-radius: 8px;
-  padding: 12px 14px 14px;
+  padding: 12px 16px 14px;
   color: var(--control-ink);
   background: var(--control-bg);
 }
 
-@media (min-width: 561px) {
-  .settings-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.settings-section h2 {
+  margin: 0;
+  border-bottom: 1px solid var(--control-border);
+  padding-bottom: 6px;
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
 }
 
+.settings-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px 24px;
+}
+
+.settings-intro {
+  margin: 0;
+  padding: 0;
+  color: var(--page-ink);
+  font-size: 15px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (min-width: 561px) {
+  .settings-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Character settings take the left half; companions and cards share the right. */
 @media (min-width: 901px) {
-  .settings-panel { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  /* The class and race lists get half the row each, under the four short groups. */
-  .settings-list {
-    grid-column: span 2;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+  .settings-panel { grid-template-columns: 2fr 1fr 1fr; }
+  .settings-pools { grid-column: 1 / -1; }
+  .settings-pools .settings-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 .settings-group {
@@ -352,6 +390,13 @@ button.primary:hover {
   font-family: var(--font-display);
   font-size: 17px;
   font-weight: 600;
+}
+
+.settings-group legend.settings-intro {
+  margin-bottom: 4px;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 400;
 }
 
 .settings-list {
@@ -441,8 +486,7 @@ button.primary:hover {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px 14px;
-  border-top: 1px solid var(--control-border);
-  padding-top: 10px;
+  padding: 2px 2px 0;
 }
 
 .settings-foot .settings-note {

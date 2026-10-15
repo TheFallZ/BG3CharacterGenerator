@@ -8,37 +8,55 @@ function checkboxHTML(name: string, value: string, label: string, checked: boole
 
 function renderSettings(): void {
   const panel = document.getElementById("settingsPanel") as HTMLElement;
+  // Grouped by purpose: how your character rolls, who comes along, what can be rolled, and what's shown.
   panel.innerHTML = `
-    <fieldset class="settings-group">
-      <legend>Multiclass</legend>
-      <div class="segmented">
-        ${MULTICLASS_MODES.map(({mode, label}) => `<label><input type="radio" name="multiclass" value="${mode}"${settings.multiclass === mode ? " checked" : ""}><span>${label}</span></label>`).join("")}
+    <section class="settings-section settings-character">
+      <h2>Your character</h2>
+      <div class="settings-row">
+        <fieldset class="settings-group">
+          <legend>Multiclass</legend>
+          <div class="segmented">
+            ${MULTICLASS_MODES.map(({mode, label}) => `<label><input type="radio" name="multiclass" value="${mode}"${settings.multiclass === mode ? " checked" : ""}><span>${label}</span></label>`).join("")}
+          </div>
+          <label class="check"><input type="checkbox" name="tripleClass"${settings.tripleClass ? " checked" : ""}> Allow triple classing</label>
+          <p class="settings-note">Sometimes rolls a multiclass build ${data.settings.multiclassChance}% of the time. Triple classing gives ${data.settings.tripleClassChance}% of those a third class.</p>
+        </fieldset>
+        <fieldset class="settings-group">
+          <legend>Origin</legend>
+          <label class="check"><input type="checkbox" name="originCharacters"${settings.originCharacters ? " checked" : ""}> Allow origin characters</label>
+          <p class="settings-note">Allows you to play as an origin character instead of only custom characters.</p>
+        </fieldset>
       </div>
-      <label class="check"><input type="checkbox" name="tripleClass"${settings.tripleClass ? " checked" : ""}> Allow triple classing</label>
-      <p class="settings-note">Sometimes rolls a multiclass build ${data.settings.multiclassChance}% of the time. Triple classing gives ${data.settings.tripleClassChance}% of those a third class.</p>
-    </fieldset>
-    <fieldset class="settings-group">
-      <legend>Origin</legend>
-      <label class="check"><input type="checkbox" name="originCharacters"${settings.originCharacters ? " checked" : ""}> Allow origin characters</label>
-      <p class="settings-note">Allows you to play as an origin character instead of only custom characters.</p>
-    </fieldset>
-    <fieldset class="settings-group">
-      <legend>Companions</legend>
-      <label class="check"><input type="checkbox" name="party"${settings.party ? " checked" : ""}> Generate a full party</label>
-      <p class="settings-note">Rolls three companions instead of one, including your romance when there is one.</p>
-    </fieldset>
-    <fieldset class="settings-group">
-      <legend>Show cards</legend>
-      ${HIDEABLE_CARDS.map(({key, label}) => checkboxHTML("showCard", key, label, !settings.hiddenCards.includes(key))).join("")}
-    </fieldset>
-    <fieldset class="settings-group settings-list">
-      <legend>Classes</legend>
-      ${Object.keys(data.classes).map(name => checkboxHTML("class", name, name, !settings.excludedClasses.includes(name))).join("")}
-    </fieldset>
-    <fieldset class="settings-group settings-list">
-      <legend>Races</legend>
-      ${Object.keys(data.races).map(name => checkboxHTML("race", name, name, !settings.excludedRaces.includes(name))).join("")}
-    </fieldset>
+    </section>
+    <section class="settings-section">
+      <h2>Companions</h2>
+      <fieldset class="settings-group">
+        <legend class="visually-hidden">Companions</legend>
+        <label class="check"><input type="checkbox" name="party"${settings.party ? " checked" : ""}> Generate a full party</label>
+        <p class="settings-note">Rolls three companions instead of one, including your romance when there is one.</p>
+      </fieldset>
+    </section>
+    <section class="settings-section">
+      <h2>Cards</h2>
+      <fieldset class="settings-group">
+        <legend class="settings-intro">Show these cards on the Generator</legend>
+        ${HIDEABLE_CARDS.map(({key, label}) => checkboxHTML("showCard", key, label, !settings.hiddenCards.includes(key))).join("")}
+      </fieldset>
+    </section>
+    <section class="settings-section settings-pools">
+      <h2>Classes and races</h2>
+      <p class="settings-intro">Untick anything you don't want to roll for your character.</p>
+      <div class="settings-row">
+        <fieldset class="settings-group settings-list">
+          <legend>Classes</legend>
+          ${Object.keys(data.classes).map(name => checkboxHTML("class", name, name, !settings.excludedClasses.includes(name))).join("")}
+        </fieldset>
+        <fieldset class="settings-group settings-list">
+          <legend>Races</legend>
+          ${Object.keys(data.races).map(name => checkboxHTML("race", name, name, !settings.excludedRaces.includes(name))).join("")}
+        </fieldset>
+      </div>
+    </section>
     <div class="settings-foot">
       <p class="settings-note">Settings save automatically. Changes to what can be rolled apply the next time you generate or reroll.</p>
       <button type="button" id="resetSettings">Reset to defaults</button>
