@@ -187,6 +187,11 @@ main {
   font-weight: 700;
 }
 
+/* A heading with nothing under it still keeps its distance from the content. */
+.page-head + :not(.page-intro) {
+  margin-top: 12px;
+}
+
 .page-intro {
   margin: 2px 0 14px;
   color: var(--page-ink);
