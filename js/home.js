@@ -1,17 +1,35 @@
 "use strict";
 // The Generator page: rolling, locks, saving and sharing the build on screen.
 const ROLLS = {
+    origin: () => rollOrigin(),
+    abilities: rollAbilities,
     darkUrge: rollDarkUrge,
     race: rollRace,
     class: rollClass,
     feats: () => rollFeats(),
     background: rollBackground,
     romance: rollRomance,
-    companionBuild: rollCompanionBuild
+    companionBuild: () => rollCompanions()
 };
-// Rolled in dependency order: background avoids racial skills, class avoids both.
-const ROLL_ORDER = ["darkUrge", "race", "background", "class", "feats", "romance", "companionBuild"];
+// Rolled in dependency order: the origin can fix race and background, background avoids racial
+// skills, class avoids both, and ability scores follow the class.
+const ROLL_ORDER = ["origin", "darkUrge", "race", "background", "class", "abilities", "feats", "romance", "companionBuild"];
 const CLASS_DIVIDERS = ["", "Second class", "Third class"];
+const COMPANION_DIVIDERS = ["", "Second companion", "Third companion"];
+function rollCompanions() {
+    return settings.party ? rollParty(character.romance) : rollCompanionBuild(character.romance);
+}
+// Race and background can't be rerolled while the origin sets them.
+function isSetByOrigin(key) {
+    if (key === "race")
+        return !!originProfile();
+    if (key === "background")
+        return !!originProfile() || character.origin === DARK_URGE_ORIGIN;
+    return false;
+}
+function currentEntry() {
+    return character.class ? { character: structuredClone(character), savedId: currentSavedId, sharedName } : null;
+}
 let lockedCards = loadLockedCards();
 let rolledCards = new Set();
 // The build on screen keeps a name while it is a saved build or came from a named link;
@@ -58,10 +76,18 @@ function rollCards(keys) {
     // A locked card with nothing to keep yet (first page load) still gets rolled.
     const targets = new Set(keys.filter(key => !isLocked(key) || character[key] === undefined));
     const keptClassSkills = targets.has("class") ? [] : getClassSkillProficiencies();
+    pushHistory(currentEntry());
     for (const key of ROLL_ORDER) {
         if (!targets.has(key))
             continue;
-        if (key === "race") {
+        if (key === "origin") {
+            const keptNames = [
+                ...(!targets.has("romance") && character.romance ? [character.romance] : []),
+                ...(!targets.has("companionBuild") ? entryText(character.companionBuild, "Companion") : [])
+            ];
+            character.origin = rollOrigin(!targets.has("race") && !!character.race, !targets.has("background") && !!character.background, keptNames);
+        }
+        else if (key === "race") {
             const keptBackgroundSkills = targets.has("background") ? [] : getBackgroundSkillProficiencies();
             character.race = rollRaceAvoiding([...keptClassSkills, ...keptBackgroundSkills]);
         }
@@ -69,7 +95,7 @@ function rollCards(keys) {
             character.background = rollBackground(keptClassSkills);
         }
         else if (key === "companionBuild") {
-            character.companionBuild = rollCompanionBuild(character.romance);
+            character.companionBuild = rollCompanions();
         }
         else if (key === "feats") {
             character.feats = rollFeats();
@@ -83,6 +109,7 @@ function rollCards(keys) {
         character.feats = rollFeats(featValues());
     }
     rolledCards = targets;
+    setNotice("");
     currentSavedId = null;
     sharedName = null;
     clearSharedBuildLink();
@@ -90,12 +117,14 @@ function rollCards(keys) {
 }
 // Feats follow the class levels, and race and class decide which armor feats are allowed.
 function reroll(key) {
-    if (key === "race")
-        rollCards(["race", "background", "class", "feats"]);
+    if (key === "origin")
+        rollCards(["origin", "race", "background", "class", "abilities", "feats", "romance", "companionBuild"]);
+    else if (key === "race")
+        rollCards(["race", "background", "class", "abilities", "feats"]);
     else if (key === "background")
-        rollCards(["background", "class", "feats"]);
+        rollCards(["background", "class", "abilities", "feats"]);
     else if (key === "class")
-        rollCards(["class", "feats"]);
+        rollCards(["class", "abilities", "feats"]);
     else if (key === "romance")
         rollCards(["romance", "companionBuild"]);
     else
@@ -107,8 +136,13 @@ function generateAll() {
 // Puts a build on screen that came from somewhere else: a saved build, a link, or this tab's last visit.
 function showBuild(build, savedId, name) {
     character = build;
+    // Builds from before these cards existed get filled in.
+    if (!character.origin)
+        character.origin = CUSTOM_ORIGIN;
+    if (!character.abilities)
+        character.abilities = rollAbilities();
     if (!character.companionBuild)
-        character.companionBuild = rollCompanionBuild(character.romance);
+        character.companionBuild = rollCompanions();
     currentSavedId = savedId;
     sharedName = name;
     rolledCards = new Set(cardOrder);
@@ -153,9 +187,18 @@ async function loadSharedBuild() {
         setNotice("That build link couldn't be read.");
         return false;
     }
+    pushHistory(currentEntry());
     showBuild(shared, null, match[1] ? slugToName(match[1]) : null);
     setNotice("Shared build loaded.");
     return true;
+}
+function undo() {
+    const previous = popHistory();
+    if (!previous)
+        return;
+    clearSharedBuildLink();
+    showBuild(previous.character, previous.savedId, previous.sharedName);
+    setNotice("Went back to the previous build.");
 }
 function setShareMenu(open) {
     document.getElementById("shareMenu").hidden = !open;
@@ -195,28 +238,37 @@ function entryHTML(entry) {
     <div class="entry-value">${htmlValue}</div>
   </div>`;
 }
-// Grid areas for the visible cards, so hiding a story card doesn't leave a gap.
+// Grid areas for the visible cards, so hiding a card doesn't leave a gap.
+// Origin, tadpole and romance stack beside the companion card, which Romance picks.
 function gridAreas(columns, visible) {
-    const story = ["darkUrge", "romance"].filter(key => visible.includes(key));
+    const story = ["origin", "darkUrge", "romance"].filter(key => visible.includes(key));
     const companion = visible.includes("companionBuild");
+    const abilities = visible.includes("abilities");
     const row = (...cells) => `"${cells.join(" ")}"`;
     const rows = [];
     if (columns === 2) {
-        rows.push(row("class", "class"), row("race", "background"), row("feats", "feats"));
-        if (story.length === 2)
-            rows.push(row(story[0], story[1]));
-        else if (story.length === 1)
-            rows.push(row(story[0], story[0]));
+        rows.push(row("class", "class"));
+        if (abilities)
+            rows.push(row("abilities", "abilities"));
+        rows.push(row("race", "background"), row("feats", "feats"));
+        for (let i = 0; i < story.length; i += 2)
+            rows.push(row(story[i], story[i + 1] ?? story[i]));
         if (companion)
             rows.push(row("companionBuild", "companionBuild"));
         return rows.join(" ");
     }
-    rows.push(row("class", "class", "class"), row("race", "background", "feats"));
+    rows.push(row("class", "class", "class"));
+    if (abilities)
+        rows.push(row("abilities", "abilities", "abilities"));
+    rows.push(row("race", "background", "feats"));
     if (companion) {
         if (story.length)
             story.forEach(key => rows.push(row(key, "companionBuild", "companionBuild")));
         else
             rows.push(row("companionBuild", "companionBuild", "companionBuild"));
+    }
+    else if (story.length === 3) {
+        rows.push(row(story[0], story[1], story[2]));
     }
     else if (story.length === 2) {
         rows.push(row(story[0], story[0], story[1]));
@@ -226,8 +278,24 @@ function gridAreas(columns, visible) {
     }
     return rows.join(" ");
 }
+// Ability scores as six boxes with their modifiers, then the racial bonuses.
+function abilitiesHTML() {
+    const entries = normalizeResult(character.abilities);
+    const boxes = entries.filter(entry => ABILITIES.includes(entry.label)).map(entry => {
+        const score = Number(entry.value);
+        return `<div class="ability">
+      <span class="ability-name">${escapeHTML(entry.label.slice(0, 3).toUpperCase())}</span>
+      <span class="ability-score">${escapeHTML(entry.value)}</span>
+      <span class="ability-mod">${score ? abilityModifier(score) : ""}</span>
+    </div>`;
+    }).join("");
+    const bonus = entries.find(entry => entry.label === "Racial bonuses");
+    return `<div class="abilities">${boxes}</div>
+    <p class="abilities-note">Level 1 point buy${bonus ? ` with ${escapeHTML(bonus.value)}` : ""}. Ability Improvement feats come on top.</p>`;
+}
 function renderCards() {
     renderBuildTitle();
+    document.getElementById("undo").disabled = !loadHistory().length;
     storeCurrentBuild({ character, savedId: currentSavedId, sharedName });
     const host = document.getElementById("cards");
     const visible = visibleCards();
@@ -235,7 +303,7 @@ function renderCards() {
     host.style.setProperty("--areas-3", gridAreas(3, visible));
     let rollIndex = 0;
     host.innerHTML = visible.map(key => {
-        const title = CARD_TITLES[key];
+        const title = cardTitle(character, key);
         const value = character[key];
         const classCount = key === "class" ? normalizeResult(value).filter(entry => entry.label === "Class").length : 0;
         const isMulticlass = classCount > 1;
@@ -251,20 +319,27 @@ function renderCards() {
             classes.push("is-locked");
         if (rolledCards.has(key))
             classes.push("card-rolled");
+        // Each later class, or each later party member, starts after a divider.
         let classIndex = 0;
-        const content = buildCardEntries(character, key).map(entry => {
+        let memberIndex = 0;
+        const content = key === "abilities" ? abilitiesHTML() : buildCardEntries(character, key).map(entry => {
             if (key === "class" && entry.label === "Class" && classIndex++ > 0) {
                 return `<div class="class-divider">${CLASS_DIVIDERS[classIndex - 1] ?? "Next class"}</div>${entryHTML({ ...entry, label: "" })}`;
             }
+            if (key === "companionBuild" && (entry.label === "Companion" || entry.label === "Hireling") && memberIndex++ > 0) {
+                return `<div class="class-divider">${COMPANION_DIVIDERS[memberIndex - 1] ?? "Next companion"}</div>${entryHTML(entry)}`;
+            }
             return entryHTML(entry);
         }).join("");
+        const setByOrigin = isSetByOrigin(key);
+        const rerollLabel = setByOrigin ? `${title} is set by your origin` : `Reroll ${title}`;
         return `<article class="${classes.join(" ")}"${rolledCards.has(key) ? ` style="--roll-index: ${rollIndex++}"` : ""}>
       <div class="card-head">
         <h2>${escapeHTML(title)}</h2>
         ${isMulticlass ? `<span class="multiclass-badge">${classCount > 2 ? "Triple class" : "Multiclass"}</span>` : ""}
         <div class="card-actions">
           <button class="text-button lock-button" data-lock="${key}" aria-pressed="${locked}" aria-label="${escapeHTML(lockLabel)}" title="${escapeHTML(lockLabel)}"${lockedByCompanion ? " disabled" : ""}>${locked ? "Locked" : "Lock"}</button>
-          <button class="text-button reroll-button" data-reroll="${key}" aria-label="Reroll ${escapeHTML(title)}"${locked ? " disabled" : ""}>Reroll</button>
+          <button class="text-button reroll-button" data-reroll="${key}" aria-label="${escapeHTML(rerollLabel)}" title="${escapeHTML(rerollLabel)}"${locked || setByOrigin ? " disabled" : ""}>Reroll</button>
         </div>
       </div>
       <div class="card-body">${content}</div>
@@ -279,6 +354,7 @@ function renderCards() {
 }
 document.getElementById("generateAll").addEventListener("click", generateAll);
 document.getElementById("saveCharacter").addEventListener("click", saveCharacter);
+document.getElementById("undo").addEventListener("click", undo);
 document.getElementById("shareToggle").addEventListener("click", () => {
     setShareMenu(document.getElementById("shareMenu").hidden === true);
 });

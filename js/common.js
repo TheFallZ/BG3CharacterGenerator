@@ -6,14 +6,19 @@ const SETTINGS_KEY = "bg3-character-generator-settings";
 const LOCKED_CARDS_KEY = "bg3-character-generator-locked-cards";
 // The build on the Generator page, kept for this tab so visiting another page and coming back keeps it.
 const CURRENT_BUILD_KEY = "bg3-character-generator-current";
+// Earlier builds from this tab, newest last, for Undo.
+const HISTORY_KEY = "bg3-character-generator-history";
+const HISTORY_LIMIT = 20;
 const SITE_URL = "https://thefallz.github.io/BG3CharacterGenerator/";
 // Share links look like "#build=<code>", or "#Karlach-Tank&build=<code>" for a named build.
 const SHARE_PATTERN = /^#(?:([^&]*)&)?build=(.+)$/;
 const MAX_NAME_LENGTH = 60;
 // Page order; the grid in styles.css places each card by its card-<key> class.
-const cardOrder = ["class", "race", "background", "feats", "darkUrge", "romance", "companionBuild"];
+const cardOrder = ["class", "abilities", "race", "background", "feats", "origin", "darkUrge", "romance", "companionBuild"];
 const CARD_TITLES = {
     class: "Class",
+    abilities: "Ability Scores",
+    origin: "Origin",
     race: "Race",
     background: "Background",
     feats: "Feats",
@@ -23,10 +28,19 @@ const CARD_TITLES = {
 };
 // Story cards a visitor can hide; the build cards always show.
 const HIDEABLE_CARDS = [
+    { key: "origin", label: "Origin" },
     { key: "romance", label: "Romance" },
+    { key: "abilities", label: "Ability scores" },
     { key: "darkUrge", label: "Tadpole choice" },
     { key: "companionBuild", label: "Companion build" }
 ];
+// The Companion card holds one companion, or three when the party setting is on.
+function companionCount(build) {
+    return (build.companionBuild || []).filter(entry => entry.label === "Companion" || entry.label === "Hireling" || entry.label === "Companion or hireling").length;
+}
+function cardTitle(build, key) {
+    return key === "companionBuild" && companionCount(build) > 1 ? "Party" : CARD_TITLES[key];
+}
 const MULTICLASS_MODES = [
     { mode: "never", label: "Never" },
     { mode: "sometimes", label: "Sometimes" },
@@ -42,7 +56,8 @@ function loadSettings() {
             excludedRaces: strings(saved.excludedRaces, Object.keys(data.races)),
             multiclass: MULTICLASS_MODES.some(({ mode }) => mode === saved.multiclass) ? saved.multiclass : defaults.multiclass,
             tripleClass: saved.tripleClass === true,
-            hiddenCards: strings(saved.hiddenCards, HIDEABLE_CARDS.map(({ key }) => key))
+            hiddenCards: strings(saved.hiddenCards, HIDEABLE_CARDS.map(({ key }) => key)),
+            party: saved.party === true
         };
     }
     catch {
@@ -106,6 +121,45 @@ function loadCurrentBuild() {
         return null;
     }
 }
+function loadHistory() {
+    try {
+        const stored = JSON.parse(sessionStorage.getItem(HISTORY_KEY) || "[]");
+        return Array.isArray(stored) ? stored : [];
+    }
+    catch {
+        return [];
+    }
+}
+function storeHistory(history) {
+    try {
+        sessionStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-HISTORY_LIMIT)));
+    }
+    catch {
+        // Undo just has less to go back to without storage.
+    }
+}
+// Remembers the build on screen before it's replaced, so Undo can bring it back.
+function pushHistory(entry) {
+    if (entry)
+        storeHistory([...loadHistory(), entry]);
+}
+function popHistory() {
+    const history = loadHistory();
+    while (history.length) {
+        const stored = history.pop();
+        const build = sanitizeCharacter(stored?.character);
+        if (build) {
+            storeHistory(history);
+            return {
+                character: build,
+                savedId: typeof stored.savedId === "string" ? stored.savedId : null,
+                sharedName: typeof stored.sharedName === "string" ? stored.sharedName : null
+            };
+        }
+    }
+    storeHistory([]);
+    return null;
+}
 function entryText(entries, label) {
     return (entries || [])
         .filter(entry => entry.label === label && typeof entry.value === "string")
@@ -158,7 +212,28 @@ function buildCardEntries(build, key) {
     }
     if (key === "companionBuild" || key === "background")
         return normalizeResult(value);
+    if (key === "abilities") {
+        return normalizeResult(value).map(entry => {
+            const score = Number(entry.value);
+            return ABILITIES.includes(entry.label) && score ? { ...entry, value: `${score} (${abilityModifier(score)})` } : entry;
+        });
+    }
+    if (key === "origin")
+        return originEntries(value);
     return [{ label: "", value: value }];
+}
+function abilityModifier(score) {
+    const modifier = Math.floor((score - 10) / 2);
+    return modifier >= 0 ? `+${modifier}` : String(modifier);
+}
+// The origin, with a note on what it fixes. Builds from before origins existed count as custom.
+function originEntries(origin) {
+    const name = origin || CUSTOM_ORIGIN;
+    if (ORIGIN_CHARACTERS[name])
+        return [{ label: "", value: name }, { label: "Set by this origin", value: "Race and background" }];
+    if (name === DARK_URGE_ORIGIN)
+        return [{ label: "", value: name }, { label: "Set by this origin", value: `Background (${DARK_URGE_BACKGROUND})` }];
+    return [{ label: "", value: name }];
 }
 function isEntryList(value) {
     return Array.isArray(value) && value.every(entry => typeof entry === "object" && entry !== null &&
@@ -183,6 +258,10 @@ function sanitizeCharacter(value) {
         result.background = input.background;
     if (isEntryList(input.companionBuild))
         result.companionBuild = input.companionBuild;
+    if (isEntryList(input.abilities))
+        result.abilities = input.abilities;
+    if (typeof input.origin === "string")
+        result.origin = input.origin;
     return result;
 }
 function toBase64Url(bytes) {
@@ -255,7 +334,7 @@ async function buildText(build, name) {
         ? [`**${name}**`, describeCharacter(build), ""]
         : [`**${describeCharacter(build)}**`, ""];
     for (const key of visibleCards()) {
-        lines.push(`**${CARD_TITLES[key]}**`, "");
+        lines.push(`**${cardTitle(build, key)}**`, "");
         for (const entry of buildCardEntries(build, key)) {
             const value = Array.isArray(entry.value) ? entry.value.join(", ") : entry.value ?? "Not available";
             lines.push(`- ${entry.label ? `${entry.label}: ` : ""}${value}`);

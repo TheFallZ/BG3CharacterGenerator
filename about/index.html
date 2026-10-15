@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>About · BG3 Character Generator</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;500;700&family=Alegreya+SC:wght@500;700&display=swap">
+<link rel="stylesheet" href="../styles.css?v=17">
+</head>
+<body data-root="../">
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-name" href="../">BG3 Character Generator</a>
+    <nav class="site-nav" aria-label="Pages">
+      <a href="../">Generator</a>
+      <a href="../saved/">Saved <span class="nav-count" data-saved-count></span></a>
+      <a href="../settings/">Settings</a>
+      <a href="../about/" aria-current="page">About</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="page-head">
+    <h1>About</h1>
+  </div>
+
+  <div class="about">
+    <section class="about-section">
+      <h2>What this is</h2>
+      <p>A random character generator for Baldur's Gate 3. One click rolls a full level 12 build: who you play, class and subclass, race, background, ability scores, feats, the tadpole question, a romance and a companion to bring along. It's made for random runs, challenge runs, or getting unstuck when you can't decide what to play next.</p>
+      <p>It's up to date with Patch 8, the latest major patch.</p>
+    </section>
+
+    <section class="about-section">
+      <h2>How it rolls</h2>
+      <ul>
+        <li><strong>Origin:</strong> usually a custom character, sometimes the Dark Urge or one of the six origin characters. Origin characters keep their own race and background, and the Dark Urge is always The Haunted One.</li>
+        <li><strong>Class:</strong> level 12 in one class, or occasionally a multiclass split where the starting class keeps at least half the levels. Subclasses and class choices only appear at the level BG3 grants them.</li>
+        <li><strong>Ability scores:</strong> a 27-point buy arranged for the starting class, with the racial +2 and +1 on its two most important abilities.</li>
+        <li><strong>Feats:</strong> one at every feat level the build reaches. Armor feats only show up when you have the armor they build on.</li>
+        <li><strong>Skills:</strong> race, background and class never hand out the same skill twice.</li>
+        <li><strong>Companions:</strong> your romance's build, a hireling if you romance no one, or a whole party of three if you turn that on in Settings.</li>
+      </ul>
+      <p>Lock any card to keep it, reroll just the parts you don't like, and use <a href="../settings/">Settings</a> to leave out classes or races or change how often multiclass builds happen.</p>
+    </section>
+
+    <section class="about-section">
+      <h2>Feedback</h2>
+      <p>Spotted a rule that doesn't match the game, or have an idea for something to add? <a href="https://github.com/TheFallZ/BG3CharacterGenerator/issues">Open an issue on GitHub</a>.</p>
+    </section>
+
+    <section class="about-section">
+      <h2>Credits</h2>
+      <p>Rules are checked against the game and the <a href="https://bg3.wiki">BG3 Wiki</a>. The code is open source under the MIT License on <a href="https://github.com/TheFallZ/BG3CharacterGenerator">GitHub</a>.</p>
+      <p>This is an unofficial fan project and is not affiliated with or endorsed by Larian Studios. Baldur's Gate 3 and its content belong to Larian Studios.</p>
+    </section>
+  </div>
+
+</main>
+<footer class="site-footer">
+  <p>Up to date with BG3 Patch 8</p>
+  <p>Spotted something wrong? <a href="https://github.com/TheFallZ/BG3CharacterGenerator/issues">Report it on GitHub</a></p>
+  <p>Unofficial fan project, not affiliated with Larian Studios</p>
+</footer>
+
+
+<script src="../js/data.js?v=17" defer></script>
+<script src="../js/generator.js?v=17" defer></script>
+<script src="../js/common.js?v=17" defer></script>
+</body>
+</html>

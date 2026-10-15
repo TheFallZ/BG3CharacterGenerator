@@ -33,6 +33,7 @@ function openSaved(id) {
     const item = getSavedCharacters().find(saved => saved.id === id);
     if (!item)
         return;
+    pushHistory(loadCurrentBuild());
     storeCurrentBuild({ character: structuredClone(item.character), savedId: id, sharedName: null });
     location.href = homeURL();
 }

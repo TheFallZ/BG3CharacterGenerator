@@ -487,6 +487,47 @@ button.primary:hover {
   resize: vertical;
 }
 
+/* About page */
+
+.about {
+  display: grid;
+  gap: 12px;
+  max-width: 820px;
+}
+
+.about-section {
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  padding: 12px 16px 14px;
+  color: var(--control-ink);
+  background: var(--control-bg);
+}
+
+.about-section h2 {
+  margin: 0 0 6px;
+  color: var(--page-ink);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.about-section p,
+.about-section ul {
+  margin: 6px 0 0;
+}
+
+.about-section ul {
+  padding-left: 20px;
+}
+
+.about-section li + li {
+  margin-top: 4px;
+}
+
+.about-section a {
+  color: var(--accent);
+}
+
 /* Saved builds page */
 
 .saved-cards {
@@ -661,6 +702,8 @@ button.danger:hover {
   }
 
   .card-class { grid-area: class; }
+  .card-abilities { grid-area: abilities; }
+  .card-origin { grid-area: origin; }
   .card-race { grid-area: race; }
   .card-background { grid-area: background; }
   .card-feats { grid-area: feats; }
@@ -812,6 +855,54 @@ button.lock-button[aria-pressed="true"] {
   gap: 8px 14px;
 }
 
+/* Ability scores */
+
+.card-abilities .card-body {
+  display: grid;
+  gap: 8px;
+}
+
+.abilities {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ability {
+  display: grid;
+  justify-items: center;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 5px 4px 6px;
+  background: rgba(255, 246, 239, .28);
+}
+
+.ability-name {
+  color: var(--muted);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+
+.ability-score {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.ability-mod {
+  color: var(--muted);
+  font-size: 14.5px;
+}
+
+.abilities-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14.5px;
+  font-weight: 400;
+}
+
 .class-divider {
   grid-column: 1 / -1;
   display: flex;
@@ -917,5 +1008,13 @@ button.lock-button[aria-pressed="true"] {
   .notice {
     flex-basis: 100%;
     order: 1;
+  }
+
+  .abilities {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .site-nav a {
+    padding: 5px 8px;
   }
 }

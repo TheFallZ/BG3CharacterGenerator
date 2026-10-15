@@ -30,6 +30,9 @@ interface GeneratorData {
 }
 
 interface Character {
+  // Who you play: "Custom character", "The Dark Urge", or an origin character's name.
+  origin?: string | null;
+  abilities?: ClassEntry[];
   darkUrge?: string | null;
   race?: ClassEntry[];
   class?: ClassEntry[];
@@ -70,6 +73,8 @@ interface Settings {
   multiclass: MulticlassMode;
   tripleClass: boolean;
   hiddenCards: CardKey[];
+  // Roll three companions for the Companion card instead of one.
+  party: boolean;
 }
 
 const DEFAULT_DATA: GeneratorData = {
@@ -494,6 +499,59 @@ const STARTING_MAGIC: Record<string, {cantrips: string[]; cantripCount: number; 
     spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Color Spray", "Disguise Self", "Enhance Leap", "Expeditious Retreat", "False Life", "Feather Fall", "Find Familiar", "Fog Cloud", "Grease", "Ice Knife", "Longstrider", "Mage Armor", "Magic Missile", "Protection from Evil and Good", "Ray of Sickness", "Shield", "Sleep", "Tasha's Hideous Laughter", "Thunderwave", "Witch Bolt"]
   }
 };
+
+const CUSTOM_ORIGIN = "Custom character";
+const DARK_URGE_ORIGIN = "The Dark Urge";
+const DARK_URGE_BACKGROUND = "The Haunted One";
+
+// Playable origin characters: race and background are fixed, but you can pick any class.
+const ORIGIN_CHARACTERS: Record<string, {race: string; subrace?: string; background: string}> = {
+  Astarion: {race: "Elf", subrace: "High Elf", background: "Charlatan"},
+  Gale: {race: "Human", background: "Sage"},
+  Karlach: {race: "Tiefling", subrace: "Zariel Tiefling", background: "Outlander"},
+  "Lae'zel": {race: "Githyanki", background: "Soldier"},
+  Shadowheart: {race: "Half-Elf", subrace: "High Half-Elf", background: "Acolyte"},
+  Wyll: {race: "Human", background: "Folk Hero"}
+};
+
+// Percent chances for who you play; the rest of the origin chance is split between the origin characters.
+const ORIGIN_CHANCES = {custom: 45, darkUrge: 15};
+
+// Companions who can't travel together in an ordinary playthrough.
+const COMPANION_CONFLICTS: [string, string][] = [["Halsin", "Minthara"]];
+const PARTY_SIZE = 3;
+
+const ABILITIES = ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"];
+
+// Point-buy spreads worth 27 points (8 costs 0, 15 costs 9), highest first. They are handed out in
+// the class's priority order, then the racial +2 and +1 go to the top two.
+const POINT_BUY_SPREADS = [
+  [15, 15, 14, 10, 8, 8],
+  [15, 15, 13, 12, 8, 8],
+  [15, 14, 14, 12, 8, 8],
+  [15, 14, 13, 12, 10, 8]
+];
+
+// Which abilities each class wants most, first to last.
+const CLASS_ABILITY_PRIORITY: Record<string, string[]> = {
+  Barbarian: ["Strength", "Constitution", "Dexterity", "Wisdom", "Charisma", "Intelligence"],
+  Bard: ["Charisma", "Dexterity", "Constitution", "Wisdom", "Intelligence", "Strength"],
+  Cleric: ["Wisdom", "Constitution", "Dexterity", "Strength", "Charisma", "Intelligence"],
+  Druid: ["Wisdom", "Constitution", "Dexterity", "Intelligence", "Charisma", "Strength"],
+  Fighter: ["Strength", "Constitution", "Dexterity", "Wisdom", "Charisma", "Intelligence"],
+  Monk: ["Dexterity", "Wisdom", "Constitution", "Strength", "Intelligence", "Charisma"],
+  Paladin: ["Strength", "Charisma", "Constitution", "Wisdom", "Dexterity", "Intelligence"],
+  Ranger: ["Dexterity", "Wisdom", "Constitution", "Strength", "Intelligence", "Charisma"],
+  Rogue: ["Dexterity", "Constitution", "Wisdom", "Intelligence", "Charisma", "Strength"],
+  Sorcerer: ["Charisma", "Constitution", "Dexterity", "Wisdom", "Intelligence", "Strength"],
+  Warlock: ["Charisma", "Constitution", "Dexterity", "Wisdom", "Intelligence", "Strength"],
+  Wizard: ["Intelligence", "Constitution", "Dexterity", "Wisdom", "Charisma", "Strength"]
+};
+
+// Subclasses that change what a class needs: heavy-armor clerics use Strength over Dexterity,
+// and the spellcasting fighter and rogue want Intelligence third.
+const HEAVY_ARMOR_DOMAINS = ["Life", "Nature", "Tempest", "War"];
+const INTELLIGENCE_SUBCLASSES = ["Eldritch Knight", "Arcane Trickster"];
 
 const COMPANION_DEFAULT_CLASSES: Record<string, string> = {
   Astarion: "Rogue",

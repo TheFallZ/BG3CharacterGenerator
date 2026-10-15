@@ -6,7 +6,7 @@ let character: Character = {};
 const MAX_LEVEL = 12;
 
 function defaultSettings(): Settings {
-  return {excludedClasses: [], excludedRaces: [], multiclass: "sometimes", tripleClass: false, hiddenCards: []};
+  return {excludedClasses: [], excludedRaces: [], multiclass: "sometimes", tripleClass: false, hiddenCards: [], party: false};
 }
 
 let settings: Settings = defaultSettings();
@@ -118,13 +118,42 @@ function rollDarkUrge(): string | null {
   return pick(data.darkUrge);
 }
 
+// The origin character being played, if any; they fix race and background.
+function originProfile(origin: string | null | undefined = character.origin) {
+  return ORIGIN_CHARACTERS[origin ?? ""] ?? null;
+}
+
+// Who you play. A locked race or background rules out origins that would change it, and a kept
+// romance or companion can't also be you.
+function rollOrigin(keepRace = false, keepBackground = false, avoidNames: string[] = []): string {
+  if (settings.hiddenCards.includes("origin")) return CUSTOM_ORIGIN;
+  const background = character.background;
+  const keptBackground = !keepBackground ? null
+    : typeof background === "string" ? background
+    : background?.find(entry => entry.label === "Background")?.value ?? null;
+  const darkUrgeAllowed = !keepBackground || keptBackground === DARK_URGE_BACKGROUND;
+  const originsAllowed = !keepRace && !keepBackground;
+  const roll = Math.random() * 100;
+  if (roll < ORIGIN_CHANCES.custom || !darkUrgeAllowed && !originsAllowed) return CUSTOM_ORIGIN;
+  if (roll < ORIGIN_CHANCES.custom + ORIGIN_CHANCES.darkUrge) return darkUrgeAllowed ? DARK_URGE_ORIGIN : CUSTOM_ORIGIN;
+  const origins = Object.keys(ORIGIN_CHARACTERS).filter(name => !avoidNames.includes(name));
+  return originsAllowed ? pick(origins) ?? CUSTOM_ORIGIN : CUSTOM_ORIGIN;
+}
+
 function rollRace(): ClassEntry[] {
+  const profile = originProfile();
+  if (profile) return raceEntries(profile.race, profile.subrace ?? null, BACKGROUND_SKILLS[profile.background] || []);
   const race = pick(allowedRaces()) ?? "Human";
+  return raceEntries(race, pick(data.races[race]?.subraces));
+}
+
+// A race's entries with its proficiencies. A Human's extra skill avoids the given skills.
+function raceEntries(race: string, subraceChoice: string | null | undefined, avoidSkills: string[] = []): ClassEntry[] {
   const info = data.races[race] || {};
   const result: ClassEntry[] = [{label: "Race", value: race}];
 
   if (info.subraces?.length) {
-    result.push({label: "Subrace", value: pick(info.subraces)});
+    result.push({label: "Subrace", value: subraceChoice ?? pick(info.subraces)});
   }
 
   const subraceValue = result.find(x => x.label === "Subrace")?.value;
@@ -150,13 +179,14 @@ function rollRace(): ClassEntry[] {
   }
 
   if (info.extra) {
-    result.push({label: info.extra.label, value: pick(info.extra.options)});
+    result.push({label: info.extra.label, value: pick(info.extra.options.filter(option => !avoidSkills.includes(option)))});
   }
   return result;
 }
 
 function rollRaceAvoiding(avoidSkills: string[]): ClassEntry[] {
   let race = rollRace();
+  if (originProfile()) return race;
   for (let attempt = 0; attempt < 50 && getRacialSkillProficiencies(race).some(skill => avoidSkills.includes(skill)); attempt++) {
     race = rollRace();
   }
@@ -448,6 +478,11 @@ function featValues(feats: Character["feats"] = character.feats): string[] {
 }
 
 function rollBackground(avoidSkills: string[] = []): ClassEntry[] {
+  const fixed = originProfile()?.background ?? (character.origin === DARK_URGE_ORIGIN ? DARK_URGE_BACKGROUND : null);
+  if (fixed) return [
+    {label: "Background", value: fixed},
+    {label: "Background Skill Proficiencies", value: BACKGROUND_SKILLS[fixed] || []}
+  ];
   const takenSkills = new Set([...getRacialSkillProficiencies(), ...avoidSkills]);
   const availableBackgrounds = data.backgrounds.filter(background =>
     (BACKGROUND_SKILLS[background] || []).every(skill => !takenSkills.has(skill))
@@ -458,7 +493,57 @@ function rollBackground(avoidSkills: string[] = []): ClassEntry[] {
     {label: "Background Skill Proficiencies", value: BACKGROUND_SKILLS[background] || []}
   ];
 }
-function rollRomance(): string | null { return pick(data.romances); }
+// You can't romance yourself, so an origin character drops out of the romance options.
+function rollRomance(): string | null {
+  return pick(data.romances.filter(name => name !== character.origin));
+}
+
+function primaryClassAndSubclass(classEntries: Character["class"] = character.class): {className: string; subclass: string | null} {
+  const className = getClassLevels(classEntries)[0]?.className ?? "Fighter";
+  const label = SUBCLASS_LABELS[className] ?? "Subclass";
+  const subclass = (classEntries || []).find(entry => entry.label === label)?.value;
+  return {className, subclass: typeof subclass === "string" ? subclass : null};
+}
+
+// Starting ability scores for the starting class: a 27-point buy plus the racial +2 and +1.
+function rollAbilities(): ClassEntry[] {
+  const {className, subclass} = primaryClassAndSubclass();
+  const priority = [...(CLASS_ABILITY_PRIORITY[className] ?? ABILITIES)];
+  const swap = (a: string, b: string) => {
+    const i = priority.indexOf(a), j = priority.indexOf(b);
+    [priority[i], priority[j]] = [priority[j], priority[i]];
+  };
+  if (className === "Cleric" && HEAVY_ARMOR_DOMAINS.includes(subclass ?? "")) swap("Dexterity", "Strength");
+  // Half of fighters are archers or finesse fighters.
+  if (className === "Fighter" && Math.random() < 0.5) swap("Strength", "Dexterity");
+  if (INTELLIGENCE_SUBCLASSES.includes(subclass ?? "")) {
+    priority.splice(priority.indexOf("Intelligence"), 1);
+    priority.splice(2, 0, "Intelligence");
+  }
+
+  const spread = pick(POINT_BUY_SPREADS) ?? POINT_BUY_SPREADS[0];
+  const scores: Record<string, number> = {};
+  priority.forEach((ability, index) => { scores[ability] = spread[index]; });
+  scores[priority[0]] += 2;
+  scores[priority[1]] += 1;
+  return [
+    ...ABILITIES.map(ability => ({label: ability, value: String(scores[ability])})),
+    {label: "Racial bonuses", value: `+2 ${priority[0]}, +1 ${priority[1]}`}
+  ];
+}
+
+// Three companions for the party: the romance (if any) plus others who can travel with them,
+// never the origin character you're playing.
+function rollParty(romance: string | null | undefined = character.romance): ClassEntry[] {
+  const members: string[] = romance && COMPANION_DEFAULT_CLASSES[romance] && romance !== character.origin ? [romance] : [];
+  const pool = Object.keys(COMPANION_DEFAULT_CLASSES).filter(name => name !== character.origin && !members.includes(name));
+  while (members.length < PARTY_SIZE && pool.length) {
+    const name = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+    const conflicts = COMPANION_CONFLICTS.some(pair => pair.includes(name) && members.some(member => pair.includes(member)));
+    if (!conflicts) members.push(name);
+  }
+  return members.flatMap(name => rollCompanionBuild(name));
+}
 
 function rollCompanionBuild(romance: string | null | undefined = character.romance): ClassEntry[] {
   const isHireling = (romance ?? "").trim().toLowerCase() === "no one";

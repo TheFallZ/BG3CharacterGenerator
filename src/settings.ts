@@ -18,6 +18,11 @@ function renderSettings(): void {
       <p class="settings-note">"Sometimes" is a ${data.settings.multiclassChance}% chance. With triple classing on, ${data.settings.tripleClassChance}% of multiclass builds get three classes.</p>
     </fieldset>
     <fieldset class="settings-group">
+      <legend>Companions</legend>
+      <label class="check"><input type="checkbox" name="party"${settings.party ? " checked" : ""}> Generate a full party</label>
+      <p class="settings-note">Rolls three companions instead of one, including your romance when there is one.</p>
+    </fieldset>
+    <fieldset class="settings-group">
       <legend>Show cards</legend>
       ${HIDEABLE_CARDS.map(({key, label}) => checkboxHTML("showCard", key, label, !settings.hiddenCards.includes(key))).join("")}
     </fieldset>
@@ -30,7 +35,7 @@ function renderSettings(): void {
       ${Object.keys(data.races).map(name => checkboxHTML("race", name, name, !settings.excludedRaces.includes(name))).join("")}
     </fieldset>
     <div class="settings-foot">
-      <p class="settings-note">Settings save automatically. Class, race and multiclass changes apply the next time you generate or reroll.</p>
+      <p class="settings-note">Settings save automatically. Changes to what can be rolled apply the next time you generate or reroll.</p>
       <button type="button" id="resetSettings">Reset to defaults</button>
     </div>`;
   updateSettingsControls();
@@ -57,7 +62,8 @@ function readSettings(): void {
     excludedRaces: unchecked("race"),
     multiclass: (panel.querySelector<HTMLInputElement>('input[name="multiclass"]:checked')?.value ?? "sometimes") as MulticlassMode,
     tripleClass: panel.querySelector<HTMLInputElement>('input[name="tripleClass"]')!.checked,
-    hiddenCards: unchecked("showCard") as CardKey[]
+    hiddenCards: unchecked("showCard") as CardKey[],
+    party: panel.querySelector<HTMLInputElement>('input[name="party"]')!.checked
   };
   storeSettings();
   updateSettingsControls();
