@@ -19,10 +19,10 @@
   --accent-deep: #a8506e;
 
   /* Dark controls */
-  --control-bg: #25211e;
-  --control-bg-hover: #332c27;
-  --control-border: #75664f;
-  --control-border-hover: #a18a67;
+  --control-bg: #1c1a1d;
+  --control-bg-hover: #2a272b;
+  --control-border: #4a454c;
+  --control-border-hover: #6e6772;
   --control-ink: #eee3d1;
 
   /* Multiclass */
@@ -79,7 +79,7 @@ main {
   gap: 2px 0;
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
-  border-top: 1px solid rgba(117, 102, 79, .45);
+  border-top: 1px solid rgba(110, 103, 114, .45);
   padding: 12px 0 16px;
   color: var(--page-ink);
   opacity: .75;
@@ -334,7 +334,7 @@ button.primary:hover {
   margin: 0;
   border-bottom: 1px solid var(--control-border);
   padding-bottom: 6px;
-  color: var(--accent);
+  color: var(--page-ink);
   font-family: var(--font-display);
   font-size: 19px;
   font-weight: 700;
@@ -439,9 +439,9 @@ button.primary:hover {
 }
 
 .chip input:checked + span {
-  border-color: var(--accent);
-  color: var(--accent-ink);
-  background: var(--accent);
+  border-color: var(--control-border-hover);
+  color: var(--control-ink);
+  background: var(--control-bg-hover);
   opacity: 1;
   font-weight: 700;
   text-decoration: none;
