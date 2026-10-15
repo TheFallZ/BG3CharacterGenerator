@@ -304,6 +304,44 @@ const FEAT_LEVELS = {
     Rogue: [4, 8, 10, 12]
 };
 const DEFAULT_FEAT_LEVELS = [4, 8, 12];
+// Feats are still random, but a feat the character couldn't use, or one that clashes with a
+// feat they already have, is left out.
+// Classes and subclasses that cast spells by the levels they're taken at.
+const CASTER_CLASSES = { Bard: 1, Cleric: 1, Druid: 1, Sorcerer: 1, Warlock: 1, Wizard: 1, Paladin: 2, Ranger: 2 };
+const CASTER_SUBCLASSES = ["Eldritch Knight", "Arcane Trickster"];
+// Fighting-style feats that need different hands: two-handed, a shield, or two weapons.
+const WEAPON_STYLE_FEATS = ["Great Weapon Master", "Shield Master", "Dual Wielder"];
+// Feats that only help with spells.
+const SPELL_FEATS = ["War Caster", "Elemental Adept"];
+// How often a feat level becomes an Ability Improvement, in percent.
+const ABILITY_IMPROVEMENT_CHANCE = 20;
+// The abilities each class leans on most, for Ability Improvement.
+const CLASS_MAIN_ABILITIES = {
+    Barbarian: ["Strength", "Constitution"],
+    Bard: ["Charisma", "Dexterity"],
+    Cleric: ["Wisdom", "Constitution"],
+    Druid: ["Wisdom", "Constitution"],
+    Fighter: ["Strength", "Dexterity", "Constitution"],
+    Monk: ["Dexterity", "Wisdom"],
+    Paladin: ["Strength", "Charisma"],
+    Ranger: ["Dexterity", "Wisdom"],
+    Rogue: ["Dexterity", "Constitution"],
+    Sorcerer: ["Charisma", "Constitution"],
+    Warlock: ["Charisma", "Constitution"],
+    Wizard: ["Intelligence", "Constitution"]
+};
+// Proficiencies that Favored Enemy and Natural Explorer picks grant.
+const RANGER_PICK_SKILLS = {
+    "Bounty Hunter": "Investigation",
+    "Keeper of the Veil": "Arcana",
+    "Mage Breaker": "Arcana",
+    "Ranger Knight": "History",
+    "Sanctified Stalker": "Religion",
+    "Urban Tracker": "Sleight of Hand"
+};
+const RANGER_PICK_ARMOR = {
+    "Ranger Knight": "Heavy Armor"
+};
 const FEAT_CHOICES = {
     "Elemental Adept": ["Acid", "Cold", "Fire", "Lightning", "Thunder"],
     "Magic Initiate": ["Bard", "Cleric", "Druid", "Sorcerer", "Warlock", "Wizard"],

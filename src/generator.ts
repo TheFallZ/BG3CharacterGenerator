@@ -91,9 +91,32 @@ function getBackgroundSkillProficiencies(background: Character["background"] = c
 const CLASS_SKILL_LABELS = ["Skill Proficiencies", "Multiclass Skill Proficiencies", "Nature Domain Skill Proficiency", "Subclass Skill Proficiency"];
 
 function getClassSkillProficiencies(classEntries: Character["class"] = character.class): string[] {
-  return (classEntries || [])
-    .filter(entry => CLASS_SKILL_LABELS.includes(entry.label))
-    .flatMap(entryValues);
+  const entries = classEntries || [];
+  const rangerPicks = entries
+    .filter(entry => entry.label === "Favored Enemy" || entry.label === "Natural Explorer")
+    .flatMap(entryValues)
+    .map(pick => RANGER_PICK_SKILLS[pick])
+    .filter((skill): skill is string => !!skill);
+  return [...entries.filter(entry => CLASS_SKILL_LABELS.includes(entry.label)).flatMap(entryValues), ...rangerPicks];
+}
+
+// Picks a Favored Enemy or Natural Explorer set whose granted skills the character doesn't already
+// have and that don't overlap each other. When there aren't enough of those, the rest are filled
+// with whatever is left, so as few skills as possible repeat.
+function rollRangerPicks(options: string[], count: number, owned: string[]): string[] {
+  const used = new Set(owned);
+  const result: string[] = [];
+  const leftover: string[] = [];
+  for (const option of pickMany(options, options.length)) {
+    const skill = RANGER_PICK_SKILLS[option];
+    if (result.length < count && !(skill && used.has(skill))) {
+      if (skill) used.add(skill);
+      result.push(option);
+    } else {
+      leftover.push(option);
+    }
+  }
+  return [...result, ...leftover.slice(0, count - result.length)];
 }
 
 function getExistingSkillProficiencies(): string[] {
@@ -201,6 +224,7 @@ function raceNames(race: Character["race"] = character.race): string[] {
 }
 
 function rollDeity(races: string[]): string | null {
+  if (races.includes("Lolth-Sworn Drow")) return "Lolth";
   const deities = (data.classes.Cleric.options?.["Deity"] || []) as string[];
   return pick(deities.filter(deity => !DEITY_RACES[deity] || races.includes(DEITY_RACES[deity])));
 }
@@ -221,7 +245,20 @@ function rollInvocations(level: number, knowsEldritchBlast: boolean): ClassEntry
   return entries;
 }
 
-function rollClassOptions(className: string, subclass: string | null, level: number, cantrips: string[]): ClassEntry[] {
+// Favored Enemy and Natural Explorer picks for a ranger level, avoiding skills already owned.
+function rollRangerChoices(level: number, ownedSkills: string[]): {enemies: string[]; explorers: string[]} {
+  const options = data.classes.Ranger.options || {};
+  const picks = 1 + (level >= 6 ? 1 : 0) + (level >= 10 ? 1 : 0);
+  const enemies = rollRangerPicks(options["Favored Enemy"], picks, ownedSkills);
+  const enemySkills = enemies.map(name => RANGER_PICK_SKILLS[name]).filter(Boolean);
+  return {enemies, explorers: rollRangerPicks(options["Natural Explorer"], picks, [...ownedSkills, ...enemySkills])};
+}
+
+function rangerChoiceSkills(choices: {enemies: string[]; explorers: string[]} | null): string[] {
+  return choices ? [...choices.enemies, ...choices.explorers].map(name => RANGER_PICK_SKILLS[name]).filter((skill): skill is string => !!skill) : [];
+}
+
+function rollClassOptions(className: string, subclass: string | null, level: number, cantrips: string[], rangerChoices: {enemies: string[]; explorers: string[]} | null = null): ClassEntry[] {
   const options = data.classes[className]?.options || {};
   const entries: ClassEntry[] = [];
 
@@ -265,9 +302,9 @@ function rollClassOptions(className: string, subclass: string | null, level: num
   }
 
   if (className === "Ranger") {
-    const picks = 1 + (level >= 6 ? 1 : 0) + (level >= 10 ? 1 : 0);
-    entries.push({label: "Favored Enemy", value: pickMany(options["Favored Enemy"], picks)});
-    entries.push({label: "Natural Explorer", value: pickMany(options["Natural Explorer"], picks)});
+    const choices = rangerChoices ?? rollRangerChoices(level, []);
+    entries.push({label: "Favored Enemy", value: choices.enemies});
+    entries.push({label: "Natural Explorer", value: choices.explorers});
     if (level >= 2) entries.push({label: "Fighting Style", value: pick(options["Fighting Style"])});
     if (subclass === "Beast Master") {
       entries.push({label: "Ranger's Companion", value: pick(options["Beast Master"]["Ranger's Companion"])});
@@ -326,6 +363,10 @@ function rollSingleClass(className: string, level: number, isMulticlass = false,
   const cls = data.classes[className];
   const entries: ClassEntry[] = [{label: "Class", value: className}, {label: "Level", value: String(level)}];
 
+  const rangerChoices = className === "Ranger" ? rollRangerChoices(level, excludedSkills) : null;
+  const granted = rangerChoiceSkills(rangerChoices);
+  excludedSkills = [...excludedSkills, ...granted];
+
   let skills: string[] = [];
   if (isMulticlass) {
     const skillCount = MULTICLASS_SKILL_COUNTS[className] || 0;
@@ -356,7 +397,7 @@ function rollSingleClass(className: string, level: number, isMulticlass = false,
   if (subclass) entries.push({label: SUBCLASS_LABELS[className] ?? "Subclass", value: subclass});
 
   const cantrips = magic.length ? entryValues(magic[0]) : [];
-  entries.push(...rollClassOptions(className, subclass, level, cantrips));
+  entries.push(...rollClassOptions(className, subclass, level, cantrips, rangerChoices));
   if (subclass) entries.push(...rollSubclassProficiencies(className, subclass, excludedSkills));
   return entries;
 }
@@ -438,6 +479,9 @@ function getArmorProficiencies(): Set<string> {
     if (entry.label === "Multiclass Proficiencies" || entry.label === "Subclass Proficiencies") {
       entryValues(entry).forEach(value => armor.add(value));
     }
+    if (entry.label === "Favored Enemy") {
+      entryValues(entry).forEach(value => { if (RANGER_PICK_ARMOR[value]) armor.add(RANGER_PICK_ARMOR[value]); });
+    }
   }
   return armor;
 }
@@ -460,17 +504,41 @@ function featName(value: string): string {
 }
 
 // Rolls one feat that the character can take, given the feats already taken.
+// What the build can make use of, for leaving out feats that would do nothing.
+function featContext(armor: Set<string>): {shields: boolean; spells: boolean} {
+  const classLevels = getClassLevels();
+  const subclasses = (character.class || []).flatMap(entryValues);
+  return {
+    shields: armor.has("Shields"),
+    spells: classLevels.some(({className, level}) => level >= (CASTER_CLASSES[className] ?? Infinity)) ||
+      CASTER_SUBCLASSES.some(subclass => subclasses.includes(subclass))
+  };
+}
+
+// +2 to one main ability, or +1 to two, from the starting class's main abilities.
+function rollAbilityImprovement(): string {
+  const main = CLASS_MAIN_ABILITIES[getClassLevels()[0]?.className ?? ""] ?? ["Constitution"];
+  const [first, second] = pickMany(main, 2);
+  return second && Math.random() < 0.4 ? `Ability Improvement: +1 ${first}, +1 ${second}` : `Ability Improvement: +2 ${first}`;
+}
+
 function rollFeat(taken: string[], armor: Set<string>): string | null {
+  if (Math.random() * 100 < ABILITY_IMPROVEMENT_CHANCE) return rollAbilityImprovement();
   const takenNames = new Set(taken.map(featName));
+  const can = featContext(armor);
+  const hasWeaponStyle = WEAPON_STYLE_FEATS.some(feat => takenNames.has(feat));
   const options = data.feats.filter(feat => {
-    if (feat !== "Ability Improvement" && takenNames.has(feat)) return false;
+    if (feat === "Ability Improvement" || takenNames.has(feat)) return false;
     const rule = FEAT_ARMOR_RULES[feat];
     if (rule?.requires && !armor.has(rule.requires)) return false;
     if (rule?.grants && armor.has(rule.grants)) return false;
+    if (feat === "Shield Master" && !can.shields) return false;
+    if (WEAPON_STYLE_FEATS.includes(feat) && hasWeaponStyle) return false;
+    if (SPELL_FEATS.includes(feat) && !can.spells) return false;
     return true;
   });
   const feat = pick(options);
-  if (!feat) return null;
+  if (!feat) return rollAbilityImprovement();
   const grants = FEAT_ARMOR_RULES[feat]?.grants;
   if (grants) armor.add(grants);
   const choice = pick(FEAT_CHOICES[feat]);
