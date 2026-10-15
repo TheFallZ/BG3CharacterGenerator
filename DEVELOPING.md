@@ -18,7 +18,7 @@ Serve the folder (for example `python -m http.server`) and open it in a browser 
 
 The live site is GitHub Pages, deployed from the `main` branch root. New work goes on the `dev` branch; to release, merge `dev` into `main` and push. Commit the rebuilt `js/` folder along with your changes; the site updates within a minute or two of a push to `main`.
 
-When you change `styles.css` or the scripts, bump the `?v=` number on their links in all four pages (`index.html`, `saved/index.html`, `settings/index.html`, `about/index.html`). GitHub Pages lets browsers cache files for 10 minutes, and the new number makes them fetch the matching files instead of mixing old and new.
+When you change `styles.css` or the scripts, bump the `?v=` number on their links in every page (`index.html`, `saved/index.html`, `settings/index.html`, `about/index.html`, `whats-new/index.html`). GitHub Pages lets browsers cache files for 10 minutes, and the new number makes them fetch the matching files instead of mixing old and new.
 
 ## Project Layout
 
@@ -29,10 +29,11 @@ When you change `styles.css` or the scripts, bump the `?v=` number on their link
 - `src/saved.ts`: the Saved builds page (`saved/index.html`).
 - `src/settings.ts`: the Settings page (`settings/index.html`).
 - `about/index.html`: the About page. It's plain HTML and only loads the shared scripts for the header.
+- `whats-new/index.html`: the What's new page, also plain HTML. Add a section at the top for each release.
 - `js/`: compiled output loaded by the pages. Do not edit it by hand; it is overwritten on every build.
 - `styles.css`: all styling. Colors are named tokens at the top of the file.
 
-The source files are plain scripts that share one global scope, loaded in order by each page (`data.js`, `generator.js`, `common.js`, then the page's own script), rather than ES modules. That keeps the pages working when opened directly from disk, where browsers block module imports. Each page has the same header and footer, so a change to one belongs in all four.
+The source files are plain scripts that share one global scope, loaded in order by each page (`data.js`, `generator.js`, `common.js`, then the page's own script), rather than ES modules. That keeps the pages working when opened directly from disk, where browsers block module imports. Each page has the same header and footer, so a change to one belongs in all of them.
 
 The Generator page keeps the build on screen in the tab's session storage, so visiting another page and coming back shows the same build. Earlier builds from the tab are kept there too, for Undo.
 

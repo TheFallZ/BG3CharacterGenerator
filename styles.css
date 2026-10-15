@@ -657,6 +657,23 @@ kbd {
   color: var(--accent);
 }
 
+/* What's new page */
+
+.update h3 {
+  margin: 14px 0 0;
+  color: var(--page-ink);
+  font-family: var(--font-display);
+  font-size: 16.5px;
+  font-weight: 700;
+}
+
+.update-date {
+  margin: 0 !important;
+  color: var(--page-ink);
+  opacity: .7;
+  font-size: 14.5px;
+}
+
 /* Saved builds page */
 
 /* Search, sort and backup controls above the saved builds. */
