@@ -75,7 +75,8 @@ interface Settings {
   hiddenCards: CardKey[];
   // Roll three companions for the Companion card instead of one.
   party: boolean;
-  // Let the Origin card pick Astarion, Gale and the other origin characters.
+  // Show the Origin card, which can make you the Dark Urge or an origin character like Astarion.
+  // Off means you always play a custom character.
   originCharacters: boolean;
 }
 

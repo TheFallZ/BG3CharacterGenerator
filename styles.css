@@ -371,6 +371,10 @@ button.primary:hover {
   cursor: pointer;
 }
 
+.check[hidden] {
+  display: none;
+}
+
 .check input {
   margin: 0;
   accent-color: var(--accent);

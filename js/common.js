@@ -73,8 +73,9 @@ function storeSettings() {
         // Settings still apply for this visit without storage.
     }
 }
+// The Origin card only exists while origin characters are allowed.
 function visibleCards() {
-    return cardOrder.filter(key => !settings.hiddenCards.includes(key));
+    return cardOrder.filter(key => !settings.hiddenCards.includes(key) && (key !== "origin" || settings.originCharacters));
 }
 function isSavedCharacter(value) {
     if (typeof value !== "object" || value === null)

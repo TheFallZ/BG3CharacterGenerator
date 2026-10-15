@@ -89,8 +89,9 @@ function storeSettings(): void {
   }
 }
 
+// The Origin card only exists while origin characters are allowed.
 function visibleCards(): CardKey[] {
-  return cardOrder.filter(key => !settings.hiddenCards.includes(key));
+  return cardOrder.filter(key => !settings.hiddenCards.includes(key) && (key !== "origin" || settings.originCharacters));
 }
 
 function isSavedCharacter(value: unknown): value is SavedCharacter {

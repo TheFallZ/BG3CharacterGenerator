@@ -17,7 +17,7 @@ function renderSettings() {
     <fieldset class="settings-group">
       <legend>Origin</legend>
       <label class="check"><input type="checkbox" name="originCharacters"${settings.originCharacters ? " checked" : ""}> Allow origin characters</label>
-      <p class="settings-note">Lets you play as Astarion, Gale, Karlach, Lae'zel, Shadowheart or Wyll. Otherwise you get a custom character or the Dark Urge.</p>
+      <p class="settings-note">Adds an Origin card that can make you the Dark Urge or Astarion, Gale, Karlach, Lae'zel, Shadowheart or Wyll. When it's off, you always play a custom character.</p>
     </fieldset>
     <fieldset class="settings-group">
       <legend>Companions</legend>
@@ -52,9 +52,17 @@ function updateSettingsControls() {
     }
     const triple = panel.querySelector('input[name="tripleClass"]');
     triple.disabled = settings.multiclass === "never" || allowedClasses().length < 3;
+    // The Origin card can only be shown or hidden while origin characters are allowed.
+    const originCard = panel.querySelector('input[name="showCard"][value="origin"]');
+    originCard.closest("label").hidden = !settings.originCharacters;
 }
-function readSettings() {
+function readSettings(event) {
     const panel = document.getElementById("settingsPanel");
+    // Turning origin characters on shows the Origin card again.
+    const changed = event?.target;
+    if (changed?.name === "originCharacters" && changed.checked) {
+        panel.querySelector('input[name="showCard"][value="origin"]').checked = true;
+    }
     const unchecked = (name) => [...panel.querySelectorAll(`input[name="${name}"]:not(:checked)`)].map(box => box.value);
     settings = {
         excludedClasses: unchecked("class"),

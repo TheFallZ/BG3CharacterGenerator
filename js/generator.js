@@ -113,16 +113,15 @@ function originProfile(origin = character.origin) {
 // Who you play. A locked race or background rules out origins that would change it, and a kept
 // romance or companion can't also be you.
 function rollOrigin(keepRace = false, keepBackground = false, avoidNames = []) {
-    if (settings.hiddenCards.includes("origin"))
+    if (!settings.originCharacters || settings.hiddenCards.includes("origin"))
         return CUSTOM_ORIGIN;
     const background = character.background;
     const keptBackground = !keepBackground ? null
         : typeof background === "string" ? background
             : background?.find(entry => entry.label === "Background")?.value ?? null;
     const darkUrgeAllowed = !keepBackground || keptBackground === DARK_URGE_BACKGROUND;
-    const originsAllowed = settings.originCharacters && !keepRace && !keepBackground;
-    // With origin characters off, custom and Dark Urge keep their odds relative to each other.
-    const roll = Math.random() * (settings.originCharacters ? 100 : ORIGIN_CHANCES.custom + ORIGIN_CHANCES.darkUrge);
+    const originsAllowed = !keepRace && !keepBackground;
+    const roll = Math.random() * 100;
     if (roll < ORIGIN_CHANCES.custom || !darkUrgeAllowed && !originsAllowed)
         return CUSTOM_ORIGIN;
     if (roll < ORIGIN_CHANCES.custom + ORIGIN_CHANCES.darkUrge)
