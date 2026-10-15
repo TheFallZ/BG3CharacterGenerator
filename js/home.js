@@ -289,9 +289,10 @@ function abilitiesHTML() {
       <span class="ability-mod">${score ? abilityModifier(score) : ""}</span>
     </div>`;
     }).join("");
-    const bonus = entries.find(entry => entry.label === "Racial bonuses");
+    const bonus = entries.find(entry => entry.label === "Racial bonuses")?.value;
+    const bonusText = typeof bonus === "string" ? bonus.replace(", ", " and ") : "";
     return `<div class="abilities">${boxes}</div>
-    <p class="abilities-note">Level 1 point buy${bonus ? ` with ${escapeHTML(bonus.value)}` : ""}. Ability Improvement feats come on top.</p>`;
+    <p class="abilities-note">Set these in character creation${bonusText ? `, putting your bonus points into ${escapeHTML(bonusText)}` : ""}.</p>`;
 }
 function renderCards() {
     renderBuildTitle();
