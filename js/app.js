@@ -21,8 +21,8 @@ const SITE_URL = "https://thefallz.github.io/BG3CharacterGenerator/";
 const SHARE_PREFIX = "#build=";
 // Story cards a visitor can hide; the build cards always show.
 const HIDEABLE_CARDS = [
-    { key: "darkUrge", label: "Tadpole question" },
     { key: "romance", label: "Romance" },
+    { key: "darkUrge", label: "Tadpole choice" },
     { key: "companionBuild", label: "Companion build" }
 ];
 const MULTICLASS_MODES = [
