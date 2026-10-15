@@ -25,3 +25,7 @@ This is an unofficial fan project and is not affiliated with or endorsed by Lari
 ## Saved Builds
 
 Saved builds stay in the browser you saved them in. They aren't uploaded anywhere, so they won't show up on another device or browser, and clearing your browser data removes them.
+
+## License
+
+The code is released under the [MIT License](LICENSE). Baldur's Gate 3 and its content belong to Larian Studios.
