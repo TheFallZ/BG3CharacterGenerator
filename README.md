@@ -21,7 +21,7 @@ This is an unofficial fan project and is not affiliated with or endorsed by Lari
 - **Lock cards you like** so they stay put when you generate again.
 - **Save your favorite builds** to load, rename or delete later.
 - **Works in any browser,** on desktop or phone, with no account or sign-up needed.
-
+- **Features an 8% chance to roll a multiclass.
 ## Saved Builds
 
 Saved builds stay in the browser you saved them in. They aren't uploaded anywhere, so they won't show up on another device or browser, and clearing your browser data removes them.
