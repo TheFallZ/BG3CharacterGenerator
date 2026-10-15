@@ -75,6 +75,8 @@ interface Settings {
   hiddenCards: CardKey[];
   // Roll three companions for the Companion card instead of one.
   party: boolean;
+  // Let the Origin card pick Astarion, Gale and the other origin characters.
+  originCharacters: boolean;
 }
 
 const DEFAULT_DATA: GeneratorData = {

@@ -73,7 +73,8 @@ function loadSettings(): Settings {
       multiclass: MULTICLASS_MODES.some(({mode}) => mode === saved.multiclass) ? saved.multiclass : defaults.multiclass,
       tripleClass: saved.tripleClass === true,
       hiddenCards: strings(saved.hiddenCards, HIDEABLE_CARDS.map(({key}) => key)) as CardKey[],
-      party: saved.party === true
+      party: saved.party === true,
+      originCharacters: saved.originCharacters === true
     };
   } catch {
     return defaults;

@@ -13,7 +13,7 @@ This is an unofficial fan project and is not affiliated with or endorsed by Lari
 ## Features
 
 - **A full level 12 build in one click:** class and subclass, race and subrace, background, skills, and a feat for every feat level.
-- **Who you play:** a custom character, the Dark Urge, or one of the six origin characters, who keep their own race and background.
+- **Who you play:** a custom character or the Dark Urge, or, if you turn it on in Settings, one of the six origin characters, who keep their own race and background.
 - **Ability scores** from a 27-point buy arranged for your class, with the racial +2 and +1 in the right places.
 - **Class choices filled in:** fighting styles, maneuvers, metamagic, invocations, Wildheart aspects, Paladin oath prompts, and starting cantrips and spells for spellcasters.
 - **Multiclass builds:** an 8% chance to roll one, with the level split shown on the Class card. Triple classing can be turned on in Settings for an extra-rare three-class build.

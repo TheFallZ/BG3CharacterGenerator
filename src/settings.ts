@@ -18,6 +18,11 @@ function renderSettings(): void {
       <p class="settings-note">"Sometimes" is a ${data.settings.multiclassChance}% chance. With triple classing on, ${data.settings.tripleClassChance}% of multiclass builds get three classes.</p>
     </fieldset>
     <fieldset class="settings-group">
+      <legend>Origin</legend>
+      <label class="check"><input type="checkbox" name="originCharacters"${settings.originCharacters ? " checked" : ""}> Allow origin characters</label>
+      <p class="settings-note">Lets you play as Astarion, Gale, Karlach, Lae'zel, Shadowheart or Wyll. Otherwise you get a custom character or the Dark Urge.</p>
+    </fieldset>
+    <fieldset class="settings-group">
       <legend>Companions</legend>
       <label class="check"><input type="checkbox" name="party"${settings.party ? " checked" : ""}> Generate a full party</label>
       <p class="settings-note">Rolls three companions instead of one, including your romance when there is one.</p>
@@ -63,7 +68,8 @@ function readSettings(): void {
     multiclass: (panel.querySelector<HTMLInputElement>('input[name="multiclass"]:checked')?.value ?? "sometimes") as MulticlassMode,
     tripleClass: panel.querySelector<HTMLInputElement>('input[name="tripleClass"]')!.checked,
     hiddenCards: unchecked("showCard") as CardKey[],
-    party: panel.querySelector<HTMLInputElement>('input[name="party"]')!.checked
+    party: panel.querySelector<HTMLInputElement>('input[name="party"]')!.checked,
+    originCharacters: panel.querySelector<HTMLInputElement>('input[name="originCharacters"]')!.checked
   };
   storeSettings();
   updateSettingsControls();

@@ -327,7 +327,12 @@ button.primary:hover {
 }
 
 @media (min-width: 901px) {
-  .settings-panel { grid-template-columns: 1.2fr .8fr 1fr 1fr; }
+  .settings-panel { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  /* The class and race lists get half the row each, under the four short groups. */
+  .settings-list {
+    grid-column: span 2;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .settings-group {

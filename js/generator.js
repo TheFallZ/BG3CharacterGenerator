@@ -3,7 +3,7 @@ let data = structuredClone(DEFAULT_DATA);
 let character = {};
 const MAX_LEVEL = 12;
 function defaultSettings() {
-    return { excludedClasses: [], excludedRaces: [], multiclass: "sometimes", tripleClass: false, hiddenCards: [], party: false };
+    return { excludedClasses: [], excludedRaces: [], multiclass: "sometimes", tripleClass: false, hiddenCards: [], party: false, originCharacters: false };
 }
 let settings = defaultSettings();
 // Classes and races the visitor allows; excluding everything falls back to the full list.
@@ -120,8 +120,9 @@ function rollOrigin(keepRace = false, keepBackground = false, avoidNames = []) {
         : typeof background === "string" ? background
             : background?.find(entry => entry.label === "Background")?.value ?? null;
     const darkUrgeAllowed = !keepBackground || keptBackground === DARK_URGE_BACKGROUND;
-    const originsAllowed = !keepRace && !keepBackground;
-    const roll = Math.random() * 100;
+    const originsAllowed = settings.originCharacters && !keepRace && !keepBackground;
+    // With origin characters off, custom and Dark Urge keep their odds relative to each other.
+    const roll = Math.random() * (settings.originCharacters ? 100 : ORIGIN_CHANCES.custom + ORIGIN_CHANCES.darkUrge);
     if (roll < ORIGIN_CHANCES.custom || !darkUrgeAllowed && !originsAllowed)
         return CUSTOM_ORIGIN;
     if (roll < ORIGIN_CHANCES.custom + ORIGIN_CHANCES.darkUrge)
