@@ -58,7 +58,7 @@ function renderSettings() {
       </div>
     </section>
     <div class="settings-foot">
-      <p class="settings-note">Settings save automatically. Changes to what can be rolled apply the next time you generate or reroll.</p>
+      <p class="settings-note">Your settings save automatically and take effect the next time you generate a character.</p>
       <button type="button" id="resetSettings">Reset to defaults</button>
     </div>`;
     updateSettingsControls();
