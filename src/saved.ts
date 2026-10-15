@@ -134,6 +134,7 @@ function savedCard(id: string): HTMLElement | null {
 function openSaved(id: string): void {
   const item = getSavedCharacters().find(saved => saved.id === id);
   if (!item) return;
+  trackEvent("open-saved-build");
   pushHistory(loadCurrentBuild());
   storeCurrentBuild({character: structuredClone(item.character), savedId: id, sharedName: null});
   location.href = homeURL();
@@ -141,12 +142,16 @@ function openSaved(id: string): void {
 
 async function copySavedLink(id: string): Promise<void> {
   const item = getSavedCharacters().find(saved => saved.id === id);
-  if (item) await copyToClipboard(await buildLink(item.character, item.name ?? null), `Link to "${savedTitle(item)}" copied.`);
+  if (!item) return;
+  trackEvent("copy-link");
+  await copyToClipboard(await buildLink(item.character, item.name ?? null), `Link to "${savedTitle(item)}" copied.`);
 }
 
 async function copySavedText(id: string): Promise<void> {
   const item = getSavedCharacters().find(saved => saved.id === id);
-  if (item) await copyToClipboard(await buildText(item.character, item.name ?? null), `Text for "${savedTitle(item)}" copied.`);
+  if (!item) return;
+  trackEvent("copy-text");
+  await copyToClipboard(await buildText(item.character, item.name ?? null), `Text for "${savedTitle(item)}" copied.`);
 }
 
 function startRename(id: string): void {
@@ -271,6 +276,7 @@ function deleteSaved(id: string): void {
 function exportSaved(): void {
   const saved = getSavedCharacters();
   if (!saved.length) return;
+  trackEvent("backup");
   const backup = {format: BACKUP_FORMAT, version: 1, exported: new Date().toISOString(), builds: saved};
   const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], {type: "application/json"}));
   const link = document.createElement("a");
@@ -284,6 +290,7 @@ function exportSaved(): void {
 // Adds the builds from a backup file, skipping any already saved here. The file is checked
 // build by build, since it may have come from anywhere.
 async function importSaved(file: File): Promise<void> {
+  trackEvent("import");
   let parsed: unknown;
   try {
     parsed = JSON.parse(await file.text());

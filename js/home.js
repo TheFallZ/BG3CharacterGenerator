@@ -120,6 +120,7 @@ function rollCards(keys) {
 }
 // Feats follow the class levels, and race and class decide which armor feats are allowed.
 function reroll(key) {
+    trackEvent(`reroll-${key}`);
     if (key === "origin")
         rollCards(["origin", "race", "background", "class", "abilities", "feats", "romance", "companionBuild"]);
     else if (key === "race")
@@ -134,6 +135,7 @@ function reroll(key) {
         rollCards([key]);
 }
 function generateAll() {
+    trackEvent("generate");
     rollCards(ROLL_ORDER);
 }
 // Puts a build on screen that came from somewhere else: a saved build, a link, or this tab's last visit.
@@ -165,6 +167,7 @@ function saveCharacter() {
     });
     try {
         storeSavedCharacters(saved);
+        trackEvent("save");
         currentSavedId = id;
         sharedName = null;
         renderCards();
@@ -192,6 +195,7 @@ async function loadSharedBuild() {
     }
     pushHistory(currentEntry());
     showBuild(shared, null, match[1] ? slugToName(match[1]) : null);
+    trackEvent("open-shared-build");
     // A named build's title already says it's shared.
     setNotice(sharedName ? "" : "Shared build loaded.");
     return true;
@@ -200,6 +204,7 @@ function undo() {
     const previous = popHistory();
     if (!previous)
         return;
+    trackEvent("undo");
     clearSharedBuildLink();
     showBuild(previous.character, previous.savedId, previous.sharedName);
     setNotice("Previous build restored.");
@@ -210,10 +215,12 @@ function setShareMenu(open) {
 }
 async function copyCurrentLink() {
     setShareMenu(false);
+    trackEvent("copy-link");
     await copyToClipboard(await buildLink(character, currentBuildName()), "Build link copied.");
 }
 async function copyCurrentText() {
     setShareMenu(false);
+    trackEvent("copy-text");
     await copyToClipboard(await buildText(character, currentBuildName()), "Build text copied.");
 }
 // The heading beside the buttons: a named build shows its name with race and class below;

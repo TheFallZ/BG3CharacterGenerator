@@ -127,6 +127,7 @@ function rollCards(keys: CardKey[]): void {
 
 // Feats follow the class levels, and race and class decide which armor feats are allowed.
 function reroll(key: CardKey): void {
+  trackEvent(`reroll-${key}`);
   if (key === "origin") rollCards(["origin", "race", "background", "class", "abilities", "feats", "romance", "companionBuild"]);
   else if (key === "race") rollCards(["race", "background", "class", "abilities", "feats"]);
   else if (key === "background") rollCards(["background", "class", "abilities", "feats"]);
@@ -136,6 +137,7 @@ function reroll(key: CardKey): void {
 }
 
 function generateAll(): void {
+  trackEvent("generate");
   rollCards(ROLL_ORDER);
 }
 
@@ -167,6 +169,7 @@ function saveCharacter(): void {
 
   try {
     storeSavedCharacters(saved);
+    trackEvent("save");
     currentSavedId = id;
     sharedName = null;
     renderCards();
@@ -193,6 +196,7 @@ async function loadSharedBuild(): Promise<boolean> {
   }
   pushHistory(currentEntry());
   showBuild(shared, null, match[1] ? slugToName(match[1]) : null);
+  trackEvent("open-shared-build");
   // A named build's title already says it's shared.
   setNotice(sharedName ? "" : "Shared build loaded.");
   return true;
@@ -201,6 +205,7 @@ async function loadSharedBuild(): Promise<boolean> {
 function undo(): void {
   const previous = popHistory();
   if (!previous) return;
+  trackEvent("undo");
   clearSharedBuildLink();
   showBuild(previous.character, previous.savedId, previous.sharedName);
   setNotice("Previous build restored.");
@@ -213,11 +218,13 @@ function setShareMenu(open: boolean): void {
 
 async function copyCurrentLink(): Promise<void> {
   setShareMenu(false);
+  trackEvent("copy-link");
   await copyToClipboard(await buildLink(character, currentBuildName()), "Build link copied.");
 }
 
 async function copyCurrentText(): Promise<void> {
   setShareMenu(false);
+  trackEvent("copy-text");
   await copyToClipboard(await buildText(character, currentBuildName()), "Build text copied.");
 }
 

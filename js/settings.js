@@ -96,6 +96,11 @@ function readSettings(event) {
     };
     storeSettings();
     updateSettingsControls();
+    // Which options people change, e.g. "setting-party-on", "setting-class-Bard-off" or "setting-multiclass-always".
+    if (changed) {
+        const value = changed.value === "on" ? "" : `-${changed.value}`;
+        trackEvent(`setting-${changed.name}${value}${changed.type === "checkbox" ? (changed.checked ? "-on" : "-off") : ""}`);
+    }
 }
 document.getElementById("settingsPanel").addEventListener("change", readSettings);
 document.getElementById("settingsPanel").addEventListener("click", event => {

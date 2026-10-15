@@ -456,6 +456,16 @@ async function buildText(build: Character, name: string | null): Promise<string>
   return lines.join("\n");
 }
 
+// Counts an action, like "generate", on GoatCounter. Counts are anonymous and use no cookies.
+// Does nothing when the counter is blocked or hasn't loaded, and GoatCounter skips localhost.
+function trackEvent(name: string): void {
+  try {
+    (window as {goatcounter?: {count?: (vars: object) => void}}).goatcounter?.count?.({path: name, title: name, event: true});
+  } catch {
+    // Counting never gets in the way of the page.
+  }
+}
+
 // Messages like "Build link copied." clear themselves after a few seconds.
 const NOTICE_SECONDS = 4;
 let noticeTimer: number | undefined;
