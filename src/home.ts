@@ -221,6 +221,7 @@ function renderBuildTitle(): void {
   const name = currentBuildName();
   header.hidden = !name;
   if (!name) return;
+  (document.getElementById("buildKind") as HTMLElement).textContent = currentSavedId ? "Saved build" : "Shared build";
   (document.getElementById("buildName") as HTMLElement).textContent = name;
   (document.getElementById("buildSummary") as HTMLElement).textContent = describeCharacter(character);
 }

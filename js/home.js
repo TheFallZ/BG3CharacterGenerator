@@ -218,6 +218,7 @@ function renderBuildTitle() {
     header.hidden = !name;
     if (!name)
         return;
+    document.getElementById("buildKind").textContent = currentSavedId ? "Saved build" : "Shared build";
     document.getElementById("buildName").textContent = name;
     document.getElementById("buildSummary").textContent = describeCharacter(character);
 }

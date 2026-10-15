@@ -746,42 +746,40 @@ button.danger:hover {
   font-weight: 700;
 }
 
-/* Build title */
+/* Build title: a named build gets a heading like the other pages, above its cards. */
 
 .build-title {
-  margin: 4px 0 14px;
-  text-align: center;
+  margin: 2px 0 14px;
 }
 
 .build-title[hidden] {
   display: none;
 }
 
+.build-kind {
+  margin: 0;
+  color: var(--page-ink);
+  opacity: .7;
+  font-size: 14px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
 .build-title h1 {
   margin: 0;
-  color: var(--accent);
-  font-family: var(--font-display);
-  font-size: clamp(28px, 5vw, 40px);
-  font-weight: 700;
-  line-height: 1.1;
-  overflow-wrap: anywhere;
-  text-shadow: 0 2px 12px rgba(233, 165, 187, .25);
-}
-
-.build-title p {
-  margin: 4px 0 0;
   color: var(--page-ink);
-  font-size: 16.5px;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
-.build-title p::before,
-.build-title p::after {
-  content: "";
-  display: inline-block;
-  width: 40px;
-  margin: 0 12px;
-  vertical-align: middle;
-  border-top: 1px solid var(--control-border);
+#buildSummary {
+  margin: 2px 0 0;
+  color: var(--page-ink);
+  opacity: .85;
+  font-size: 16.5px;
 }
 
 /* Cards */
