@@ -729,6 +729,11 @@ kbd {
   flex-direction: column;
 }
 
+/* No dividing lines inside saved cards: the header tint and spacing separate the parts. */
+.saved-card .card-head {
+  border-bottom: 0;
+}
+
 .saved-card .card-head h2 {
   font-size: 19px;
   overflow-wrap: anywhere;
@@ -856,8 +861,7 @@ button.saved-more {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: auto;
-  border-top: 1px solid var(--rule);
-  padding-top: 8px;
+  padding-top: 6px;
 }
 
 .saved-card-date {
