@@ -188,7 +188,8 @@ async function loadSharedBuild() {
     }
     pushHistory(currentEntry());
     showBuild(shared, null, match[1] ? slugToName(match[1]) : null);
-    setNotice("Shared build loaded.");
+    // A named build's title already says it's shared.
+    setNotice(sharedName ? "" : "Shared build loaded.");
     return true;
 }
 function undo() {
