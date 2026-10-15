@@ -29,3 +29,7 @@ When you change `styles.css` or the scripts, bump the `?v=` number on their link
 - `styles.css`: all styling. Colors are named tokens at the top of the file.
 
 The source files are plain scripts that share one global scope, loaded in order by `index.html`, rather than ES modules. That keeps the page working when `index.html` is opened directly from disk, where browsers block module imports.
+
+## Proficiency Rules
+
+The first generated class uses its starting-class skill picks. A second class uses BG3's multiclass proficiency grants instead of receiving all its starting-class skill picks. The BG3 Wiki notes that multiclass Clerics appear to receive two skill proficiencies despite this likely being a game bug; the generator mirrors that behavior.
