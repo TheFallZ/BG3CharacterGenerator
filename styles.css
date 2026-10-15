@@ -669,8 +669,8 @@ kbd {
 .timeline-step {
   position: relative;
   display: grid;
-  grid-template-columns: 130px minmax(0, 1fr);
-  gap: 0 18px;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 0 14px;
   padding-bottom: 18px;
 }
 
@@ -707,18 +707,15 @@ kbd {
   box-shadow: 0 0 0 4px var(--page);
 }
 
-.timeline-marker time {
-  opacity: .8;
-  font-size: 14.5px;
+.timeline-version {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .release-card .card-head h2 {
   font-size: 21px;
-}
-
-.release-version {
-  color: var(--muted);
-  font-size: 15px;
 }
 
 .release-intro {
