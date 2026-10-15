@@ -103,6 +103,10 @@ function rollCards(keys) {
             character = { ...character, [key]: ROLLS[key]() };
         }
     }
+    // A kept class's Expertise has to stay on skills the character still has.
+    if (!targets.has("class") && (targets.has("race") || targets.has("background")) && character.class) {
+        character.class = repairExpertise(character.class, [...getRacialSkillProficiencies(), ...getBackgroundSkillProficiencies(), ...getClassSkillProficiencies()]);
+    }
     // Locked feats survive a new class, trimmed or topped up to the new number of feat levels.
     if (targets.has("class") && !targets.has("feats")) {
         character.feats = rollFeats(featValues());

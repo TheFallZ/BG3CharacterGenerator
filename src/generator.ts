@@ -88,7 +88,7 @@ function getBackgroundSkillProficiencies(background: Character["background"] = c
   return typeof backgroundName === "string" ? BACKGROUND_SKILLS[backgroundName] || [] : [];
 }
 
-const CLASS_SKILL_LABELS = ["Skill Proficiencies", "Multiclass Skill Proficiencies", "Nature Domain Skill Proficiency", "Subclass Skill Proficiency"];
+const CLASS_SKILL_LABELS = ["Skill Proficiencies", "Multiclass Skill Proficiencies", "Nature Domain Skill Proficiency", "Subclass Skill Proficiency", "College of Lore Skill Proficiencies"];
 
 function getClassSkillProficiencies(classEntries: Character["class"] = character.class): string[] {
   const entries = classEntries || [];
@@ -167,7 +167,9 @@ function rollRace(): ClassEntry[] {
   const profile = originProfile();
   if (profile) return raceEntries(profile.race, profile.subrace ?? null, BACKGROUND_SKILLS[profile.background] || []);
   const race = pick(allowedRaces()) ?? "Human";
-  return raceEntries(race, pick(data.races[race]?.subraces));
+  // The Dark Urge always has The Haunted One background, so a Human's bonus skill steers around it.
+  const avoid = character.origin === DARK_URGE_ORIGIN ? BACKGROUND_SKILLS[DARK_URGE_BACKGROUND] || [] : [];
+  return raceEntries(race, pick(data.races[race]?.subraces), avoid);
 }
 
 // A race's entries with its proficiencies. A Human's extra skill avoids the given skills.
@@ -273,6 +275,12 @@ function rollClassOptions(className: string, subclass: string | null, level: num
     if (subclass === "College of Swords") {
       entries.push({label: "Fighting Style", value: pick(options["College of Swords"]["Fighting Style"])});
     }
+    // Magical Secrets: two spells up to level 3 for College of Lore at 6, two up to level 5 for every Bard at 10.
+    const loreSecrets = subclass === "College of Lore" && level >= 6 ? pickMany(MAGICAL_SECRETS.slice(0, 4).flat(), 2) : [];
+    if (loreSecrets.length) entries.push({label: "Magical Secrets (Level 6)", value: loreSecrets});
+    if (level >= 10) {
+      entries.push({label: "Magical Secrets (Level 10)", value: pickMany(MAGICAL_SECRETS.flat().filter(spell => !loreSecrets.includes(spell)), 2)});
+    }
   }
 
   if (className === "Cleric") {
@@ -281,6 +289,11 @@ function rollClassOptions(className: string, subclass: string | null, level: num
 
   if (className === "Druid" && subclass === "Circle of the Land") {
     entries.push({label: "Land", value: pick(options["Circle of the Land"]["Land"])});
+    entries.push({label: "Bonus Cantrip", value: pick(STARTING_MAGIC.Druid.cantrips.filter(cantrip => !cantrips.includes(cantrip)))});
+  }
+
+  if (className === "Cleric" && subclass === "Nature") {
+    entries.push({label: "Druid Cantrip", value: pick(STARTING_MAGIC.Druid.cantrips.filter(cantrip => !cantrips.includes(cantrip)))});
   }
 
   if (className === "Fighter") {
@@ -293,6 +306,15 @@ function rollClassOptions(className: string, subclass: string | null, level: num
       const maneuvers = level >= 10 ? 7 : level >= 7 ? 5 : 3;
       entries.push({label: "Maneuvers", value: pickMany(options["Battle Master"]["Maneuvers"], maneuvers)});
     }
+    if (subclass === "Arcane Archer") {
+      entries.push({label: "Arcane Archer Cantrip", value: pick(options["Arcane Archer"]["Arcane Archer Cantrip"])});
+      const shots = level >= 10 ? 5 : level >= 7 ? 4 : 3;
+      entries.push({label: "Arcane Shots", value: pickMany(options["Arcane Archer"]["Arcane Shots"], shots)});
+    }
+  }
+
+  if (className === "Monk" && subclass === "Way of the Four Elements") {
+    entries.push({label: "Elemental Disciplines", value: rollElementalDisciplines(level, options["Way of the Four Elements"])});
   }
 
   if (className === "Paladin") {
@@ -308,6 +330,9 @@ function rollClassOptions(className: string, subclass: string | null, level: num
     if (level >= 2) entries.push({label: "Fighting Style", value: pick(options["Fighting Style"])});
     if (subclass === "Beast Master") {
       entries.push({label: "Ranger's Companion", value: pick(options["Beast Master"]["Ranger's Companion"])});
+    }
+    if (subclass === "Swarmkeeper") {
+      entries.push({label: "Gathered Swarm", value: pick(options.Swarmkeeper["Gathered Swarm"])});
     }
     if (subclass === "Hunter") {
       entries.push({label: "Hunter's Prey", value: pick(options.Hunter["Hunter's Prey"])});
@@ -328,7 +353,10 @@ function rollClassOptions(className: string, subclass: string | null, level: num
     if (level >= 3) {
       const pact = pick(options["Pact Boon"] as string[]);
       entries.push({label: "Pact Boon", value: pact});
-      if (pact === "Pact of the Blade") entries.push({label: "Preferred Weapon", value: pick(options["Preferred Weapon"])});
+      if (pact === "Pact of the Blade") {
+        const weapons = [...options["Preferred Weapon"], ...(subclass === "Hexblade" ? options["Hexblade Pact Weapons"] : [])];
+        entries.push({label: "Preferred Weapon", value: pick(weapons)});
+      }
       if (pact === "Pact of the Chain") entries.push({label: "Preferred Familiar", value: pick(options["Preferred Familiar"])});
     }
     entries.push(...rollInvocations(level, cantrips.includes("Eldritch Blast")));
@@ -347,6 +375,11 @@ function rollSubclassProficiencies(className: string, subclass: string | null, e
   const skills = SUBCLASS_SKILLS[className]?.[subclass ?? ""] || [];
   if (skills.length) {
     entries.push({label: "Subclass Skill Proficiency", value: skills});
+  }
+
+  if (className === "Bard" && subclass === "College of Lore") {
+    const skills = pickMany((data.classes.Bard.skills).filter(skill => !excludedSkills.includes(skill)), 3);
+    if (skills.length) entries.push({label: "College of Lore Skill Proficiencies", value: skills});
   }
 
   if (className === "Cleric" && subclass === "Knowledge") {
@@ -398,7 +431,7 @@ function rollSingleClass(className: string, level: number, isMulticlass = false,
 
   const cantrips = magic.length ? entryValues(magic[0]) : [];
   entries.push(...rollClassOptions(className, subclass, level, cantrips, rangerChoices));
-  if (subclass) entries.push(...rollSubclassProficiencies(className, subclass, excludedSkills));
+  if (subclass) entries.push(...rollSubclassProficiencies(className, subclass, ownedSkills));
   return entries;
 }
 
@@ -443,6 +476,84 @@ function rollWeapons(className: string, classEntries: ClassEntry[]): ClassEntry[
   ];
 }
 
+// Way of the Four Elements: three disciplines at level 3, then one more at 6, 9 and 11,
+// with new ones unlocking at 6 and 11.
+function rollElementalDisciplines(level: number, options: Record<string, string[]>): string[] {
+  const chosen = pickMany(options["Elemental Disciplines"], 3);
+  const more = (pool: string[]) => {
+    const next = pick(pool.filter(name => !chosen.includes(name)));
+    if (next) chosen.push(next);
+  };
+  if (level >= 6) more([...options["Elemental Disciplines"], ...options["Level 6 Disciplines"]]);
+  if (level >= 9) more([...options["Elemental Disciplines"], ...options["Level 6 Disciplines"]]);
+  if (level >= 11) more([...options["Elemental Disciplines"], ...options["Level 6 Disciplines"], ...options["Level 11 Disciplines"]]);
+  return chosen;
+}
+
+// Rogue and Bard Expertise: two skills the character is proficient in at each Expertise level,
+// never one that already has Expertise. Inserted at the end of that class's entries.
+function addExpertise(entries: ClassEntry[], owned: string[]): ClassEntry[] {
+  const taken = new Set(entries.filter(entry => entry.label.includes("Expertise")).flatMap(entryValues));
+  const result: ClassEntry[] = [];
+  let className = "", level = 0;
+  const flush = () => {
+    const count = (EXPERTISE_LEVELS[className] || []).filter(at => level >= at).length * 2;
+    if (!count) return;
+    const skills = pickMany([...new Set(owned)].filter(skill => !taken.has(skill)), count);
+    skills.forEach(skill => taken.add(skill));
+    if (skills.length) result.push({label: "Expertise", value: skills});
+  };
+  for (const entry of entries) {
+    if (entry.label === "Class") {
+      flush();
+      className = typeof entry.value === "string" ? entry.value : "";
+      level = MAX_LEVEL;
+    } else if (entry.label === "Level") {
+      level = Number(entry.value) || MAX_LEVEL;
+    }
+    result.push(entry);
+  }
+  flush();
+  return result;
+}
+
+// After a new race or background with the class kept, Expertise in a skill the character
+// no longer has is swapped for one they do.
+function repairExpertise(classEntries: ClassEntry[], owned: string[]): ClassEntry[] {
+  const taken = new Set(classEntries.filter(entry => entry.label.includes("Expertise")).flatMap(entryValues).filter(skill => owned.includes(skill)));
+  return classEntries.map(entry => {
+    if (entry.label !== "Expertise") return entry;
+    const kept = entryValues(entry).filter(skill => owned.includes(skill));
+    const missing = entryValues(entry).length - kept.length;
+    if (!missing) return entry;
+    const extra = pickMany(owned.filter(skill => !taken.has(skill)), missing);
+    extra.forEach(skill => taken.add(skill));
+    return {...entry, value: [...kept, ...extra]};
+  });
+}
+
+// In a multiclass build, two classes can roll the same cantrip. Later copies are swapped for
+// another cantrip from the same list, so nothing is learned twice.
+function dedupeCantrips(entries: ClassEntry[]): ClassEntry[] {
+  const known = new Set<string>();
+  let className = "";
+  return entries.map(entry => {
+    if (entry.label === "Class" && typeof entry.value === "string") className = entry.value;
+    const pool = entry.label === "Starting Cantrips" ? STARTING_MAGIC[className]?.cantrips
+      : entry.label === "Druid Cantrip" || entry.label === "Bonus Cantrip" ? STARTING_MAGIC.Druid.cantrips
+      : entry.label === "Arcane Archer Cantrip" ? data.classes.Fighter.options?.["Arcane Archer"]["Arcane Archer Cantrip"]
+      : null;
+    if (!pool) return entry;
+    const values = entryValues(entry).map(cantrip => {
+      if (!known.has(cantrip)) { known.add(cantrip); return cantrip; }
+      const swap = pick((pool as string[]).filter(option => !known.has(option))) ?? cantrip;
+      known.add(swap);
+      return swap;
+    });
+    return {...entry, value: Array.isArray(entry.value) ? values : values[0] ?? null};
+  });
+}
+
 function rollClass(): ClassEntry[] {
   const names = allowedClasses();
   const existingSkills = getExistingSkillProficiencies();
@@ -452,7 +563,7 @@ function rollClass(): ClassEntry[] {
 
   if (!others.length) {
     const entries = rollSingleClass(primary, MAX_LEVEL, false, existingSkills);
-    return [...entries, ...rollWeapons(primary, entries)];
+    return dedupeCantrips(addExpertise([...entries, ...rollWeapons(primary, entries)], [...existingSkills, ...getClassSkillProficiencies(entries)]));
   }
 
   // The starting class leaves room for the skills the later classes pick.
@@ -466,7 +577,7 @@ function rollClass(): ClassEntry[] {
   others.forEach((name, index) => {
     entries.push(...rollSingleClass(name, levels[index + 1], true, [...existingSkills, ...getClassSkillProficiencies(entries)]));
   });
-  return entries;
+  return dedupeCantrips(addExpertise(entries, [...existingSkills, ...getClassSkillProficiencies(entries)]));
 }
 
 // Armor proficiencies from race, starting class, multiclass grants and subclasses.

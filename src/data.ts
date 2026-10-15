@@ -185,6 +185,10 @@ const DEFAULT_DATA: GeneratorData = {
       skillCount: 2,
       subclasses: ["Battle Master", "Champion", "Eldritch Knight", "Arcane Archer"],
       options: {
+        "Arcane Archer": {
+          "Arcane Archer Cantrip": ["Guidance", "Light", "True Strike"],
+          "Arcane Shots": ["Banishing Arrow", "Beguiling Arrow", "Bursting Arrow", "Enfeebling Arrow", "Grasping Arrow", "Piercing Arrow", "Seeking Arrow", "Shadow Arrow"]
+        },
         "Fighting Style": ["Archery", "Defense", "Dueling", "Great Weapon Fighting", "Protection", "Two-Weapon Fighting"],
         "Champion": {
           "Second Fighting Style": ["Archery", "Defense", "Dueling", "Great Weapon Fighting", "Protection", "Two-Weapon Fighting"]
@@ -197,7 +201,15 @@ const DEFAULT_DATA: GeneratorData = {
     "Monk": {
       skills: ["Acrobatics", "Athletics", "History", "Insight", "Religion", "Stealth"],
       skillCount: 2,
-      subclasses: ["Way of the Four Elements", "Way of Shadow", "Way of the Open Hand", "Way of the Drunken Master"]
+      subclasses: ["Way of the Four Elements", "Way of Shadow", "Way of the Open Hand", "Way of the Drunken Master"],
+      options: {
+        // Elemental Disciplines: three at level 3, then one at 6, 9 and 11, with more to choose from at 6 and 11.
+        "Way of the Four Elements": {
+          "Elemental Disciplines": ["Blade of Rime", "Chill of the Mountain", "Fangs of the Fire Snake", "Fist of Four Thunders", "Fist of Unbroken Air", "Rush of the Gale Spirits", "Shaping of the Ice", "Sphere of Elemental Balance", "Sweeping Cinder Strike", "Touch of the Storm", "Water Whip"],
+          "Level 6 Disciplines": ["Clench of the North Wind", "Embrace of the Inferno", "Gong of the Summit"],
+          "Level 11 Disciplines": ["Flames of the Phoenix", "Mist Stance", "Ride the Wind"]
+        }
+      }
     },
     "Paladin": {
       skills: ["Athletics", "Insight", "Intimidation", "Medicine", "Persuasion", "Religion"],
@@ -227,6 +239,9 @@ const DEFAULT_DATA: GeneratorData = {
         "Fighting Style": ["Archery", "Defense", "Dueling", "Two-Weapon Fighting"],
         "Beast Master": {
           "Ranger's Companion": ["Bear", "Boar", "Dire Raven", "Wolf", "Wolf Spider"]
+        },
+        "Swarmkeeper": {
+          "Gathered Swarm": ["Cloud of Jellyfish", "Flurry of Moths", "Legion of Bees"]
         },
         "Hunter": {
           "Hunter's Prey": ["Colossus Slayer", "Giant Killer", "Horde Breaker"],
@@ -262,6 +277,8 @@ const DEFAULT_DATA: GeneratorData = {
       options: {
         "Pact Boon": ["Pact of the Blade", "Pact of the Chain", "Pact of the Tome"],
         "Preferred Weapon": ["Battleaxe", "Glaive", "Greatsword", "Rapier", "Trident", "Warhammer"],
+        // Only Hexblades can summon these as their pact weapon.
+        "Hexblade Pact Weapons": ["Flail", "Maul", "Sickle"],
         "Preferred Familiar": ["Animal Spirit", "Imp", "Quasit"],
         "Mystic Arcanum": ["Arcane Gate", "Circle of Death", "Create Undead", "Eyebite", "Flesh to Stone"]
       }
@@ -367,8 +384,26 @@ const SUBCLASS_PROFICIENCIES: Record<string, Record<string, string[]>> = {
 
 // Skill proficiencies granted by a subclass itself.
 const SUBCLASS_SKILLS: Record<string, Record<string, string[]>> = {
+  Fighter: {"Arcane Archer": ["Arcana", "Nature"]},
   Wizard: {Bladesinging: ["Performance"]}
 };
+
+// Expertise picks by class level: Rogues at 1 and 6, Bards at 3 and 10, two each time.
+const EXPERTISE_LEVELS: Record<string, number[]> = {
+  Rogue: [1, 6],
+  Bard: [3, 10]
+};
+
+// Spells Bards can learn with Magical Secrets, by spell level (0 is cantrips).
+// College of Lore picks two up to level 3 at Bard level 6; every Bard picks two up to level 5 at 10.
+const MAGICAL_SECRETS: string[][] = [
+  ["Bone Chill", "Eldritch Blast", "Fire Bolt", "Ray of Frost", "Sacred Flame"],
+  ["Armor of Agathys", "Bless", "Chromatic Orb", "Command", "Entangle", "False Life", "Guiding Bolt", "Hellish Rebuke", "Hex", "Hunter's Mark", "Ice Knife", "Magic Missile", "Sanctuary", "Thunderous Smite"],
+  ["Arcane Lock", "Blur", "Darkness", "Darkvision", "Misty Step", "Pass Without Trace", "Ray of Enfeeblement", "Scorching Ray", "Spike Growth", "Spiritual Weapon", "Web"],
+  ["Animate Dead", "Call Lightning", "Counterspell", "Crusader's Mantle", "Daylight", "Fireball", "Gaseous Form", "Grant Flight", "Haste", "Hunger of Hadar", "Lightning Bolt", "Mass Healing Word", "Remove Curse", "Revivify", "Sleet Storm", "Slow", "Spirit Guardians", "Vampiric Touch", "Warden of Vitality"],
+  ["Banishment", "Blight", "Death Ward", "Dominate Beast", "Fire Shield", "Guardian of Faith", "Ice Storm", "Wall of Fire"],
+  ["Banishing Smite", "Cone of Cold", "Conjure Elemental", "Contagion", "Wall of Stone"]
+];
 
 // Levels at which BG3 grants each class its subclass.
 const SUBCLASS_LEVELS: Record<string, number> = {
