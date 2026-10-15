@@ -438,5 +438,6 @@ loadSharedBuild().then(loaded => {
   if (loaded) return;
   const current = loadCurrentBuild();
   if (current) showBuild(current.character, current.savedId, current.sharedName);
-  else generateAll();
+  // Rolled directly so the first build of a visit isn't counted as a Generate press.
+  else rollCards(ROLL_ORDER);
 });
