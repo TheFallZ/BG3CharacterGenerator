@@ -221,8 +221,9 @@ async function copyCurrentText(): Promise<void> {
 function renderBuildTitle(): void {
   const name = currentBuildName();
   const summary = document.getElementById("buildSummary") as HTMLElement;
+  const isSaved = !!currentSavedId && getSavedCharacters().some(item => item.id === currentSavedId);
   (document.getElementById("buildKind") as HTMLElement).textContent =
-    !name ? "Your character" : currentSavedId ? "Saved build" : "Shared build";
+    isSaved ? "Saved build" : name ? "Shared build" : "Your character";
   (document.getElementById("buildName") as HTMLElement).textContent = name ?? describeCharacter(character);
   summary.textContent = name ? describeCharacter(character) : "";
   summary.hidden = !name;
