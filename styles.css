@@ -408,8 +408,11 @@ button.primary:hover {
   grid-column: 1 / -1;
 }
 
+/* Only the box and its name are clickable, not the empty space beside them. */
 .check {
   display: flex;
+  justify-self: start;
+  width: fit-content;
   align-items: center;
   gap: 7px;
   font-size: 15.5px;
