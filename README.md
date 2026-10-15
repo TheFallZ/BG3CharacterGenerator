@@ -2,6 +2,14 @@
 
 A small, browser-based character generator for Baldur's Gate 3. Generate a character, reroll individual sections, and save builds in your browser.
 
+**Try it: https://thefallz.github.io/BG3CharacterGenerator/**
+
+![A generated level 12 character with Class, Race, Background, Feats, Romance and Companion Build cards](docs/screenshot.png)
+
+Up to date with Patch 8, the latest major patch. If you spot a rule that doesn't match the game, please [open an issue](https://github.com/TheFallZ/BG3CharacterGenerator/issues).
+
+This is an unofficial fan project and is not affiliated with or endorsed by Larian Studios.
+
 ## Features
 
 - Randomizes class, race, feats, background, romance, and the Dark Urge prompt.

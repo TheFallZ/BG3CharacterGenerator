@@ -64,6 +64,22 @@ main {
   padding: 18px 0 28px;
 }
 
+/* Footer */
+
+.site-footer {
+  margin-top: 28px;
+  padding-top: 14px;
+  border-top: 1px solid var(--control-border);
+  color: var(--page-ink);
+  font-size: 14.5px;
+  text-align: center;
+}
+
+.site-footer p { margin: 2px 0; }
+
+.site-footer a { color: var(--accent); }
+.site-footer a:hover { color: var(--accent-hover); }
+
 /* Toolbar */
 
 .toolbar {
