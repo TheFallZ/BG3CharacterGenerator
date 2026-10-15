@@ -635,6 +635,65 @@ button.primary:hover {
 
 /* Saved builds page */
 
+/* Search, sort and backup controls above the saved builds. */
+.saved-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-bottom: 14px;
+}
+
+.saved-tools input[type="search"],
+.saved-tools select {
+  border: 1px solid var(--control-border);
+  border-radius: 5px;
+  padding: 6px 10px;
+  color: var(--control-ink);
+  background: var(--control-bg);
+  font: inherit;
+  font-size: 15.5px;
+}
+
+.saved-tools input[type="search"] {
+  flex: 1 1 240px;
+  max-width: 360px;
+}
+
+.saved-sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--page-ink);
+  font-size: 15px;
+}
+
+.saved-backup {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.saved-no-match {
+  margin: 0 0 14px;
+  color: var(--page-ink);
+  opacity: .8;
+}
+
+.saved-no-match[hidden] {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .saved-tools input[type="search"] {
+    max-width: none;
+  }
+
+  .saved-backup {
+    margin-left: 0;
+  }
+}
+
 .saved-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));

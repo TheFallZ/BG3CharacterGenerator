@@ -1,9 +1,33 @@
 "use strict";
-// The Saved page: every saved build with open, share, rename and delete.
+// The Saved page: every saved build with open, share, rename and delete, plus sorting,
+// search, and backing builds up to a file.
+const SAVED_SORT_KEY = "bg3-character-generator-saved-sort";
+const BACKUP_FORMAT = "bg3-character-generator-saved-builds";
+function savedTime(item) {
+    return Number(item.id.split("-")[0]) || 0;
+}
+function startingClass(item) {
+    return getClassLevels(item.character.class)[0]?.className ?? "";
+}
+const SAVED_SORTS = {
+    newest: (a, b) => savedTime(b) - savedTime(a),
+    oldest: (a, b) => savedTime(a) - savedTime(b),
+    name: (a, b) => savedTitle(a).localeCompare(savedTitle(b)),
+    class: (a, b) => startingClass(a).localeCompare(startingClass(b)) || savedTitle(a).localeCompare(savedTitle(b))
+};
+function savedSort() {
+    return document.getElementById("savedSort").value;
+}
 function renderSavedPage() {
     const list = document.getElementById("savedList");
-    const saved = getSavedCharacters();
-    document.getElementById("savedEmpty").hidden = saved.length > 0;
+    const all = getSavedCharacters();
+    const query = document.getElementById("savedSearch").value.trim().toLowerCase();
+    const saved = all
+        .filter(item => !query || `${savedTitle(item)} ${describeCharacter(item.character)}`.toLowerCase().includes(query))
+        .sort(SAVED_SORTS[savedSort()] ?? SAVED_SORTS.newest);
+    document.getElementById("savedEmpty").hidden = all.length > 0;
+    document.getElementById("savedNoMatch").hidden = !all.length || saved.length > 0;
+    document.getElementById("exportSaved").disabled = !all.length;
     list.innerHTML = saved.map(item => {
         const title = savedTitle(item);
         const id = escapeHTML(item.id);
@@ -124,6 +148,91 @@ function deleteSaved(id) {
         setNotice("Could not delete the saved build.");
     }
     renderSavedPage();
+}
+// Downloads every saved build as a file that Import can read back, here or on another device.
+function exportSaved() {
+    const saved = getSavedCharacters();
+    if (!saved.length)
+        return;
+    const backup = { format: BACKUP_FORMAT, version: 1, exported: new Date().toISOString(), builds: saved };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `bg3-saved-builds-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setNotice(`Backed up ${saved.length} ${saved.length === 1 ? "build" : "builds"}.`);
+}
+// Adds the builds from a backup file, skipping any already saved here. The file is checked
+// build by build, since it may have come from anywhere.
+async function importSaved(file) {
+    let parsed;
+    try {
+        parsed = JSON.parse(await file.text());
+    }
+    catch {
+        setNotice("That file isn't a saved builds backup.");
+        return;
+    }
+    const builds = Array.isArray(parsed) ? parsed
+        : Array.isArray(parsed?.builds) ? parsed.builds
+            : [];
+    const existing = getSavedCharacters();
+    const ids = new Set(existing.map(item => item.id));
+    const added = [];
+    for (const build of builds) {
+        if (!isSavedCharacter(build) || ids.has(build.id))
+            continue;
+        const character = sanitizeCharacter(build.character);
+        if (!character)
+            continue;
+        const name = typeof build.name === "string" ? build.name.trim().slice(0, MAX_NAME_LENGTH) : "";
+        added.push({ id: build.id, label: build.label, ...(name ? { name } : {}), character });
+        ids.add(build.id);
+    }
+    if (!builds.length) {
+        setNotice("That file isn't a saved builds backup.");
+        return;
+    }
+    if (!added.length) {
+        setNotice("Everything in that backup is already saved here.");
+        return;
+    }
+    try {
+        storeSavedCharacters([...added, ...existing]);
+        setNotice(`Imported ${added.length} ${added.length === 1 ? "build" : "builds"}.`);
+    }
+    catch {
+        setNotice("Could not import. Browser storage may be full or unavailable.");
+    }
+    renderSavedPage();
+}
+document.getElementById("savedSearch").addEventListener("input", renderSavedPage);
+document.getElementById("savedSort").addEventListener("change", () => {
+    try {
+        localStorage.setItem(SAVED_SORT_KEY, savedSort());
+    }
+    catch {
+        // The sort still applies for this visit.
+    }
+    renderSavedPage();
+});
+document.getElementById("exportSaved").addEventListener("click", exportSaved);
+document.getElementById("importSaved").addEventListener("click", () => document.getElementById("importFile").click());
+document.getElementById("importFile").addEventListener("change", event => {
+    const input = event.target;
+    const file = input.files?.[0];
+    input.value = "";
+    if (file)
+        importSaved(file);
+});
+try {
+    const sort = localStorage.getItem(SAVED_SORT_KEY);
+    if (sort && SAVED_SORTS[sort])
+        document.getElementById("savedSort").value = sort;
+}
+catch {
+    // Newest first is the default.
 }
 document.getElementById("savedList").addEventListener("click", event => {
     const button = event.target.closest("button");

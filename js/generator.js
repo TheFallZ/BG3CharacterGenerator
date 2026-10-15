@@ -362,18 +362,39 @@ function splitLevels(count) {
     const second = minSecond + Math.floor(Math.random() * (rest - minSecond));
     return [primary, second, rest - second];
 }
+// Preferred weapons for your own character, from the starting class and its fighting style.
+function rollWeapons(className, classEntries) {
+    const weapons = WEAPON_PREFERENCES[className];
+    if (!weapons)
+        return [];
+    const style = classEntries.find(entry => entry.label === "Fighting Style")?.value;
+    let melee = FIGHTING_STYLE_WEAPONS[typeof style === "string" ? style : ""] ?? weapons.melee;
+    // College of Swords bards fight with blades they're proficient with.
+    if (className === "Bard")
+        melee = melee.filter(weapon => BARD_BLADES.includes(weapon));
+    if (!melee.length)
+        melee = weapons.melee;
+    return [
+        { label: "Preferred melee weapon", value: pick(melee) },
+        { label: "Preferred ranged weapon", value: pick(weapons.ranged) }
+    ];
+}
 function rollClass() {
     const names = allowedClasses();
     const existingSkills = getExistingSkillProficiencies();
     const classNames = pickMany(names, rollClassCount(names.length));
     const levels = splitLevels(classNames.length);
     const [primary, ...others] = classNames;
-    if (!others.length)
-        return rollSingleClass(primary, MAX_LEVEL, false, existingSkills);
+    if (!others.length) {
+        const entries = rollSingleClass(primary, MAX_LEVEL, false, existingSkills);
+        return [...entries, ...rollWeapons(primary, entries)];
+    }
     // The starting class leaves room for the skills the later classes pick.
     const reservedSkills = [...new Set(others.flatMap(name => MULTICLASS_SKILL_COUNTS[name] ? data.classes[name]?.skills || [] : []))].filter(skill => !existingSkills.includes(skill));
     const reservedCount = others.reduce((sum, name) => sum + (MULTICLASS_SKILL_COUNTS[name] || 0), 0);
     const entries = rollSingleClass(primary, levels[0], false, existingSkills, reservedSkills, reservedCount);
+    // Weapons follow the starting class and sit with it, before the later classes.
+    entries.push(...rollWeapons(primary, entries));
     others.forEach((name, index) => {
         entries.push(...rollSingleClass(name, levels[index + 1], true, [...existingSkills, ...getClassSkillProficiencies(entries)]));
     });

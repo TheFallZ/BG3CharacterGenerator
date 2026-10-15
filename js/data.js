@@ -481,6 +481,14 @@ const BASE_HIRELINGS = [
     { name: "Ver'yll Wenkiir", defaultClass: "Ranger", race: "Seldarine Drow" },
     { name: "Zenith Feur'sel", defaultClass: "Cleric", race: "High Elf" }
 ];
+// Melee weapons that suit a fighting style, for classes that pick one.
+const FIGHTING_STYLE_WEAPONS = {
+    "Great Weapon Fighting": ["Greatsword", "Greataxe", "Maul", "Glaive", "Halberd"],
+    "Dueling": ["Longsword", "Rapier", "Warhammer", "Scimitar"],
+    "Two-Weapon Fighting": ["Shortsword", "Scimitar", "Rapier", "Dagger"],
+    "Protection": ["Longsword", "Warhammer", "Morningstar"]
+};
+const BARD_BLADES = ["Rapier", "Longsword", "Shortsword", "Scimitar", "Dagger"];
 const WEAPON_PREFERENCES = {
     Barbarian: { melee: ["Greataxe", "Greatsword", "Maul"], ranged: ["Longbow", "Heavy Crossbow"] },
     Bard: { melee: ["Rapier", "Shortsword", "Longsword"], ranged: ["Shortbow", "Hand Crossbow"] },
