@@ -39,7 +39,7 @@ function renderSettings(): void {
     <section class="settings-section">
       <h2>Cards</h2>
       <fieldset class="settings-group">
-        <legend class="settings-intro">Show these cards on the Generator</legend>
+        <legend class="visually-hidden">Cards to show</legend>
         ${HIDEABLE_CARDS.map(({key, label}) => checkboxHTML("showCard", key, label, !settings.hiddenCards.includes(key))).join("")}
       </fieldset>
     </section>
