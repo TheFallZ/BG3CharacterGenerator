@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;500;700&family=Alegreya+SC:wght@500;700&display=swap">
-<link rel="stylesheet" href="../styles.css?v=57">
+<link rel="stylesheet" href="../styles.css?v=58">
 </head>
 <body data-root="../">
 
@@ -37,66 +37,65 @@
     <h1>What's new</h1>
   </div>
 
-  <div class="releases">
-    <article class="release">
-      <header class="release-head">
-        <h2>The big update</h2>
-        <span class="release-date">October 2026</span>
-      </header>
-      <p class="release-intro">This is a big one. Saved builds and settings have their own pages now, the generator rolls more of your character, and sharing a build is a lot easier.</p>
+  <ol class="timeline">
+    <li class="timeline-step">
+      <div class="timeline-marker"><span class="timeline-dot"></span><time datetime="2026-10">October 2026</time></div>
+      <article class="card release-card">
+        <div class="card-head"><h2>The big update</h2><span class="release-version">v2.0</span></div>
+        <div class="card-body">
+          <p class="release-intro">Saved builds and settings get their own pages, the generator rolls more of your character, and sharing a build is a lot easier.</p>
+          <div class="release-groups">
+            <section>
+              <h3>Your character</h3>
+              <ul>
+                <li>Ability scores arranged for your class, with your bonus points added</li>
+                <li>Preferred melee and ranged weapons</li>
+                <li>Origin characters, including the Dark Urge (turn on in Settings)</li>
+                <li>A full party of three companions, if you'd like</li>
+                <li>Rare triple-class builds (turn on in Settings)</li>
+              </ul>
+            </section>
+            <section>
+              <h3>Settings</h3>
+              <ul>
+                <li>Pick how often you get a multiclass build</li>
+                <li>Leave out classes or races you don't want</li>
+                <li>Hide cards you don't need</li>
+              </ul>
+            </section>
+            <section>
+              <h3>Saving and sharing</h3>
+              <ul>
+                <li>Name your builds and add notes</li>
+                <li>Search and sort the Saved page</li>
+                <li>Share links and copy-as-text for Reddit and Discord</li>
+                <li>Back up and import builds between devices</li>
+                <li>Undo and keyboard shortcuts (G, Z, S, C)</li>
+              </ul>
+            </section>
+            <section>
+              <h3>Smaller changes</h3>
+              <ul>
+                <li>A cleaner layout with calmer colors</li>
+                <li>Companion builds say companion or hireling</li>
+                <li>Works properly in the Reddit app</li>
+              </ul>
+            </section>
+          </div>
+        </div>
+      </article>
+    </li>
 
-      <div class="release-groups">
-        <section>
-          <h3>Your character</h3>
-          <ul>
-            <li>Ability scores, arranged for your class with your bonus points already added.</li>
-            <li>Preferred melee and ranged weapons that suit your class and fighting style.</li>
-            <li>Origin characters. Turn them on in Settings and you might play as the Dark Urge, Karlach, Astarion or one of the others.</li>
-            <li>A full party of three companions instead of one, if you'd like.</li>
-            <li>Rare triple-class builds, when you allow them.</li>
-          </ul>
-        </section>
-
-        <section>
-          <h3>Settings</h3>
-          <ul>
-            <li>Pick how often you get a multiclass build.</li>
-            <li>Leave out any classes or races you don't want.</li>
-            <li>Hide cards you don't need, like the tadpole question.</li>
-          </ul>
-        </section>
-
-        <section>
-          <h3>Saving and sharing</h3>
-          <ul>
-            <li>Name your builds and add notes, like where you're up to in a run.</li>
-            <li>Search and sort everything on the Saved page.</li>
-            <li>Share a link that opens exactly what you rolled, or copy it as text for Reddit or Discord.</li>
-            <li>Back up your saved builds and import them on another device.</li>
-            <li>Undo if you roll past a build you liked.</li>
-            <li>Keyboard shortcuts: G to generate, Z to undo, S to save and C to copy a link.</li>
-          </ul>
-        </section>
-
-        <section>
-          <h3>Smaller changes</h3>
-          <ul>
-            <li>A cleaner layout with calmer colors.</li>
-            <li>Companion builds say whether you're bringing a companion or a hireling.</li>
-            <li>Works properly in the Reddit app and other in-app browsers.</li>
-          </ul>
-        </section>
-      </div>
-    </article>
-
-    <article class="release">
-      <header class="release-head">
-        <h2>First release</h2>
-        <span class="release-date">October 2026</span>
-      </header>
-      <p class="release-intro">The first version. Roll a full level 12 character with a class, race, background, feats, the tadpole question, a romance and a companion. Lock or reroll any part, and save the builds you like.</p>
-    </article>
-  </div>
+    <li class="timeline-step">
+      <div class="timeline-marker"><span class="timeline-dot"></span><time datetime="2026-10">October 2026</time></div>
+      <article class="card release-card">
+        <div class="card-head"><h2>First release</h2><span class="release-version">v1.0</span></div>
+        <div class="card-body">
+          <p class="release-intro">Roll a full level 12 character, lock or reroll any part of it, and save the builds you like.</p>
+        </div>
+      </article>
+    </li>
+  </ol>
 
 </main>
 <footer class="site-footer">
@@ -107,8 +106,8 @@
 </footer>
 
 
-<script src="../js/data.js?v=57" defer></script>
-<script src="../js/generator.js?v=57" defer></script>
-<script src="../js/common.js?v=57" defer></script>
+<script src="../js/data.js?v=58" defer></script>
+<script src="../js/generator.js?v=58" defer></script>
+<script src="../js/common.js?v=58" defer></script>
 </body>
 </html>
