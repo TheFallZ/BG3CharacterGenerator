@@ -10,7 +10,10 @@ Edit the TypeScript in `src/`, then check types and rebuild from the project fol
 npm.cmd install
 npm.cmd run typecheck
 npm.cmd run build
+npm.cmd test
 ```
+
+`npm test` rolls a few thousand random builds from the compiled `js/` and checks each against the game's rules: class levels, subclass unlocks, skills, Expertise, cantrips, invocations, feats, origins, ability scores and parties. Set `BUILDS` to roll more, for example `$env:BUILDS=20000; npm.cmd test`.
 
 Serve the folder (for example `python -m http.server`) and open it in a browser to try your changes. Opening `index.html` straight from disk works for the generator, but links between pages work best when served.
 

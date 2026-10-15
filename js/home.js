@@ -383,8 +383,12 @@ const SHORTCUTS = {
     c: copyCurrentLink
 };
 document.addEventListener("keydown", event => {
-    if (event.key === "Escape")
+    if (event.key === "Escape") {
+        const inMenu = !!document.activeElement?.closest("#shareMenu");
         setShareMenu(false);
+        if (inMenu)
+            document.getElementById("shareToggle")?.focus();
+    }
     const target = event.target;
     if (event.ctrlKey || event.metaKey || event.altKey || target.closest("input, textarea, select, [contenteditable]"))
         return;

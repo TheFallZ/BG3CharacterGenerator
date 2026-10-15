@@ -8,7 +8,7 @@
   /* Parchment cards */
   --card: #d8ccca;
   --ink: #302628;
-  --muted: #756467;
+  --muted: #5e4d51;
   --frame: #92787b;
   --rule: rgba(106, 76, 81, .36);
 
@@ -16,7 +16,7 @@
   --accent: #e9a5bb;
   --accent-hover: #dc8fa9;
   --accent-ink: #432d36;
-  --accent-deep: #a8506e;
+  --accent-deep: #8a3454;
 
   /* Dark controls */
   --control-bg: #1c1a1d;
@@ -55,6 +55,7 @@ body {
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
 
+a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
@@ -847,14 +848,24 @@ kbd {
 
 /* Saved builds use the Generator's card look: a header with the title and a ⋯ menu,
    labeled details, an optional note, and the save date with Open at the bottom. */
-.saved-card {
+/* Saved cards let the ⋯ menu hang outside them, and the card with an open menu sits above the
+   cards after it. */
+.card.saved-card {
   display: flex;
   flex-direction: column;
+  overflow: visible;
 }
 
-/* No dividing lines inside saved cards: the header tint and spacing separate the parts. */
+.saved-card:has(.saved-menu:not([hidden])) {
+  position: relative;
+  z-index: 6;
+}
+
+/* No dividing lines inside saved cards: the header tint and spacing separate the parts.
+   Its corners follow the card's, since the card no longer clips it. */
 .saved-card .card-head {
   border-bottom: 0;
+  border-radius: 7px 4px 0 0 / 8px 1px 0 0;
 }
 
 .saved-card .card-head h2 {
@@ -889,8 +900,15 @@ kbd {
   flex: 0 0 auto;
 }
 
+/* 32px square so it's easy to tap; the negative margin keeps the card header the same height. */
 button.saved-more {
-  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  margin: -6px -8px -6px 0;
+  padding: 0;
   font-size: 20px;
   line-height: 1;
   text-decoration: none;
@@ -1098,6 +1116,13 @@ button.danger:hover {
 }
 
 .update-banner button.text-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  margin: -4px -8px -4px 0;
+  padding: 0;
   color: var(--page-ink);
   font-size: 20px;
   line-height: 1;

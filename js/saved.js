@@ -65,7 +65,7 @@ function renderSavedPage() {
         </div>
         <div class="saved-card-actions">
           <span class="saved-card-date">Saved ${escapeHTML(shortDate(item))}</span>
-          <button class="primary saved-open" data-open="${id}">Open</button>
+          <button class="primary saved-open" data-open="${id}" aria-label="Open ${escapeHTML(title)}">Open</button>
         </div>
       </div>
     </li>`;
@@ -376,8 +376,12 @@ document.addEventListener("click", event => {
     if (!event.target.closest(".saved-menu-wrap"))
         closeMenus();
 });
+// Escape closes the menu and puts focus back on its ⋯ button, so keyboard users don't lose their place.
 document.addEventListener("keydown", event => {
-    if (event.key === "Escape")
-        closeMenus();
+    if (event.key !== "Escape")
+        return;
+    const wrap = document.activeElement?.closest(".saved-menu-wrap");
+    closeMenus();
+    wrap?.querySelector(".saved-more")?.focus();
 });
 renderSavedPage();

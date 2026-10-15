@@ -331,20 +331,109 @@ function homeURL() {
 async function buildLink(build, name) {
     return `${homeURL()}#${name ? `${nameToSlug(name)}&` : ""}build=${await encodeBuild(build)}`;
 }
-// Markdown-friendly text for Reddit and Discord: a bold heading per card and a bullet per entry.
-async function buildText(build, name) {
-    const lines = name
-        ? [`**${name}**`, describeCharacter(build), ""]
-        : [`**${describeCharacter(build)}**`, ""];
-    for (const key of visibleCards()) {
-        lines.push(`**${cardTitle(build, key)}**`, "");
-        for (const entry of buildCardEntries(build, key)) {
-            const value = Array.isArray(entry.value) ? entry.value.join(", ") : entry.value ?? "Not available";
-            lines.push(`- ${entry.label ? `${entry.label}: ` : ""}${value}`);
-        }
-        lines.push("");
+// Labels the copied text leaves out of the class details: they're in the class heading, the
+// Skills and Expertise lines, or are armor and weapon proficiencies the game hands out anyway.
+const TEXT_SKIPPED_CLASS_LABELS = ["Class", "Level", "Multiclass Proficiencies", "Subclass Proficiencies",
+    "Preferred melee weapon", "Preferred ranged weapon", ...Object.values(SUBCLASS_LABELS)];
+const ABILITY_SHORT = {
+    Strength: "STR", Dexterity: "DEX", Constitution: "CON", Intelligence: "INT", Wisdom: "WIS", Charisma: "CHA"
+};
+function listText(values) {
+    return values.filter(Boolean).join(", ");
+}
+// "Ability Improvement: +2 Dexterity" reads as "Ability Improvement (+2 Dexterity)" in a list.
+function choiceText(value) {
+    const [name, ...choice] = value.split(":");
+    return choice.length ? `${name.trim()} (${choice.join(":").trim()})` : value;
+}
+// Each class as a bullet, "Bard 12 (College of Lore)", with its choices indented under it.
+function classTextLines(build) {
+    const lines = [];
+    const blocks = [];
+    for (const entry of build.class || []) {
+        if (entry.label === "Class")
+            blocks.push([]);
+        blocks[blocks.length - 1]?.push(entry);
     }
-    lines.push(`[Open this build in the BG3 Character Generator](${await buildLink(build, name)})`);
+    for (const entries of blocks) {
+        const className = entryText(entries, "Class")[0] ?? "";
+        const level = entryText(entries, "Level")[0] ?? String(MAX_LEVEL);
+        const subclass = entryText(entries, SUBCLASS_LABELS[className] ?? "Subclass")[0];
+        lines.push(`- **${className} ${level}**${subclass ? ` (${subclass})` : ""}`);
+        const weapons = [...entryText(entries, "Preferred melee weapon"), ...entryText(entries, "Preferred ranged weapon")];
+        for (const entry of entries) {
+            if (TEXT_SKIPPED_CLASS_LABELS.includes(entry.label) || CLASS_SKILL_LABELS.includes(entry.label) || entry.label.includes("Expertise"))
+                continue;
+            const value = listText(entryValues(entry));
+            if (value)
+                lines.push(`    - ${entry.label}: ${value}`);
+        }
+        if (weapons.length)
+            lines.push(`    - Weapons: ${listText(weapons)}`);
+    }
+    return lines;
+}
+// One line per companion: "Astarion: Rogue (Arcane Trickster), Rapier and Shortbow".
+function companionTextLines(build) {
+    const members = [];
+    for (const entry of build.companionBuild || []) {
+        if (entry.label === "Companion" || entry.label === "Hireling" || entry.label === "Companion or hireling")
+            members.push([]);
+        members[members.length - 1]?.push(entry);
+    }
+    return members.map(entries => {
+        const [first] = entries;
+        const subclass = entryText(entries, "Subclass")[0];
+        const weapons = [...entryText(entries, "Preferred melee weapon"), ...entryText(entries, "Preferred ranged weapon")];
+        return `${first.value}: ${entryText(entries, "Class")[0] ?? ""}${subclass ? ` (${subclass})` : ""}` +
+            (weapons.length ? `, ${weapons.join(" and ")}` : "");
+    });
+}
+// Markdown for Reddit and Discord: a bold title, one line per card, and each class's choices
+// indented under it. Hidden cards are left out, like on the page.
+async function buildText(build, name) {
+    const shown = new Set(visibleCards());
+    const lines = [name ? `**${name}** · ${describeCharacter(build)}` : `**${describeCharacter(build)}**`, ""];
+    const line = (label, value) => {
+        if (value)
+            lines.push(`- **${label}:** ${value}`);
+    };
+    if (shown.has("origin") && build.origin && build.origin !== CUSTOM_ORIGIN)
+        line("Origin", build.origin);
+    const race = entryText(build.race, "Subrace")[0] ?? entryText(build.race, "Race")[0];
+    const raceExtras = (build.race || [])
+        .filter(entry => !["Race", "Subrace", "Racial Proficiencies", "Additional Skill Proficiency"].includes(entry.label))
+        .map(entry => `${entry.label}: ${listText(entryValues(entry))}`);
+    line("Race", race && [race, ...raceExtras].join(" · "));
+    line("Background", typeof build.background === "string" ? build.background : entryText(build.background ?? undefined, "Background")[0]);
+    const skills = [...new Set([
+            ...getRacialSkillProficiencies(build.race),
+            ...getBackgroundSkillProficiencies(build.background),
+            ...getClassSkillProficiencies(build.class)
+        ])];
+    line("Skills", listText(skills));
+    line("Expertise", listText((build.class || []).filter(entry => entry.label.includes("Expertise")).flatMap(entryValues)));
+    if (shown.has("abilities") && build.abilities) {
+        const scores = ABILITIES.map(ability => `${ABILITY_SHORT[ability]} ${entryText(build.abilities, ability)[0] ?? "?"}`);
+        const bonuses = entryText(build.abilities, "Racial bonuses")[0];
+        line("Ability scores", `${scores.join(", ")}${bonuses ? ` (${bonuses})` : ""}`);
+    }
+    lines.push(...classTextLines(build));
+    line("Feats", listText(featValues(build.feats).map(choiceText)) || "None before level 4");
+    if (shown.has("darkUrge"))
+        line("Tadpole", build.darkUrge);
+    if (shown.has("romance"))
+        line("Romance", build.romance);
+    if (shown.has("companionBuild")) {
+        const companions = companionTextLines(build);
+        if (companions.length === 1)
+            line(entryText(build.companionBuild, "Hireling").length ? "Hireling" : "Companion", companions[0]);
+        else if (companions.length) {
+            lines.push("- **Party:**");
+            companions.forEach(companion => lines.push(`    - ${companion}`));
+        }
+    }
+    lines.push("", `[Open this build in the BG3 Character Generator](${await buildLink(build, name)})`);
     return lines.join("\n");
 }
 // Messages like "Build link copied." clear themselves after a few seconds.
