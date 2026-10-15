@@ -105,7 +105,7 @@ main {
 /* Site header */
 
 .site-header {
-  border-bottom: 1px solid rgba(117, 102, 79, .45);
+  border-bottom: 1px solid var(--accent);
 }
 
 .site-header-inner {
