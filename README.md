@@ -49,6 +49,8 @@ Then open `index.html`.
 
 GitHub Pages will publish the site and show its URL in the Pages settings. The page uses `index.html` as its entry point.
 
+When you change `styles.css` or the scripts, bump the `?v=` number on their links in `index.html`. GitHub Pages lets browsers cache files for 10 minutes, and the new number makes them fetch the matching files instead of mixing old and new.
+
 ## Project Layout
 
 - `src/data.ts`: game data and rule tables (races, classes, backgrounds, spells, proficiencies, companions).
