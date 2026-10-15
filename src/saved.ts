@@ -30,7 +30,7 @@ function renderSavedPage(): void {
   const all = getSavedCharacters();
   const query = (document.getElementById("savedSearch") as HTMLInputElement).value.trim().toLowerCase();
   const saved = all
-    .filter(item => !query || `${savedTitle(item)} ${describeCharacter(item.character)}`.toLowerCase().includes(query))
+    .filter(item => !query || `${savedTitle(item)} ${describeCharacter(item.character)} ${item.note ?? ""}`.toLowerCase().includes(query))
     .sort(SAVED_SORTS[savedSort()] ?? SAVED_SORTS.newest);
   (document.getElementById("savedEmpty") as HTMLElement).hidden = all.length > 0;
   (document.getElementById("savedNoMatch") as HTMLElement).hidden = !all.length || saved.length > 0;
@@ -45,12 +45,14 @@ function renderSavedPage(): void {
         <h2 class="saved-card-title">${escapeHTML(title)}</h2>
         ${summary ? `<p class="saved-card-summary">${escapeHTML(summary)}</p>` : ""}
         <p class="saved-card-date">Saved ${escapeHTML(savedDate(item))}</p>
+        ${item.note ? `<p class="saved-card-note">${escapeHTML(item.note)}</p>` : ""}
       </div>
       <div class="saved-card-actions">
         <button class="primary" data-open="${id}">Open</button>
         <button data-copy-link="${id}">Copy link</button>
         <button data-copy-text="${id}">Copy text</button>
         <button data-rename="${id}">Rename</button>
+        <button data-note="${id}">${item.note ? "Edit note" : "Add note"}</button>
         <button data-delete="${id}" aria-label="Delete ${escapeHTML(title)}">Delete</button>
       </div>
     </li>`;
@@ -125,6 +127,50 @@ function renameSaved(id: string, name: string): void {
   savedCard(id)?.querySelector<HTMLButtonElement>("[data-rename]")?.focus();
 }
 
+// Notes are edited in place under the build's details. Ctrl+Enter saves, Escape cancels.
+function startNote(id: string): void {
+  const item = getSavedCharacters().find(saved => saved.id === id);
+  const text = savedCard(id)?.querySelector<HTMLElement>(".saved-card-text");
+  if (!item || !text || text.querySelector(".saved-note-editor")) return;
+  text.querySelector(".saved-card-note")?.remove();
+
+  const editor = document.createElement("div");
+  editor.className = "saved-note-editor";
+  editor.innerHTML = `<textarea maxlength="${MAX_NOTE_LENGTH}" rows="3" aria-label="Note" placeholder="Where are you in this run? Anything to remember?"></textarea>
+    <div class="saved-note-buttons">
+      <button type="button" class="primary" data-save-note>Save note</button>
+      <button type="button" data-cancel-note>Cancel</button>
+    </div>`;
+  const field = editor.querySelector("textarea")!;
+  field.value = item.note ?? "";
+  text.append(editor);
+  field.focus();
+
+  editor.querySelector("[data-save-note]")!.addEventListener("click", () => saveNote(id, field.value));
+  editor.querySelector("[data-cancel-note]")!.addEventListener("click", renderSavedPage);
+  field.addEventListener("keydown", event => {
+    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) saveNote(id, field.value);
+    else if (event.key === "Escape") renderSavedPage();
+  });
+}
+
+// An empty note removes it.
+function saveNote(id: string, note: string): void {
+  const trimmed = note.trim().slice(0, MAX_NOTE_LENGTH);
+  try {
+    storeSavedCharacters(getSavedCharacters().map(item => {
+      if (item.id !== id) return item;
+      const {note: _old, ...rest} = item;
+      return trimmed ? {...rest, note: trimmed} : rest;
+    }));
+    setNotice(trimmed ? "Note saved." : "Note removed.");
+  } catch {
+    setNotice("Could not save the note.");
+  }
+  renderSavedPage();
+  savedCard(id)?.querySelector<HTMLButtonElement>("[data-note]")?.focus();
+}
+
 // Asks on the page rather than with confirm(), which some in-app browsers block.
 function askToDelete(id: string): void {
   const item = getSavedCharacters().find(saved => saved.id === id);
@@ -189,7 +235,8 @@ async function importSaved(file: File): Promise<void> {
     const character = sanitizeCharacter(build.character);
     if (!character) continue;
     const name = typeof build.name === "string" ? build.name.trim().slice(0, MAX_NAME_LENGTH) : "";
-    added.push({id: build.id, label: build.label, ...(name ? {name} : {}), character});
+    const note = typeof build.note === "string" ? build.note.trim().slice(0, MAX_NOTE_LENGTH) : "";
+    added.push({id: build.id, label: build.label, ...(name ? {name} : {}), ...(note ? {note} : {}), character});
     ids.add(build.id);
   }
   if (!builds.length) {
@@ -241,6 +288,7 @@ document.getElementById("savedList")!.addEventListener("click", event => {
   else if (set.copyLink) copySavedLink(set.copyLink);
   else if (set.copyText) copySavedText(set.copyText);
   else if (set.rename) startRename(set.rename);
+  else if (set.note) startNote(set.note);
   else if (set.delete) askToDelete(set.delete);
   else if (set.confirmDelete) deleteSaved(set.confirmDelete);
   else if (set.cancelDelete) cancelDelete(set.cancelDelete);

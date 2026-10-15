@@ -226,6 +226,10 @@ function renderBuildTitle(): void {
   (document.getElementById("buildName") as HTMLElement).textContent = name ?? describeCharacter(character);
   summary.textContent = name ? describeCharacter(character) : "";
   summary.hidden = !name;
+  const note = currentSavedId ? getSavedCharacters().find(item => item.id === currentSavedId)?.note : undefined;
+  const noteLine = document.getElementById("buildNote") as HTMLElement;
+  noteLine.textContent = note ?? "";
+  noteLine.hidden = !note;
 }
 
 function entryHTML(entry: ClassEntry): string {
@@ -370,8 +374,22 @@ document.getElementById("copyText")!.addEventListener("click", copyCurrentText);
 document.addEventListener("click", event => {
   if (!(event.target as HTMLElement).closest(".share")) setShareMenu(false);
 });
+// Single-key shortcuts, ignored while typing or when a modifier key is held.
+const SHORTCUTS: Record<string, () => void> = {
+  g: generateAll,
+  z: undo,
+  s: saveCharacter,
+  c: copyCurrentLink
+};
+
 document.addEventListener("keydown", event => {
   if (event.key === "Escape") setShareMenu(false);
+  const target = event.target as HTMLElement;
+  if (event.ctrlKey || event.metaKey || event.altKey || target.closest("input, textarea, select, [contenteditable]")) return;
+  const action = SHORTCUTS[event.key.toLowerCase()];
+  if (!action) return;
+  event.preventDefault();
+  action();
 });
 window.addEventListener("hashchange", loadSharedBuild);
 

@@ -629,6 +629,25 @@ button.primary:hover {
   margin-top: 4px;
 }
 
+.shortcuts {
+  list-style: none;
+  padding-left: 0 !important;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 26px;
+  margin-right: 8px;
+  border: 1px solid var(--control-border-hover);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0 6px;
+  color: var(--control-ink);
+  background: var(--control-bg-hover);
+  font: 700 14px/1.6 var(--font);
+  text-align: center;
+}
+
 .about-section a {
   color: var(--accent);
 }
@@ -737,6 +756,44 @@ button.primary:hover {
   font-size: 14.5px;
 }
 
+.saved-card-note {
+  margin: 8px 0 0;
+  border-left: 3px solid var(--frame);
+  padding: 2px 0 2px 10px;
+  color: var(--ink);
+  font-size: 15.5px;
+  font-style: italic;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.saved-note-editor {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.saved-note-editor textarea {
+  width: 100%;
+  border: 1px solid var(--frame);
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, .5);
+  font: 15.5px/1.4 var(--font);
+  resize: vertical;
+}
+
+.saved-note-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.saved-note-buttons button {
+  padding: 5px 10px;
+  font-size: 15px;
+}
+
 .saved-card-actions {
   display: flex;
   align-items: center;
@@ -837,6 +894,17 @@ button.danger:hover {
   font-size: 16.5px;
 }
 
+.build-note {
+  max-width: 640px;
+  margin: 4px 0 0;
+  color: var(--page-ink);
+  opacity: .75;
+  font-size: 15px;
+  font-style: italic;
+  white-space: pre-wrap;
+}
+
+.build-note[hidden],
 .build-summary[hidden] {
   display: none;
 }

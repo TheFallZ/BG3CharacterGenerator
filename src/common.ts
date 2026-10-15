@@ -15,6 +15,7 @@ const SITE_URL = "https://thefallz.github.io/BG3CharacterGenerator/";
 // Share links look like "#build=<code>", or "#Karlach-Tank&build=<code>" for a named build.
 const SHARE_PATTERN = /^#(?:([^&]*)&)?build=(.+)$/;
 const MAX_NAME_LENGTH = 60;
+const MAX_NOTE_LENGTH = 300;
 
 // Page order; the grid in styles.css places each card by its card-<key> class.
 const cardOrder: CardKey[] = ["class", "abilities", "race", "background", "feats", "origin", "darkUrge", "romance", "companionBuild"];

@@ -47,6 +47,8 @@ interface SavedCharacter {
   id: string;
   label: string;
   name?: string;
+  // A short note the player keeps with the build, like where they are in a run.
+  note?: string;
   character: Character;
 }
 

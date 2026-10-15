@@ -22,9 +22,10 @@ This is an unofficial fan project and is not affiliated with or endorsed by Lari
 - **A build for a companion or hireling,** either in their usual class or a random new one, with preferred weapons. Turn on **full party** in Settings to roll three companions instead.
 - **Reroll any single card** without touching the rest of your build, and **Undo** if you roll past one you liked.
 - **Lock cards you like** so they stay put when you generate again.
-- **Save your favorite builds** and find them on the Saved page to search, sort, open, rename, share or delete later. Back them up to a file and import them in another browser or on another device.
+- **Save your favorite builds** and find them on the Saved page to search, sort, open, rename, add a note to, share or delete later. Back them up to a file and import them in another browser or on another device.
 - **Share a build** with a link that opens exactly what you rolled, or copy it as text ready to paste into Reddit or Discord.
 - **A Settings page** to leave out classes or races, choose how often multiclass builds happen, and hide the tadpole, romance or companion cards.
+- **Keyboard shortcuts:** G to generate, Z to undo, S to save and C to copy a link.
 - **Works in any browser,** on desktop or phone, with no account or sign-up needed.
 
 ## Saved Builds
