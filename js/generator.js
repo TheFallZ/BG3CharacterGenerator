@@ -443,7 +443,7 @@ function rollCompanionBuild(romance = character.romance) {
     const subclass = pick(data.classes[className].subclasses);
     const weapons = WEAPON_PREFERENCES[className];
     const entries = [
-        { label: "Companion or hireling", value: partyMember.name },
+        { label: isHireling ? "Hireling" : "Companion", value: partyMember.name },
         ...(!isHireling ? [{ label: "Class choice", value: usesDefaultClass ? "Default class" : "Random class" }] : []),
         { label: "Class", value: className },
         { label: "Subclass", value: subclass }
