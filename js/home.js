@@ -212,16 +212,16 @@ async function copyCurrentText() {
     setShareMenu(false);
     await copyToClipboard(await buildText(character, currentBuildName()), "Build text copied.");
 }
-// A named build gets a title over the cards; unnamed builds don't.
+// The heading beside the buttons: a named build shows its name with race and class below;
+// any other build uses its race and class as the heading.
 function renderBuildTitle() {
-    const header = document.getElementById("buildTitle");
     const name = currentBuildName();
-    header.hidden = !name;
-    if (!name)
-        return;
-    document.getElementById("buildKind").textContent = currentSavedId ? "Saved build" : "Shared build";
-    document.getElementById("buildName").textContent = name;
-    document.getElementById("buildSummary").textContent = describeCharacter(character);
+    const summary = document.getElementById("buildSummary");
+    document.getElementById("buildKind").textContent =
+        !name ? "Your character" : currentSavedId ? "Saved build" : "Shared build";
+    document.getElementById("buildName").textContent = name ?? describeCharacter(character);
+    summary.textContent = name ? describeCharacter(character) : "";
+    summary.hidden = !name;
 }
 function entryHTML(entry) {
     const value = entry.value;

@@ -193,18 +193,18 @@ main {
   opacity: .8;
 }
 
-/* Toolbar */
+/* Build heading and toolbar: the heading on the left, every button together on the right. */
 
-.toolbar {
+.build-header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px 14px;
+  gap: 10px 20px;
   margin-bottom: 14px;
 }
 
-.toolbar-actions {
+.toolbar {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -746,14 +746,10 @@ button.danger:hover {
   font-weight: 700;
 }
 
-/* Build title: a named build gets a heading like the other pages, above its cards. */
+/* Build title */
 
 .build-title {
-  margin: 2px 0 14px;
-}
-
-.build-title[hidden] {
-  display: none;
+  min-width: 0;
 }
 
 .build-kind {
@@ -769,17 +765,21 @@ button.danger:hover {
   margin: 0;
   color: var(--page-ink);
   font-family: var(--font-display);
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 700;
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
 
-#buildSummary {
+.build-summary {
   margin: 2px 0 0;
   color: var(--page-ink);
   opacity: .85;
   font-size: 16.5px;
+}
+
+.build-summary[hidden] {
+  display: none;
 }
 
 /* Cards */
@@ -1150,18 +1150,27 @@ button.lock-button[aria-pressed="true"] {
     gap: 7px 10px;
   }
 
-  .toolbar {
+  /* The heading goes first, then Generate across the full width, then the other buttons. */
+  .build-header {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .toolbar-actions {
+  .build-title h1 {
+    font-size: 26px;
+  }
+
+  .toolbar {
     justify-content: stretch;
   }
 
-  .toolbar-actions > button,
+  .toolbar > button,
   .share {
     flex: 1;
+  }
+
+  #generateAll {
+    flex-basis: 100%;
   }
 
   .share > button {
