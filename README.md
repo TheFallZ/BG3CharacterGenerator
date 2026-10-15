@@ -19,9 +19,9 @@ This is an unofficial fan project and is not affiliated with or endorsed by Lari
 - **A build for a companion or hireling,** either in their usual class or a random new one, with preferred weapons.
 - **Reroll any single card** without touching the rest of your build.
 - **Lock cards you like** so they stay put when you generate again.
-- **Save your favorite builds** to load, rename or delete later.
+- **Save your favorite builds** and find them on the Saved page to open, rename, share or delete later.
 - **Share a build** with a link that opens exactly what you rolled, or copy it as text ready to paste into Reddit or Discord.
-- **Settings** to leave out classes or races, choose how often multiclass builds happen, and hide the tadpole, romance or companion cards.
+- **A Settings page** to leave out classes or races, choose how often multiclass builds happen, and hide the tadpole, romance or companion cards.
 - **Works in any browser,** on desktop or phone, with no account or sign-up needed.
 
 ## Saved Builds

@@ -7,25 +7,36 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;500;700&family=Alegreya+SC:wght@500;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=10">
+<link rel="stylesheet" href="styles.css?v=11">
 </head>
-<body>
+<body data-root="./">
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-name" href="./">BG3 Character Generator</a>
+    <nav class="site-nav" aria-label="Pages">
+      <a href="./" aria-current="page">Generator</a>
+      <a href="saved/">Saved <span class="nav-count" data-saved-count></span></a>
+      <a href="settings/">Settings</a>
+    </nav>
+  </div>
+</header>
 
 <main>
   <div class="toolbar">
-    <div class="toolbar-main">
-      <button class="primary" id="generateAll">Generate character</button>
-      <button id="settingsToggle" aria-expanded="false" aria-controls="settingsPanel">Settings</button>
-    </div>
-    <div class="save-controls">
-      <div class="save-notice" id="saveNotice" role="status" aria-live="polite"></div>
-      <button id="shareLink">Share link</button>
-      <button id="copyText">Copy text</button>
+    <button class="primary" id="generateAll">Generate character</button>
+    <div class="toolbar-actions">
+      <div class="notice" id="notice" role="status" aria-live="polite"></div>
       <button id="saveCharacter">Save build</button>
+      <div class="share">
+        <button id="shareToggle" aria-expanded="false" aria-controls="shareMenu" aria-haspopup="true">Share</button>
+        <div class="share-menu" id="shareMenu" hidden>
+          <button id="copyLink">Copy link</button>
+          <button id="copyText">Copy text</button>
+        </div>
+      </div>
     </div>
   </div>
-
-  <section class="settings-panel" id="settingsPanel" aria-label="Settings" hidden></section>
 
   <section class="copy-box" id="copyBox" aria-labelledby="copyHeading" hidden>
     <div class="copy-box-head">
@@ -34,11 +45,6 @@
     </div>
     <p class="settings-note">Your browser blocked automatic copying. The text below is selected, so press Ctrl+C (or long-press and copy on a phone).</p>
     <textarea id="copyField" readonly></textarea>
-  </section>
-
-  <section class="saved-strip" id="savedStrip" aria-labelledby="savedHeading" hidden>
-    <h2 class="saved-heading" id="savedHeading">Saved builds</h2>
-    <ul class="saved-list" id="savedCharacters"></ul>
   </section>
 
   <header class="build-title" id="buildTitle" hidden>
@@ -56,8 +62,9 @@
 
 </main>
 
-<script src="js/data.js?v=10" defer></script>
-<script src="js/generator.js?v=10" defer></script>
-<script src="js/app.js?v=10" defer></script>
+<script src="js/data.js?v=11" defer></script>
+<script src="js/generator.js?v=11" defer></script>
+<script src="js/common.js?v=11" defer></script>
+<script src="js/home.js?v=11" defer></script>
 </body>
 </html>

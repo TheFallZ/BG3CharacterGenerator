@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Saved builds · BG3 Character Generator</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;500;700&family=Alegreya+SC:wght@500;700&display=swap">
+<link rel="stylesheet" href="../styles.css?v=11">
+</head>
+<body data-root="../">
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-name" href="../">BG3 Character Generator</a>
+    <nav class="site-nav" aria-label="Pages">
+      <a href="../">Generator</a>
+      <a href="../saved/" aria-current="page">Saved <span class="nav-count" data-saved-count></span></a>
+      <a href="../settings/">Settings</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="page-head">
+    <h1>Saved builds</h1>
+    <div class="notice" id="notice" role="status" aria-live="polite"></div>
+  </div>
+  <p class="page-intro">Builds are saved in this browser only. Open one to keep rolling from it, or copy a link to share it.</p>
+
+  <section class="copy-box" id="copyBox" aria-labelledby="copyHeading" hidden>
+    <div class="copy-box-head">
+      <h2 id="copyHeading">Copy this</h2>
+      <button type="button" id="copyClose">Close</button>
+    </div>
+    <p class="settings-note">Your browser blocked automatic copying. The text below is selected, so press Ctrl+C (or long-press and copy on a phone).</p>
+    <textarea id="copyField" readonly></textarea>
+  </section>
+
+  <div class="saved-empty" id="savedEmpty" hidden>
+    <p>No saved builds yet. Generate a character and press <strong>Save build</strong> to keep it here.</p>
+    <a class="button-link primary" href="../">Go to the generator</a>
+  </div>
+
+  <ul class="saved-cards" id="savedList"></ul>
+
+  <footer class="site-footer">
+    <p>Up to date with BG3 Patch 8</p>
+    <p>Spotted something wrong? <a href="https://github.com/TheFallZ/BG3CharacterGenerator/issues">Report it on GitHub</a></p>
+    <p>Unofficial fan project, not affiliated with Larian Studios</p>
+  </footer>
+
+</main>
+
+<script src="../js/data.js?v=11" defer></script>
+<script src="../js/generator.js?v=11" defer></script>
+<script src="../js/common.js?v=11" defer></script>
+<script src="../js/saved.js?v=11" defer></script>
+</body>
+</html>
