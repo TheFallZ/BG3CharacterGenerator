@@ -657,21 +657,89 @@ kbd {
   color: var(--accent);
 }
 
-/* What's new page */
+/* What's new page: one box per release, newest first. */
 
-.update h3 {
-  margin: 14px 0 0;
+.releases {
+  display: grid;
+  gap: 16px;
+  max-width: 980px;
+}
+
+.release {
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  padding: 16px 20px 18px;
+  color: var(--control-ink);
+  background: var(--control-bg);
+}
+
+.release-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+.release-head h2 {
+  margin: 0;
   color: var(--page-ink);
   font-family: var(--font-display);
-  font-size: 16.5px;
+  font-size: 22px;
   font-weight: 700;
 }
 
-.update-date {
-  margin: 0 !important;
+.release-date {
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  padding: 1px 10px;
   color: var(--page-ink);
-  opacity: .7;
-  font-size: 14.5px;
+  font-size: 14px;
+}
+
+.release-intro {
+  max-width: 70ch;
+  margin: 8px 0 0;
+  color: var(--page-ink);
+  font-size: 16.5px;
+}
+
+.release-groups {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px 32px;
+  margin-top: 16px;
+}
+
+@media (min-width: 761px) {
+  .release-groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.release-groups h3 {
+  margin: 0 0 6px;
+  border-bottom: 1px solid var(--control-border);
+  padding-bottom: 4px;
+  color: var(--page-ink);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.release-groups ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.release-groups li {
+  margin-top: 5px;
+  font-size: 15.5px;
+  line-height: 1.45;
+}
+
+.release-groups li::marker {
+  color: var(--accent);
 }
 
 /* Saved builds page */
