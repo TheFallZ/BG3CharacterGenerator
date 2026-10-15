@@ -346,6 +346,12 @@ button.primary:hover {
   gap: 14px 24px;
 }
 
+/* Classes above races, with room between them. */
+.settings-stack {
+  display: grid;
+  gap: 18px;
+}
+
 .settings-intro {
   margin: 0;
   padding: 0;
@@ -402,7 +408,7 @@ button.primary:hover {
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 .chip {

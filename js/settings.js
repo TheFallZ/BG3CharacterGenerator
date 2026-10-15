@@ -46,7 +46,7 @@ function renderSettings() {
     </section>
     <section class="settings-section settings-pools">
       <h2>Classes and races</h2>
-      <div class="settings-row">
+      <div class="settings-stack">
         <fieldset class="settings-group settings-list">
           <legend>Classes</legend>
           <div class="chips">${Object.keys(data.classes).sort().map(name => chipHTML("class", name, !settings.excludedClasses.includes(name))).join("")}</div>
