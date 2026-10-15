@@ -105,9 +105,7 @@ main {
 /* Site header */
 
 .site-header {
-  border-bottom: 2px solid var(--accent-deep);
-  background: linear-gradient(180deg, #2f2925, var(--control-bg));
-  box-shadow: 0 2px 10px rgba(0, 0, 0, .45);
+  border-bottom: 1px solid rgba(117, 102, 79, .45);
 }
 
 .site-header-inner {
