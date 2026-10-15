@@ -38,16 +38,20 @@ function renderSavedPage(): void {
   list.innerHTML = saved.map(item => {
     const title = savedTitle(item);
     const id = escapeHTML(item.id);
-    const tags = [
-      item.character.romance && item.character.romance !== "No One" ? `♥ ${item.character.romance}` : "",
-      backgroundName(item),
-      `Saved ${shortDate(item)}`
-    ].filter(Boolean);
-    return `<li class="saved-card" data-id="${id}">
-      <div class="saved-card-head">
+    const levels = getClassLevels(item.character.class);
+    const classes = levels.map(({className, level}) => `${className} ${level}`).join(" / ");
+    // An unnamed build's title is already its race and class, so it shows the subclass instead of the race.
+    const second = item.name
+      ? {label: "Race", value: raceName(item)}
+      : {label: "Subclass", value: primaryClassAndSubclass(item.character.class).subclass ?? "None yet"};
+    const romance = item.character.romance && item.character.romance !== "No One" ? item.character.romance : "No one";
+    const detail = (label: string, value: string) =>
+      `<div class="entry"><span class="entry-label">${escapeHTML(label)}</span><div class="entry-value">${escapeHTML(value)}</div></div>`;
+    return `<li class="card saved-card" data-id="${id}">
+      <div class="card-head">
         <h2 class="saved-card-title">${escapeHTML(title)}</h2>
         <div class="saved-menu-wrap">
-          <button class="saved-more" data-menu="${id}" aria-haspopup="true" aria-expanded="false" aria-label="More actions for ${escapeHTML(title)}">⋯</button>
+          <button class="text-button saved-more" data-menu="${id}" aria-haspopup="true" aria-expanded="false" aria-label="More actions for ${escapeHTML(title)}">⋯</button>
           <div class="saved-menu" hidden>
             <button data-copy-link="${id}">Copy link</button>
             <button data-copy-text="${id}">Copy text</button>
@@ -57,25 +61,27 @@ function renderSavedPage(): void {
           </div>
         </div>
       </div>
-      <div class="saved-card-text">
-        <p class="saved-card-sub">${escapeHTML(savedSubtitle(item))}</p>
-        <div class="saved-tags">${tags.map(tag => `<span>${escapeHTML(tag)}</span>`).join("")}</div>
-        ${item.note ? `<p class="saved-card-note">${escapeHTML(item.note)}</p>` : ""}
-      </div>
-      <div class="saved-card-actions">
-        <button class="primary saved-open" data-open="${id}">Open</button>
+      <div class="card-body saved-card-body">
+        <div class="saved-card-text">
+          <div class="saved-details">
+            ${detail("Class", classes)}
+            ${detail(second.label, second.value)}
+            ${detail("Background", backgroundName(item))}
+            ${detail("Romance", romance)}
+          </div>
+          ${item.note ? `<p class="saved-card-note"><span>Note:</span> ${escapeHTML(item.note)}</p>` : ""}
+        </div>
+        <div class="saved-card-actions">
+          <span class="saved-card-date">Saved ${escapeHTML(shortDate(item))}</span>
+          <button class="primary saved-open" data-open="${id}">Open</button>
+        </div>
       </div>
     </li>`;
   }).join("");
 }
 
-// Under the title: a named build says what it is; an unnamed one (whose title already
-// is its race and class) shows its subclass instead.
-function savedSubtitle(item: SavedCharacter): string {
-  const levels = getClassLevels(item.character.class);
-  const classes = levels.map(({className, level}) => `${className} ${level}`).join(" / ");
-  if (item.name) return [entryText(item.character.race, "Subrace")[0] ?? entryText(item.character.race, "Race")[0], classes].filter(Boolean).join(" · ");
-  return primaryClassAndSubclass(item.character.class).subclass ?? classes;
+function raceName(item: SavedCharacter): string {
+  return entryText(item.character.race, "Subrace")[0] ?? entryText(item.character.race, "Race")[0] ?? "";
 }
 
 function backgroundName(item: SavedCharacter): string {
