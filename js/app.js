@@ -16,6 +16,111 @@ const ROLL_ORDER = ["darkUrge", "race", "background", "class", "feats", "romance
 const LOCKED_CARDS_KEY = "bg3-character-generator-locked-cards";
 let lockedCards = loadLockedCards();
 let rolledCards = new Set();
+const SETTINGS_KEY = "bg3-character-generator-settings";
+const SITE_URL = "https://thefallz.github.io/BG3CharacterGenerator/";
+const SHARE_PREFIX = "#build=";
+// Story cards a visitor can hide; the build cards always show.
+const HIDEABLE_CARDS = [
+    { key: "darkUrge", label: "Tadpole question" },
+    { key: "romance", label: "Romance" },
+    { key: "companionBuild", label: "Companion build" }
+];
+const MULTICLASS_MODES = [
+    { mode: "never", label: "Never" },
+    { mode: "sometimes", label: "Sometimes" },
+    { mode: "always", label: "Always" }
+];
+function loadSettings() {
+    const defaults = defaultSettings();
+    try {
+        const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+        const strings = (value, known) => Array.isArray(value) ? value.filter((item) => known.includes(item)) : [];
+        return {
+            excludedClasses: strings(saved.excludedClasses, Object.keys(data.classes)),
+            excludedRaces: strings(saved.excludedRaces, Object.keys(data.races)),
+            multiclass: MULTICLASS_MODES.some(({ mode }) => mode === saved.multiclass) ? saved.multiclass : defaults.multiclass,
+            tripleClass: saved.tripleClass === true,
+            hiddenCards: strings(saved.hiddenCards, HIDEABLE_CARDS.map(({ key }) => key))
+        };
+    }
+    catch {
+        return defaults;
+    }
+}
+function storeSettings() {
+    try {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }
+    catch {
+        // Settings still apply for this visit without storage.
+    }
+}
+function visibleCards() {
+    return cardOrder.filter(key => !settings.hiddenCards.includes(key));
+}
+function checkboxHTML(name, value, label, checked) {
+    return `<label class="check"><input type="checkbox" name="${name}" value="${escapeHTML(value)}"${checked ? " checked" : ""}> ${escapeHTML(label)}</label>`;
+}
+function renderSettings() {
+    const panel = document.getElementById("settingsPanel");
+    panel.innerHTML = `
+    <fieldset class="settings-group">
+      <legend>Multiclass</legend>
+      <div class="segmented">
+        ${MULTICLASS_MODES.map(({ mode, label }) => `<label><input type="radio" name="multiclass" value="${mode}"${settings.multiclass === mode ? " checked" : ""}><span>${label}</span></label>`).join("")}
+      </div>
+      <label class="check"><input type="checkbox" name="tripleClass"${settings.tripleClass ? " checked" : ""}> Allow triple classing</label>
+      <p class="settings-note">"Sometimes" is a ${data.settings.multiclassChance}% chance. With triple classing on, ${data.settings.tripleClassChance}% of multiclass builds get three classes.</p>
+    </fieldset>
+    <fieldset class="settings-group">
+      <legend>Show cards</legend>
+      ${HIDEABLE_CARDS.map(({ key, label }) => checkboxHTML("showCard", key, label, !settings.hiddenCards.includes(key))).join("")}
+    </fieldset>
+    <fieldset class="settings-group settings-list">
+      <legend>Classes</legend>
+      ${Object.keys(data.classes).map(name => checkboxHTML("class", name, name, !settings.excludedClasses.includes(name))).join("")}
+    </fieldset>
+    <fieldset class="settings-group settings-list">
+      <legend>Races</legend>
+      ${Object.keys(data.races).map(name => checkboxHTML("race", name, name, !settings.excludedRaces.includes(name))).join("")}
+    </fieldset>
+    <div class="settings-foot">
+      <p class="settings-note">Class, race and multiclass changes apply the next time you generate or reroll.</p>
+      <button type="button" id="resetSettings">Reset to defaults</button>
+    </div>`;
+    updateSettingsControls();
+}
+// Keeps at least one class and race checked, and turns off triple classing where it can't happen.
+function updateSettingsControls() {
+    const panel = document.getElementById("settingsPanel");
+    for (const name of ["class", "race"]) {
+        const boxes = [...panel.querySelectorAll(`input[name="${name}"]`)];
+        const checked = boxes.filter(box => box.checked);
+        boxes.forEach(box => { box.disabled = checked.length === 1 && box.checked; });
+    }
+    const triple = panel.querySelector('input[name="tripleClass"]');
+    triple.disabled = settings.multiclass === "never" || allowedClasses().length < 3;
+}
+function readSettings() {
+    const panel = document.getElementById("settingsPanel");
+    const unchecked = (name) => [...panel.querySelectorAll(`input[name="${name}"]:not(:checked)`)].map(box => box.value);
+    settings = {
+        excludedClasses: unchecked("class"),
+        excludedRaces: unchecked("race"),
+        multiclass: (panel.querySelector('input[name="multiclass"]:checked')?.value ?? "sometimes"),
+        tripleClass: panel.querySelector('input[name="tripleClass"]').checked,
+        hiddenCards: unchecked("showCard")
+    };
+    storeSettings();
+    updateSettingsControls();
+    renderCards();
+}
+function toggleSettings() {
+    const panel = document.getElementById("settingsPanel");
+    const button = document.getElementById("settingsToggle");
+    panel.hidden = !panel.hidden;
+    button.setAttribute("aria-expanded", String(!panel.hidden));
+}
 function loadLockedCards() {
     try {
         const saved = JSON.parse(localStorage.getItem(LOCKED_CARDS_KEY) || "[]");
@@ -76,6 +181,7 @@ function rollCards(keys) {
         character.feats = rollFeats(featValues());
     }
     rolledCards = targets;
+    clearSharedBuildLink();
     renderCards();
 }
 function normalizeResult(value) {
@@ -292,14 +398,189 @@ function escapeHTML(value) {
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
     })[char] ?? char);
 }
+// What a card shows, shared by the page and the copied text. Each class carries its level, e.g. "Sorcerer, level 8".
+function cardEntries(key) {
+    const value = character[key];
+    if (key === "class" || key === "race") {
+        const entries = normalizeResult(value);
+        return entries.flatMap((entry, index) => {
+            if (entry.label === "Level")
+                return [];
+            const level = entries[index + 1]?.label === "Level" ? entries[index + 1].value : null;
+            return key === "class" && entry.label === "Class" && level ? [{ ...entry, value: `${entry.value}, level ${level}` }] : [entry];
+        });
+    }
+    if (key === "feats") {
+        const feats = (value || []);
+        if (!feats.length)
+            return [{ label: "", value: "No feats before level 4" }];
+        return typeof feats[0] === "string" ? [{ label: "", value: feats }] : feats;
+    }
+    if (key === "companionBuild" || key === "background")
+        return normalizeResult(value);
+    return [{ label: "", value: value }];
+}
+function isEntryList(value) {
+    return Array.isArray(value) && value.every(entry => typeof entry === "object" && entry !== null &&
+        typeof entry.label === "string" &&
+        (entry.value === null || typeof entry.value === "string" ||
+            Array.isArray(entry.value) && entry.value.every((item) => typeof item === "string")));
+}
+// Rebuilds a character from untrusted data (a shared link), keeping only well-formed fields.
+function sanitizeCharacter(value) {
+    if (typeof value !== "object" || value === null)
+        return null;
+    const input = value;
+    if (!isEntryList(input.class) || !isEntryList(input.race))
+        return null;
+    const text = (item) => typeof item === "string" ? item : null;
+    const result = { class: input.class, race: input.race, darkUrge: text(input.darkUrge), romance: text(input.romance) };
+    if (isEntryList(input.feats))
+        result.feats = input.feats;
+    else if (Array.isArray(input.feats) && input.feats.every(item => typeof item === "string"))
+        result.feats = input.feats;
+    if (isEntryList(input.background) || typeof input.background === "string")
+        result.background = input.background;
+    if (isEntryList(input.companionBuild))
+        result.companionBuild = input.companionBuild;
+    return result;
+}
+function toBase64Url(bytes) {
+    let binary = "";
+    bytes.forEach(byte => { binary += String.fromCharCode(byte); });
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function fromBase64Url(text) {
+    const binary = atob(text.replace(/-/g, "+").replace(/_/g, "/"));
+    return Uint8Array.from(binary, char => char.charCodeAt(0));
+}
+// Links hold the whole build, compressed where the browser supports it ("z"), or plain JSON ("j").
+async function encodeBuild(build) {
+    const json = JSON.stringify(build);
+    if (typeof CompressionStream === "function") {
+        const stream = new Blob([json]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+        return "z" + toBase64Url(new Uint8Array(await new Response(stream).arrayBuffer()));
+    }
+    return "j" + toBase64Url(new TextEncoder().encode(json));
+}
+async function decodeBuild(code) {
+    try {
+        const bytes = fromBase64Url(code.slice(1));
+        let json;
+        if (code[0] === "z") {
+            const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+            json = await new Response(stream).text();
+        }
+        else if (code[0] === "j") {
+            json = new TextDecoder().decode(bytes);
+        }
+        else {
+            return null;
+        }
+        return sanitizeCharacter(JSON.parse(json));
+    }
+    catch {
+        return null;
+    }
+}
+// Links point at this page when it's served over the web, and at the live site when opened from disk.
+async function shareLink() {
+    const base = location.protocol.startsWith("http") ? location.origin + location.pathname : SITE_URL;
+    return base + SHARE_PREFIX + await encodeBuild(character);
+}
+// A new roll no longer matches the shared build in the address bar.
+function clearSharedBuildLink() {
+    if (!location.hash.startsWith(SHARE_PREFIX))
+        return;
+    history.replaceState(null, "", location.pathname + location.search);
+    setSaveNotice("");
+}
+async function loadSharedBuild() {
+    if (!location.hash.startsWith(SHARE_PREFIX))
+        return false;
+    const shared = await decodeBuild(location.hash.slice(SHARE_PREFIX.length));
+    if (!shared) {
+        setSaveNotice("That build link couldn't be read.");
+        return false;
+    }
+    character = shared;
+    if (!character.companionBuild)
+        character.companionBuild = rollCompanionBuild(character.romance);
+    rolledCards = new Set(cardOrder);
+    renderCards();
+    setSaveNotice("Shared build loaded.");
+    return true;
+}
+async function copyToClipboard(text, message) {
+    try {
+        await navigator.clipboard.writeText(text);
+        setSaveNotice(message);
+    }
+    catch {
+        // Clipboard access can be blocked; let the visitor copy it by hand.
+        prompt("Copy this:", text);
+    }
+}
+async function copyShareLink() {
+    await copyToClipboard(await shareLink(), "Build link copied.");
+}
+// Markdown-friendly text for Reddit and Discord: a bold heading per card and a bullet per entry.
+async function copyBuildText() {
+    const lines = [`**${describeCharacter(character)}**`, ""];
+    for (const key of visibleCards()) {
+        lines.push(`**${definitions[key].title}**`, "");
+        for (const entry of cardEntries(key)) {
+            const value = Array.isArray(entry.value) ? entry.value.join(", ") : entry.value ?? "Not available";
+            lines.push(`- ${entry.label ? `${entry.label}: ` : ""}${value}`);
+        }
+        lines.push("");
+    }
+    lines.push(`[Open this build in the BG3 Character Generator](${await shareLink()})`);
+    await copyToClipboard(lines.join("\n"), "Build text copied.");
+}
+// Grid areas for the visible cards, so hiding a story card doesn't leave a gap.
+function gridAreas(columns, visible) {
+    const story = ["darkUrge", "romance"].filter(key => visible.includes(key));
+    const companion = visible.includes("companionBuild");
+    const row = (...cells) => `"${cells.join(" ")}"`;
+    const rows = [];
+    if (columns === 2) {
+        rows.push(row("class", "class"), row("race", "background"), row("feats", "feats"));
+        if (story.length === 2)
+            rows.push(row(story[0], story[1]));
+        else if (story.length === 1)
+            rows.push(row(story[0], story[0]));
+        if (companion)
+            rows.push(row("companionBuild", "companionBuild"));
+        return rows.join(" ");
+    }
+    rows.push(row("class", "class", "class"), row("race", "background", "feats"));
+    if (companion) {
+        if (story.length)
+            story.forEach(key => rows.push(row(key, "companionBuild", "companionBuild")));
+        else
+            rows.push(row("companionBuild", "companionBuild", "companionBuild"));
+    }
+    else if (story.length === 2) {
+        rows.push(row(story[0], story[0], story[1]));
+    }
+    else if (story.length === 1) {
+        rows.push(row(story[0], story[0], story[0]));
+    }
+    return rows.join(" ");
+}
+const CLASS_DIVIDERS = ["", "Second class", "Third class"];
 function renderCards() {
     const host = document.getElementById("cards");
+    const visible = visibleCards();
+    host.style.setProperty("--areas-2", gridAreas(2, visible));
+    host.style.setProperty("--areas-3", gridAreas(3, visible));
     let rollIndex = 0;
-    host.innerHTML = cardOrder.map(key => {
+    host.innerHTML = visible.map(key => {
         const def = definitions[key];
         const value = character[key];
-        const isMulticlass = key === "class" &&
-            normalizeResult(value).filter(entry => entry.label === "Class").length > 1;
+        const classCount = key === "class" ? normalizeResult(value).filter(entry => entry.label === "Class").length : 0;
+        const isMulticlass = classCount > 1;
         const locked = isLocked(key);
         const lockedByCompanion = isLockedByCompanion(key);
         const lockLabel = lockedByCompanion
@@ -314,41 +595,21 @@ function renderCards() {
             classes.push("card-rolled");
         let content = "";
         if (key === "class" || key === "race") {
-            let classCount = 0;
-            const entries = normalizeResult(value);
-            content = entries.map((entry, index) => {
-                if (entry.label === "Level")
-                    return "";
-                // Show each class with its level, e.g. "Sorcerer, level 8".
-                const level = entries[index + 1]?.label === "Level" ? entries[index + 1].value : null;
-                const shown = key === "class" && entry.label === "Class" && level ? { ...entry, value: `${entry.value}, level ${level}` } : entry;
-                if (key === "class" && entry.label === "Class" && ++classCount === 2) {
-                    return `<div class="class-divider">Second class</div>${entryHTML({ ...shown, label: "" })}`;
+            let classIndex = 0;
+            content = cardEntries(key).map(entry => {
+                if (key === "class" && entry.label === "Class" && classIndex++ > 0) {
+                    return `<div class="class-divider">${CLASS_DIVIDERS[classIndex - 1] ?? "Next class"}</div>${entryHTML({ ...entry, label: "" })}`;
                 }
-                return entryHTML(shown);
+                return entryHTML(entry);
             }).join("");
         }
-        else if (key === "companionBuild") {
-            content = normalizeResult(value).map(entryHTML).join("");
-        }
-        else if (key === "background") {
-            content = normalizeResult(value).map(entryHTML).join("");
-        }
-        else if (key === "feats") {
-            const feats = (value || []);
-            content = feats.length && typeof feats[0] === "string"
-                ? entryHTML({ label: "", value: feats })
-                : feats.length
-                    ? feats.map(entryHTML).join("")
-                    : entryHTML({ label: "", value: "No feats before level 4" });
-        }
         else {
-            content = entryHTML({ label: "", value: value });
+            content = cardEntries(key).map(entryHTML).join("");
         }
         return `<article class="${classes.join(" ")}"${rolledCards.has(key) ? ` style="--roll-index: ${rollIndex++}"` : ""}>
       <div class="card-head">
         <h2>${escapeHTML(def.title)}</h2>
-        ${isMulticlass ? '<span class="multiclass-badge">Multiclass</span>' : ""}
+        ${isMulticlass ? `<span class="multiclass-badge">${classCount > 2 ? "Triple class" : "Multiclass"}</span>` : ""}
         <div class="card-actions">
           <button class="text-button lock-button" data-lock="${key}" aria-pressed="${locked}" aria-label="${escapeHTML(lockLabel)}" title="${escapeHTML(lockLabel)}"${lockedByCompanion ? " disabled" : ""}>${locked ? "Locked" : "Lock"}</button>
           <button class="text-button reroll-button" data-reroll="${key}" aria-label="Reroll ${escapeHTML(def.title)}"${locked ? " disabled" : ""}>Reroll</button>
@@ -366,6 +627,19 @@ function renderCards() {
 }
 document.getElementById("generateAll").addEventListener("click", generateAll);
 document.getElementById("saveCharacter").addEventListener("click", saveCharacter);
+document.getElementById("shareLink").addEventListener("click", copyShareLink);
+document.getElementById("copyText").addEventListener("click", copyBuildText);
+document.getElementById("settingsToggle").addEventListener("click", toggleSettings);
+document.getElementById("settingsPanel").addEventListener("change", readSettings);
+document.getElementById("settingsPanel").addEventListener("click", event => {
+    if (event.target.id !== "resetSettings")
+        return;
+    settings = defaultSettings();
+    storeSettings();
+    renderSettings();
+    renderCards();
+});
+window.addEventListener("hashchange", loadSharedBuild);
 document.getElementById("savedCharacters").addEventListener("click", event => {
     const button = event.target.closest("button");
     if (button?.dataset.load)
@@ -375,5 +649,8 @@ document.getElementById("savedCharacters").addEventListener("click", event => {
     else if (button?.dataset.delete)
         deleteCharacter(button.dataset.delete);
 });
-generateAll();
+settings = loadSettings();
+renderSettings();
 renderSavedCharacters();
+loadSharedBuild().then(loaded => { if (!loaded)
+    generateAll(); });

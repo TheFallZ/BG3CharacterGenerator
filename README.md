@@ -14,12 +14,14 @@ This is an unofficial fan project and is not affiliated with or endorsed by Lari
 
 - **A full level 12 build in one click:** class and subclass, race and subrace, background, skills, and a feat for every feat level.
 - **Class choices filled in:** fighting styles, maneuvers, metamagic, invocations, Wildheart aspects, Paladin oath prompts, and starting cantrips and spells for spellcasters.
-- **Multiclass builds:** an 8% chance to roll one, with the level split shown on the Class card.
+- **Multiclass builds:** an 8% chance to roll one, with the level split shown on the Class card. Triple classing can be turned on in Settings for an extra-rare three-class build.
 - **Story prompts:** whether to accept the tadpole, who to romance, and a deity for Clerics.
 - **A build for a companion or hireling,** either in their usual class or a random new one, with preferred weapons.
 - **Reroll any single card** without touching the rest of your build.
 - **Lock cards you like** so they stay put when you generate again.
 - **Save your favorite builds** to load, rename or delete later.
+- **Share a build** with a link that opens exactly what you rolled, or copy it as text ready to paste into Reddit or Discord.
+- **Settings** to leave out classes or races, choose how often multiclass builds happen, and hide the tadpole, romance or companion cards.
 - **Works in any browser,** on desktop or phone, with no account or sign-up needed.
 
 ## Saved Builds

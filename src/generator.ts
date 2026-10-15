@@ -5,6 +5,25 @@ let character: Character = {};
 
 const MAX_LEVEL = 12;
 
+function defaultSettings(): Settings {
+  return {excludedClasses: [], excludedRaces: [], multiclass: "sometimes", tripleClass: false, hiddenCards: []};
+}
+
+let settings: Settings = defaultSettings();
+
+// Classes and races the visitor allows; excluding everything falls back to the full list.
+function allowedClasses(): string[] {
+  const names = Object.keys(data.classes);
+  const allowed = names.filter(name => !settings.excludedClasses.includes(name));
+  return allowed.length ? allowed : names;
+}
+
+function allowedRaces(): string[] {
+  const names = Object.keys(data.races);
+  const allowed = names.filter(name => !settings.excludedRaces.includes(name));
+  return allowed.length ? allowed : names;
+}
+
 function rollStartingMagic(className: string): ClassEntry[] {
   const magic = STARTING_MAGIC[className];
   if (!magic) return [];
@@ -100,7 +119,7 @@ function rollDarkUrge(): string | null {
 }
 
 function rollRace(): ClassEntry[] {
-  const race = pick(Object.keys(data.races)) ?? "Human";
+  const race = pick(allowedRaces()) ?? "Human";
   const info = data.races[race] || {};
   const result: ClassEntry[] = [{label: "Race", value: race}];
 
@@ -312,24 +331,51 @@ function rollSingleClass(className: string, level: number, isMulticlass = false,
   return entries;
 }
 
+// One, two or three classes, following the Multiclass setting and how many classes are allowed.
+function rollClassCount(available: number): number {
+  const chance = settings.multiclass === "always" ? 100
+    : settings.multiclass === "never" ? 0
+    : Number(data.settings?.multiclassChance ?? 8);
+  if (available < 2 || Math.random() * 100 >= chance) return 1;
+  const triple = settings.tripleClass && available >= 3 &&
+    Math.random() * 100 < Number(data.settings?.tripleClassChance ?? 20);
+  return triple ? 3 : 2;
+}
+
+// Splits the 12 levels. The starting class keeps at least half, and a second class
+// gets at least as many levels as a third.
+function splitLevels(count: number): number[] {
+  if (count === 1) return [MAX_LEVEL];
+  if (count === 2) {
+    const primary = 6 + Math.floor(Math.random() * 6);
+    return [primary, MAX_LEVEL - primary];
+  }
+  const primary = 6 + Math.floor(Math.random() * 5);
+  const rest = MAX_LEVEL - primary;
+  const minSecond = Math.ceil(rest / 2);
+  const second = minSecond + Math.floor(Math.random() * (rest - minSecond));
+  return [primary, second, rest - second];
+}
+
 function rollClass(): ClassEntry[] {
-  const names = Object.keys(data.classes);
-  const primary = pick(names) ?? names[0];
+  const names = allowedClasses();
   const existingSkills = getExistingSkillProficiencies();
-  const multi = Math.random() * 100 < Number(data.settings?.multiclassChance ?? 8);
+  const classNames = pickMany(names, rollClassCount(names.length));
+  const levels = splitLevels(classNames.length);
+  const [primary, ...others] = classNames;
 
-  if (!multi) return rollSingleClass(primary, MAX_LEVEL, false, existingSkills);
+  if (!others.length) return rollSingleClass(primary, MAX_LEVEL, false, existingSkills);
 
-  // The starting class keeps at least half of the 12 levels.
-  const primaryLevel = 6 + Math.floor(Math.random() * 6);
-  const secondary = pick(names.filter(n => n !== primary)) ?? primary;
-  const secondarySkillCount = MULTICLASS_SKILL_COUNTS[secondary] || 0;
-  const secondarySkills = secondarySkillCount
-    ? (data.classes[secondary]?.skills || []).filter(skill => !existingSkills.includes(skill))
-    : [];
-  const first = rollSingleClass(primary, primaryLevel, false, existingSkills, secondarySkills, secondarySkillCount);
-  const second = rollSingleClass(secondary, MAX_LEVEL - primaryLevel, true, [...existingSkills, ...getClassSkillProficiencies(first)]);
-  return [...first, ...second];
+  // The starting class leaves room for the skills the later classes pick.
+  const reservedSkills = [...new Set(others.flatMap(name =>
+    MULTICLASS_SKILL_COUNTS[name] ? data.classes[name]?.skills || [] : []
+  ))].filter(skill => !existingSkills.includes(skill));
+  const reservedCount = others.reduce((sum, name) => sum + (MULTICLASS_SKILL_COUNTS[name] || 0), 0);
+  const entries = rollSingleClass(primary, levels[0], false, existingSkills, reservedSkills, reservedCount);
+  others.forEach((name, index) => {
+    entries.push(...rollSingleClass(name, levels[index + 1], true, [...existingSkills, ...getClassSkillProficiencies(entries)]));
+  });
+  return entries;
 }
 
 // Armor proficiencies from race, starting class, multiclass grants and subclasses.

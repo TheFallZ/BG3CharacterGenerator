@@ -7,18 +7,25 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;500;700&family=Alegreya+SC:wght@500;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=2">
+<link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
 
 <main>
   <div class="toolbar">
-    <button class="primary" id="generateAll">Generate character</button>
+    <div class="toolbar-main">
+      <button class="primary" id="generateAll">Generate character</button>
+      <button id="settingsToggle" aria-expanded="false" aria-controls="settingsPanel">Settings</button>
+    </div>
     <div class="save-controls">
       <div class="save-notice" id="saveNotice" role="status" aria-live="polite"></div>
+      <button id="shareLink">Share link</button>
+      <button id="copyText">Copy text</button>
       <button id="saveCharacter">Save build</button>
     </div>
   </div>
+
+  <section class="settings-panel" id="settingsPanel" aria-label="Settings" hidden></section>
 
   <section class="saved-strip" id="savedStrip" aria-labelledby="savedHeading" hidden>
     <h2 class="saved-heading" id="savedHeading">Saved builds</h2>
@@ -35,8 +42,8 @@
 
 </main>
 
-<script src="js/data.js?v=2" defer></script>
-<script src="js/generator.js?v=2" defer></script>
-<script src="js/app.js?v=2" defer></script>
+<script src="js/data.js?v=5" defer></script>
+<script src="js/generator.js?v=5" defer></script>
+<script src="js/app.js?v=5" defer></script>
 </body>
 </html>

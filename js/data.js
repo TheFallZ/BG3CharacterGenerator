@@ -202,7 +202,8 @@ const DEFAULT_DATA = {
     ],
     romances: ["Astarion", "Gale", "Halsin", "Karlach", "Lae'zel", "Minthara", "Shadowheart", "Wyll", "Jaheira", "Minsc", "No One"],
     settings: {
-        multiclassChance: 8
+        multiclassChance: 8,
+        tripleClassChance: 20
     }
 };
 const BACKGROUND_SKILLS = {

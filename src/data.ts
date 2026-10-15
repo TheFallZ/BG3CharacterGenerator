@@ -25,7 +25,8 @@ interface GeneratorData {
   feats: string[];
   backgrounds: string[];
   romances: string[];
-  settings: { multiclassChance: number };
+  // Percent chances: a multiclass on "Sometimes", and three classes when a multiclass rolls with triple classing on.
+  settings: { multiclassChance: number; tripleClassChance: number };
 }
 
 interface Character {
@@ -59,6 +60,17 @@ interface WeaponPreferences {
 
 type CardKey = keyof Character;
 type GeneratorResult = ClassEntry[] | string[] | string | null;
+
+type MulticlassMode = "never" | "sometimes" | "always";
+
+// The visitor's choices from the Settings panel. Excluded classes and races only apply to their own character.
+interface Settings {
+  excludedClasses: string[];
+  excludedRaces: string[];
+  multiclass: MulticlassMode;
+  tripleClass: boolean;
+  hiddenCards: CardKey[];
+}
 
 const DEFAULT_DATA: GeneratorData = {
   darkUrge: [
@@ -270,7 +282,8 @@ const DEFAULT_DATA: GeneratorData = {
   romances: ["Astarion", "Gale", "Halsin", "Karlach", "Lae'zel", "Minthara", "Shadowheart", "Wyll", "Jaheira", "Minsc", "No One"],
 
   settings: {
-    multiclassChance: 8
+    multiclassChance: 8,
+    tripleClassChance: 20
   }
 };
 
