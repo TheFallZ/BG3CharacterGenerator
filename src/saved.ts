@@ -44,7 +44,7 @@ function renderSavedPage(): void {
     const second = item.name
       ? {label: "Race", value: raceName(item)}
       : {label: "Subclass", value: primaryClassAndSubclass(item.character.class).subclass ?? "None yet"};
-    const romance = item.character.romance && item.character.romance !== "No One" ? item.character.romance : "No one";
+    const companion = romanceOrCompanion(item);
     const detail = (label: string, value: string) =>
       `<div class="entry"><span class="entry-label">${escapeHTML(label)}</span><div class="entry-value">${escapeHTML(value)}</div></div>`;
     return `<li class="card saved-card" data-id="${id}">
@@ -67,7 +67,7 @@ function renderSavedPage(): void {
             ${detail("Class", classes)}
             ${detail(second.label, second.value)}
             ${detail("Background", backgroundName(item))}
-            ${detail("Romance", romance)}
+            ${detail(companion.label, companion.value)}
           </div>
           ${item.note ? `<p class="saved-card-note"><span>Note:</span> ${escapeHTML(item.note)}</p>` : ""}
         </div>
@@ -78,6 +78,20 @@ function renderSavedPage(): void {
       </div>
     </li>`;
   }).join("");
+}
+
+// The romance, or when there isn't one, who comes along instead: the hireling, companion or party.
+function romanceOrCompanion(item: SavedCharacter): {label: string; value: string} {
+  const romance = item.character.romance;
+  if (romance && romance !== "No One") return {label: "Romance", value: romance};
+  const members = (item.character.companionBuild || [])
+    .filter(entry => ["Companion", "Hireling", "Companion or hireling"].includes(entry.label) && typeof entry.value === "string");
+  if (members.length > 1) return {label: "Party", value: members.map(entry => entry.value).join(", ")};
+  if (members.length === 1) {
+    const label = members[0].label === "Companion or hireling" ? "Hireling" : members[0].label;
+    return {label, value: members[0].value as string};
+  }
+  return {label: "Romance", value: "No one"};
 }
 
 function raceName(item: SavedCharacter): string {
