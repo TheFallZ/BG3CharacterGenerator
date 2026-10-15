@@ -18,7 +18,6 @@ const ROLLS: Record<CardKey, () => GeneratorResult> = {
 // skills, class avoids both, and ability scores follow the class.
 const ROLL_ORDER: CardKey[] = ["origin", "darkUrge", "race", "background", "class", "abilities", "feats", "romance", "companionBuild"];
 const CLASS_DIVIDERS = ["", "Second class", "Third class"];
-const COMPANION_DIVIDERS = ["", "Second companion", "Third companion"];
 
 function rollCompanions(): ClassEntry[] {
   return settings.party ? rollParty(character.romance) : rollCompanionBuild(character.romance);
@@ -243,37 +242,43 @@ function entryHTML(entry: ClassEntry): string {
 }
 
 // Grid areas for the visible cards, so hiding a card doesn't leave a gap.
-// Origin, tadpole and romance stack beside the companion card, which Romance picks.
-function gridAreas(columns: 2 | 3, visible: CardKey[]): string {
+// Wide screens use six columns so two or three short story cards (origin, tadpole, romance)
+// can share a row evenly, with the companion card full width below.
+function gridAreas(columns: 2 | 6, visible: CardKey[]): string {
   const story = (["origin", "darkUrge", "romance"] as CardKey[]).filter(key => visible.includes(key));
-  const companion = visible.includes("companionBuild");
-  const abilities = visible.includes("abilities");
   const row = (...cells: string[]) => `"${cells.join(" ")}"`;
+  const span = (key: string, width: number) => Array(width).fill(key);
   const rows: string[] = [];
 
   if (columns === 2) {
     rows.push(row("class", "class"));
-    if (abilities) rows.push(row("abilities", "abilities"));
+    if (visible.includes("abilities")) rows.push(row("abilities", "abilities"));
     rows.push(row("race", "background"), row("feats", "feats"));
     for (let i = 0; i < story.length; i += 2) rows.push(row(story[i], story[i + 1] ?? story[i]));
-    if (companion) rows.push(row("companionBuild", "companionBuild"));
+    if (visible.includes("companionBuild")) rows.push(row("companionBuild", "companionBuild"));
     return rows.join(" ");
   }
 
-  rows.push(row("class", "class", "class"));
-  if (abilities) rows.push(row("abilities", "abilities", "abilities"));
-  rows.push(row("race", "background", "feats"));
-  if (companion) {
-    if (story.length) story.forEach(key => rows.push(row(key, "companionBuild", "companionBuild")));
-    else rows.push(row("companionBuild", "companionBuild", "companionBuild"));
-  } else if (story.length === 3) {
-    rows.push(row(story[0], story[1], story[2]));
-  } else if (story.length === 2) {
-    rows.push(row(story[0], story[0], story[1]));
-  } else if (story.length === 1) {
-    rows.push(row(story[0], story[0], story[0]));
-  }
+  rows.push(row(...span("class", 6)));
+  if (visible.includes("abilities")) rows.push(row(...span("abilities", 6)));
+  rows.push(row(...span("race", 2), ...span("background", 2), ...span("feats", 2)));
+  if (story.length) rows.push(row(...story.flatMap(key => span(key, 6 / story.length))));
+  if (visible.includes("companionBuild")) rows.push(row(...span("companionBuild", 6)));
   return rows.join(" ");
+}
+
+// A party shows each companion in its own column; a single companion keeps the two-column layout.
+function companionHTML(): string {
+  const members: ClassEntry[][] = [];
+  for (const entry of buildCardEntries(character, "companionBuild")) {
+    const startsMember = ["Companion", "Hireling", "Companion or hireling"].includes(entry.label);
+    if (startsMember || !members.length) members.push([]);
+    members[members.length - 1].push(entry);
+  }
+  if (members.length < 2) return members.flat().map(entryHTML).join("");
+  return `<div class="party">${members.map(member =>
+    `<div class="party-member">${member.map(entryHTML).join("")}</div>`
+  ).join("")}</div>`;
 }
 
 // Ability scores as six boxes with their modifiers, then the racial bonuses.
@@ -300,7 +305,7 @@ function renderCards(): void {
   const host = document.getElementById("cards") as HTMLElement;
   const visible = visibleCards();
   host.style.setProperty("--areas-2", gridAreas(2, visible));
-  host.style.setProperty("--areas-3", gridAreas(3, visible));
+  host.style.setProperty("--areas-6", gridAreas(6, visible));
   let rollIndex = 0;
   host.innerHTML = visible.map(key => {
     const title = cardTitle(character, key);
@@ -317,18 +322,16 @@ function renderCards(): void {
     if (locked) classes.push("is-locked");
     if (rolledCards.has(key)) classes.push("card-rolled");
 
-    // Each later class, or each later party member, starts after a divider.
+    // Each later class starts after a divider.
     let classIndex = 0;
-    let memberIndex = 0;
-    const content = key === "abilities" ? abilitiesHTML() : buildCardEntries(character, key).map(entry => {
-      if (key === "class" && entry.label === "Class" && classIndex++ > 0) {
-        return `<div class="class-divider">${CLASS_DIVIDERS[classIndex - 1] ?? "Next class"}</div>${entryHTML({...entry, label: ""})}`;
-      }
-      if (key === "companionBuild" && (entry.label === "Companion" || entry.label === "Hireling") && memberIndex++ > 0) {
-        return `<div class="class-divider">${COMPANION_DIVIDERS[memberIndex - 1] ?? "Next companion"}</div>${entryHTML(entry)}`;
-      }
-      return entryHTML(entry);
-    }).join("");
+    const content = key === "abilities" ? abilitiesHTML()
+      : key === "companionBuild" ? companionHTML()
+      : buildCardEntries(character, key).map(entry => {
+        if (key === "class" && entry.label === "Class" && classIndex++ > 0) {
+          return `<div class="class-divider">${CLASS_DIVIDERS[classIndex - 1] ?? "Next class"}</div>${entryHTML({...entry, label: ""})}`;
+        }
+        return entryHTML(entry);
+      }).join("");
     const setByOrigin = isSetByOrigin(key);
     const rerollLabel = setByOrigin ? `${title} is set by your origin` : `Reroll ${title}`;
 

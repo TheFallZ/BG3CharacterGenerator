@@ -817,15 +817,15 @@ button.danger:hover {
   .card-companionBuild { grid-area: companionBuild; }
 }
 
-/* Tadpole and Romance stack beside the companion that Romance picks. */
+/* Six columns so the short story cards can share a row evenly; companions go full width below. */
 @media (min-width: 901px) {
   .cards {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-areas: var(--areas-3,
-      "class class class"
-      "race background feats"
-      "darkUrge companionBuild companionBuild"
-      "romance companionBuild companionBuild");
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-areas: var(--areas-6,
+      "class class class class class class"
+      "race race background background feats feats"
+      "darkUrge darkUrge darkUrge romance romance romance"
+      "companionBuild companionBuild companionBuild companionBuild companionBuild companionBuild");
   }
 }
 
@@ -958,6 +958,66 @@ button.lock-button[aria-pressed="true"] {
   align-content: start;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px 14px;
+}
+
+/* Party: one column per companion, each led by their name. */
+.card-companionBuild .card-body:has(.party) {
+  display: block;
+}
+
+.party {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.party-member {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 14px;
+}
+
+.party-member:first-child {
+  padding-left: 0;
+}
+
+.party-member:last-child {
+  padding-right: 0;
+}
+
+.party-member + .party-member {
+  border-left: 1px solid var(--rule);
+}
+
+.party-member .entry:first-child .entry-value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.party-member .entry {
+  margin: 0;
+}
+
+/* On phones the companions stack, split by a line. */
+@media (max-width: 700px) {
+  .party {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .party-member,
+  .party-member:first-child,
+  .party-member:last-child {
+    padding: 0;
+  }
+
+  .party-member + .party-member {
+    margin-top: 14px;
+    border-top: 1px solid var(--rule);
+    border-left: 0;
+    padding-top: 14px;
+  }
 }
 
 /* Ability scores */
