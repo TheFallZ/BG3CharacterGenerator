@@ -370,7 +370,6 @@ button.primary:hover {
 @media (min-width: 901px) {
   .settings-panel { grid-template-columns: 2fr 1fr 1fr; }
   .settings-pools { grid-column: 1 / -1; }
-  .settings-pools .settings-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 .settings-group {
@@ -399,13 +398,57 @@ button.primary:hover {
   font-weight: 400;
 }
 
-.settings-list {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 12px;
+/* Class and race toggles: pink chips are in the pool, dimmed ones are left out. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.settings-list legend {
-  grid-column: 1 / -1;
+.chip {
+  cursor: pointer;
+}
+
+.chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chip span {
+  display: block;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  padding: 3px 12px;
+  color: var(--page-ink);
+  opacity: .6;
+  font-size: 15px;
+  text-decoration: line-through;
+  transition: background .15s ease, color .15s ease, opacity .15s ease;
+}
+
+.chip:hover span {
+  border-color: var(--control-border-hover);
+  opacity: .85;
+}
+
+.chip input:checked + span {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  background: var(--accent);
+  opacity: 1;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.chip input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The last chip left in a list can't be turned off. */
+.chip:has(input:disabled) {
+  cursor: default;
 }
 
 /* Only the box and its name are clickable, not the empty space beside them. */

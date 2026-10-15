@@ -6,6 +6,11 @@ function checkboxHTML(name: string, value: string, label: string, checked: boole
   return `<label class="check"><input type="checkbox" name="${name}" value="${escapeHTML(value)}"${checked ? " checked" : ""}> ${escapeHTML(label)}</label>`;
 }
 
+// A pill-shaped toggle for the class and race lists: pink when it can be rolled.
+function chipHTML(name: string, value: string, checked: boolean): string {
+  return `<label class="chip"><input type="checkbox" name="${name}" value="${escapeHTML(value)}"${checked ? " checked" : ""}><span>${escapeHTML(value)}</span></label>`;
+}
+
 function renderSettings(): void {
   const panel = document.getElementById("settingsPanel") as HTMLElement;
   // Grouped by purpose: how your character rolls, who comes along, what can be rolled, and what's shown.
@@ -48,11 +53,11 @@ function renderSettings(): void {
       <div class="settings-row">
         <fieldset class="settings-group settings-list">
           <legend>Classes</legend>
-          ${Object.keys(data.classes).map(name => checkboxHTML("class", name, name, !settings.excludedClasses.includes(name))).join("")}
+          <div class="chips">${Object.keys(data.classes).sort().map(name => chipHTML("class", name, !settings.excludedClasses.includes(name))).join("")}</div>
         </fieldset>
         <fieldset class="settings-group settings-list">
           <legend>Races</legend>
-          ${Object.keys(data.races).map(name => checkboxHTML("race", name, name, !settings.excludedRaces.includes(name))).join("")}
+          <div class="chips">${Object.keys(data.races).sort().map(name => chipHTML("race", name, !settings.excludedRaces.includes(name))).join("")}</div>
         </fieldset>
       </div>
     </section>
