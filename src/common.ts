@@ -456,6 +456,91 @@ async function buildText(build: Character, name: string | null): Promise<string>
   return lines.join("\n");
 }
 
+// Pictures of saved builds, keyed by the saved build's id. They live in IndexedDB because
+// localStorage only holds a few megabytes, and are kept as data URLs so they go straight into
+// build files. Every function here resolves quietly when IndexedDB is unavailable.
+const PICTURE_DB = "bg3-character-generator";
+const PICTURE_STORE = "pictures";
+// Pictures are shrunk to fit this many pixels on their longest side before they're stored.
+const PICTURE_SIZE = 640;
+// Anything bigger in a build file is ignored, so a shared file can't fill up storage.
+const MAX_PICTURE_LENGTH = 1_500_000;
+
+function openPictures(): Promise<IDBDatabase | null> {
+  return new Promise(resolve => {
+    try {
+      const request = indexedDB.open(PICTURE_DB, 1);
+      request.onupgradeneeded = () => request.result.createObjectStore(PICTURE_STORE);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+async function pictureRequest<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T | null> {
+  const db = await openPictures();
+  if (!db) return null;
+  return new Promise(resolve => {
+    try {
+      const request = run(db.transaction(PICTURE_STORE, mode).objectStore(PICTURE_STORE));
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+async function getPicture(id: string): Promise<string | null> {
+  const picture = await pictureRequest("readonly", store => store.get(id));
+  return isPictureData(picture) ? picture : null;
+}
+
+async function getAllPictures(): Promise<Map<string, string>> {
+  const pictures = new Map<string, string>();
+  const keys = await pictureRequest("readonly", store => store.getAllKeys()) ?? [];
+  const values = await pictureRequest("readonly", store => store.getAll()) ?? [];
+  keys.forEach((key, index) => {
+    if (typeof key === "string" && isPictureData(values[index])) pictures.set(key, values[index]);
+  });
+  return pictures;
+}
+
+// Resolves false when the picture couldn't be stored.
+async function storePicture(id: string, picture: string): Promise<boolean> {
+  return await pictureRequest("readwrite", store => store.put(picture, id)) !== null;
+}
+
+async function deletePicture(id: string): Promise<void> {
+  await pictureRequest("readwrite", store => store.delete(id));
+}
+
+// Only raster images, so a picture from a shared file can't carry script the way an SVG could.
+function isPictureData(value: unknown): value is string {
+  return typeof value === "string" && value.length <= MAX_PICTURE_LENGTH &&
+    /^data:image\/(webp|jpeg|png);base64,[A-Za-z0-9+/]+=*$/.test(value);
+}
+
+// Shrinks an image file and re-encodes it as WebP, or JPEG where the browser can't write WebP.
+async function shrinkPicture(file: Blob): Promise<string | null> {
+  try {
+    const image = await createImageBitmap(file);
+    const scale = Math.min(1, PICTURE_SIZE / Math.max(image.width, image.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(image.width * scale);
+    canvas.height = Math.round(image.height * scale);
+    canvas.getContext("2d")!.drawImage(image, 0, 0, canvas.width, canvas.height);
+    image.close();
+    const webp = canvas.toDataURL("image/webp", 0.82);
+    const picture = webp.startsWith("data:image/webp") ? webp : canvas.toDataURL("image/jpeg", 0.85);
+    return isPictureData(picture) ? picture : null;
+  } catch {
+    return null;
+  }
+}
+
 // Counts an action, like "generate", on GoatCounter. Counts are anonymous and use no cookies.
 // Does nothing when the counter is blocked or hasn't loaded, and GoatCounter skips localhost.
 function trackEvent(name: string): void {

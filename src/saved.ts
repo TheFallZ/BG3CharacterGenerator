@@ -5,6 +5,14 @@
 
 const SAVED_SORT_KEY = "bg3-character-generator-saved-sort";
 const BACKUP_FORMAT = "bg3-character-generator-saved-builds";
+// Version 2 files can carry a picture with each build.
+const BACKUP_VERSION = 2;
+const BUILD_FILE_EXTENSION = ".bg3build";
+
+// Pictures by saved build id, loaded once when the page opens.
+let pictures = new Map<string, string>();
+// The build that the picture chooser is open for.
+let pictureFor: string | null = null;
 
 function savedTime(item: SavedCharacter): number {
   return Number(item.id.split("-")[0]) || 0;
@@ -45,6 +53,7 @@ function renderSavedPage(): void {
       ? {label: "Race", value: raceName(item)}
       : {label: "Subclass", value: primaryClassAndSubclass(item.character.class).subclass ?? "None yet"};
     const companion = romanceOrCompanion(item);
+    const picture = pictures.get(item.id);
     const detail = (label: string, value: string) =>
       `<div class="entry"><span class="entry-label">${escapeHTML(label)}</span><div class="entry-value">${escapeHTML(value)}</div></div>`;
     return `<li class="card saved-card" data-id="${id}">
@@ -53,14 +62,18 @@ function renderSavedPage(): void {
         <div class="saved-menu-wrap">
           <button class="text-button saved-more" data-menu="${id}" aria-haspopup="true" aria-expanded="false" aria-label="More actions for ${escapeHTML(title)}">⋯</button>
           <div class="saved-menu" hidden>
-            <button data-copy-link="${id}">Copy link</button>
-            <button data-copy-text="${id}">Copy text</button>
             <button data-rename="${id}">Rename</button>
             <button data-note="${id}">${item.note ? "Edit note" : "Add note"}</button>
-            <button class="saved-menu-danger" data-delete="${id}">Delete</button>
+            <button data-picture="${id}">${picture ? "Change picture" : "Add picture"}</button>
+            ${picture ? `<button data-remove-picture="${id}">Remove picture</button>` : ""}
+            <button class="saved-menu-group" data-copy-link="${id}">Copy link</button>
+            <button data-copy-text="${id}">Copy text</button>
+            <button data-download="${id}">Download build file</button>
+            <button class="saved-menu-group saved-menu-danger" data-delete="${id}">Delete</button>
           </div>
         </div>
       </div>
+      ${picture ? `<img class="saved-card-picture" src="${escapeHTML(picture)}" alt="Picture of ${escapeHTML(title)}">` : ""}
       <div class="card-body saved-card-body">
         <div class="saved-card-text">
           <div class="saved-details">
@@ -265,6 +278,8 @@ function cancelDelete(id: string): void {
 function deleteSaved(id: string): void {
   try {
     storeSavedCharacters(getSavedCharacters().filter(saved => saved.id !== id));
+    pictures.delete(id);
+    deletePicture(id);
     setNotice("Build deleted.");
   } catch {
     setNotice("Could not delete the saved build.");
@@ -272,30 +287,81 @@ function deleteSaved(id: string): void {
   renderSavedPage();
 }
 
+function choosePicture(id: string): void {
+  pictureFor = id;
+  document.getElementById("pictureFile")!.click();
+}
+
+async function addPicture(id: string, file: File): Promise<void> {
+  const picture = await shrinkPicture(file);
+  if (!picture) {
+    setNotice("That picture couldn't be used. Try a PNG or JPEG.");
+    return;
+  }
+  if (!await storePicture(id, picture)) {
+    setNotice("Could not save the picture. Browser storage may be full or unavailable.");
+    return;
+  }
+  trackEvent("add-picture");
+  pictures.set(id, picture);
+  setNotice("Picture added.");
+  renderSavedPage();
+}
+
+async function removePicture(id: string): Promise<void> {
+  await deletePicture(id);
+  pictures.delete(id);
+  setNotice("Picture removed.");
+  renderSavedPage();
+  savedCard(id)?.querySelector<HTMLButtonElement>("[data-picture]")?.focus();
+}
+
+// Saved builds as they go into a file, each with its picture if it has one.
+function fileBuilds(saved: SavedCharacter[]): (SavedCharacter & {picture?: string})[] {
+  return saved.map(item => {
+    const picture = pictures.get(item.id);
+    return picture ? {...item, picture} : item;
+  });
+}
+
+function downloadFile(fileName: string, builds: SavedCharacter[]): void {
+  const contents = {format: BACKUP_FORMAT, version: BACKUP_VERSION, exported: new Date().toISOString(), builds: fileBuilds(builds)};
+  const url = URL.createObjectURL(new Blob([JSON.stringify(contents)], {type: "application/json"}));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// One build, with its name, note and picture, in a file someone else can import.
+function downloadBuild(id: string): void {
+  const item = getSavedCharacters().find(saved => saved.id === id);
+  if (!item) return;
+  trackEvent("download-build");
+  const fileName = savedTitle(item).replace(/[^\p{L}\p{N} -]+/gu, "").trim().replace(/\s+/g, "-") || "build";
+  downloadFile(fileName + BUILD_FILE_EXTENSION, [item]);
+  setNotice(`Downloaded "${savedTitle(item)}". Anyone you send the file to can import it on their Saved page.`);
+}
+
 // Downloads every saved build as a file that Import can read back, here or on another device.
 function exportSaved(): void {
   const saved = getSavedCharacters();
   if (!saved.length) return;
   trackEvent("backup");
-  const backup = {format: BACKUP_FORMAT, version: 1, exported: new Date().toISOString(), builds: saved};
-  const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], {type: "application/json"}));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `bg3-saved-builds-${new Date().toISOString().slice(0, 10)}.json`;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadFile(`bg3-saved-builds-${new Date().toISOString().slice(0, 10)}.json`, saved);
   setNotice(`Backed up ${saved.length} ${saved.length === 1 ? "build" : "builds"}.`);
 }
 
-// Adds the builds from a backup file, skipping any already saved here. The file is checked
-// build by build, since it may have come from anywhere.
+// Adds the builds from a backup or build file, skipping any already saved here. The file is
+// checked build by build, since it may have come from anywhere.
 async function importSaved(file: File): Promise<void> {
   trackEvent("import");
   let parsed: unknown;
   try {
     parsed = JSON.parse(await file.text());
   } catch {
-    setNotice("That file isn't a saved builds backup.");
+    setNotice("That file isn't a saved build or backup.");
     return;
   }
   const builds: unknown[] = Array.isArray(parsed) ? parsed
@@ -304,6 +370,7 @@ async function importSaved(file: File): Promise<void> {
   const existing = getSavedCharacters();
   const ids = new Set(existing.map(item => item.id));
   const added: SavedCharacter[] = [];
+  const addedPictures = new Map<string, string>();
   for (const build of builds) {
     if (!isSavedCharacter(build) || ids.has(build.id)) continue;
     const character = sanitizeCharacter(build.character);
@@ -311,19 +378,24 @@ async function importSaved(file: File): Promise<void> {
     const name = typeof build.name === "string" ? build.name.trim().slice(0, MAX_NAME_LENGTH) : "";
     const note = typeof build.note === "string" ? build.note.trim().slice(0, MAX_NOTE_LENGTH) : "";
     added.push({id: build.id, label: build.label, ...(name ? {name} : {}), ...(note ? {note} : {}), character});
+    const picture = (build as {picture?: unknown}).picture;
+    if (isPictureData(picture)) addedPictures.set(build.id, picture);
     ids.add(build.id);
   }
   if (!builds.length) {
-    setNotice("That file isn't a saved builds backup.");
+    setNotice("That file isn't a saved build or backup.");
     return;
   }
   if (!added.length) {
-    setNotice("Everything in that backup is already saved here.");
+    setNotice(builds.length === 1 ? "That build is already saved here." : "Everything in that backup is already saved here.");
     return;
   }
   try {
     storeSavedCharacters([...added, ...existing]);
-    setNotice(`Imported ${added.length} ${added.length === 1 ? "build" : "builds"}.`);
+    for (const [id, picture] of addedPictures) {
+      if (await storePicture(id, picture)) pictures.set(id, picture);
+    }
+    setNotice(added.length === 1 ? `Added "${savedTitle(added[0])}".` : `Imported ${added.length} builds.`);
   } catch {
     setNotice("Could not import. Browser storage may be full or unavailable.");
   }
@@ -347,6 +419,23 @@ document.getElementById("importFile")!.addEventListener("change", event => {
   input.value = "";
   if (file) importSaved(file);
 });
+document.getElementById("pictureFile")!.addEventListener("change", event => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = "";
+  if (file && pictureFor) addPicture(pictureFor, file);
+});
+
+// A build file or backup dropped anywhere on the page is imported.
+document.addEventListener("dragover", event => {
+  if (event.dataTransfer?.types.includes("Files")) event.preventDefault();
+});
+document.addEventListener("drop", event => {
+  const file = event.dataTransfer?.files[0];
+  if (!file) return;
+  event.preventDefault();
+  importSaved(file);
+});
 
 try {
   const sort = localStorage.getItem(SAVED_SORT_KEY);
@@ -366,6 +455,9 @@ document.getElementById("savedList")!.addEventListener("click", event => {
   if (set.open) openSaved(set.open);
   else if (set.copyLink) copySavedLink(set.copyLink);
   else if (set.copyText) copySavedText(set.copyText);
+  else if (set.download) downloadBuild(set.download);
+  else if (set.picture) choosePicture(set.picture);
+  else if (set.removePicture) removePicture(set.removePicture);
   else if (set.rename) startRename(set.rename);
   else if (set.note) startNote(set.note);
   else if (set.delete) askToDelete(set.delete);
@@ -385,3 +477,8 @@ document.addEventListener("keydown", event => {
 });
 
 renderSavedPage();
+getAllPictures().then(stored => {
+  if (!stored.size) return;
+  pictures = stored;
+  renderSavedPage();
+});

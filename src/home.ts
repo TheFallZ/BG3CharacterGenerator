@@ -243,6 +243,19 @@ function renderBuildTitle(): void {
   const noteLine = document.getElementById("buildNote") as HTMLElement;
   noteLine.textContent = note ?? "";
   noteLine.hidden = !note;
+  renderBuildPicture(isSaved ? currentSavedId : null);
+}
+
+// A saved build's picture sits beside its heading. It loads after the rest, so a later build
+// that has already replaced this one isn't given the wrong picture.
+async function renderBuildPicture(savedId: string | null): Promise<void> {
+  const image = document.getElementById("buildPicture") as HTMLImageElement;
+  const picture = savedId ? await getPicture(savedId) : null;
+  if (savedId !== currentSavedId) return;
+  image.hidden = !picture;
+  image.src = picture ?? "";
+  image.alt = picture ? `Picture of ${currentBuildName() ?? describeCharacter(character)}` : "";
+  document.getElementById("buildTitle")!.classList.toggle("has-picture", !!picture);
 }
 
 function entryHTML(entry: ClassEntry): string {

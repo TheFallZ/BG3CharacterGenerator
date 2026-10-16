@@ -873,6 +873,19 @@ kbd {
   overflow-wrap: anywhere;
 }
 
+/* The picture runs the width of the card, framed on every side in the text color with a light
+   edge on the parchment side, so it reads as set into the card rather than cut into it.
+   Character screenshots are usually taller than wide, so the crop favors the top, where the face is. */
+.saved-card-picture {
+  display: block;
+  width: 100%;
+  height: 200px;
+  border: 3px solid var(--ink);
+  box-shadow: 0 -1px 0 rgba(255, 246, 239, .6), 0 1px 0 rgba(255, 246, 239, .6);
+  object-fit: cover;
+  object-position: center 20%;
+}
+
 .saved-card-body {
   display: flex;
   flex: 1;
@@ -943,6 +956,11 @@ button.saved-more {
 
 .saved-menu button + button {
   border-top: 1px solid var(--control-border);
+}
+
+/* The menu runs edit, share, then delete, with a heavier line where each group starts. */
+.saved-menu button.saved-menu-group {
+  border-top: 3px solid var(--control-border-hover);
 }
 
 .saved-menu button:hover {
@@ -1136,6 +1154,32 @@ button.danger:hover {
 
 .build-title {
   min-width: 0;
+}
+
+/* A saved build's picture sits to the left of the heading lines. */
+.build-title.has-picture {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 14px;
+  align-items: center;
+}
+
+.build-title.has-picture > :not(.build-picture) {
+  grid-column: 2;
+}
+
+.build-picture {
+  grid-row: 1 / span 4;
+  width: 76px;
+  height: 76px;
+  border: 2px solid var(--frame);
+  border-radius: 8px;
+  object-fit: cover;
+  object-position: center 20%;
+}
+
+.build-picture[hidden] {
+  display: none;
 }
 
 .build-kind {
