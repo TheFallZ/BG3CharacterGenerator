@@ -41,11 +41,7 @@
 
 body {
   margin: 0;
-  /* Faint d20s scattered over the dark page, drawn like the favicon's die. */
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560' viewBox='0 0 560 560'%3E%3Cg fill='none' stroke='%23e9a5bb' stroke-width='1.6' stroke-linejoin='round'%3E%3Cg transform='translate%2840 50%29 rotate%28-12 40.0 40.0%29 scale%281.250%29' stroke-opacity='0.080'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%28330 30%29 rotate%2820 24.0 24.0%29 scale%280.750%29' stroke-opacity='0.056'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%28200 230%29 rotate%288 32.0 32.0%29 scale%281.000%29' stroke-opacity='0.068'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%28440 300%29 rotate%28-25 45.0 45.0%29 scale%281.406%29' stroke-opacity='0.080'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%2860 380%29 rotate%2830 28.0 28.0%29 scale%280.875%29' stroke-opacity='0.056'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%28300 460%29 rotate%28-5 20.0 20.0%29 scale%280.625%29' stroke-opacity='0.048'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
-    radial-gradient(ellipse at 50% 0, var(--page-glow) 0, var(--page-mid) 38%, var(--page) 75%);
-  background-attachment: fixed;
+  background: var(--page);
   color: var(--ink);
   font: 16.5px/1.5 var(--font);
   /* The footer sits at the bottom of the window on short pages and after the content on long ones. */
@@ -53,6 +49,21 @@ body {
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
+}
+
+/* Faint d20s scattered over the dark page, drawn like the favicon's die. They sit on their own
+   fixed layer, which the browser can keep still while the page scrolls over it, rather than a
+   fixed body background, which it repaints on every frame of scrolling. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560' viewBox='0 0 560 560'%3E%3Cg fill='none' stroke='%23e9a5bb' stroke-width='1.6' stroke-linejoin='round'%3E%3Cg transform='translate%2840 50%29 rotate%28-12 40.0 40.0%29 scale%281.250%29' stroke-opacity='0.080'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%28330 30%29 rotate%2820 24.0 24.0%29 scale%280.750%29' stroke-opacity='0.056'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%28200 230%29 rotate%288 32.0 32.0%29 scale%281.000%29' stroke-opacity='0.068'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%28440 300%29 rotate%28-25 45.0 45.0%29 scale%281.406%29' stroke-opacity='0.080'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%2860 380%29 rotate%2830 28.0 28.0%29 scale%280.875%29' stroke-opacity='0.056'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%28300 460%29 rotate%28-5 20.0 20.0%29 scale%280.625%29' stroke-opacity='0.048'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 50% 0, var(--page-glow) 0, var(--page-mid) 38%, var(--page) 75%);
+  pointer-events: none;
+  will-change: transform;
 }
 
 button, input, select, textarea { font: inherit; }
