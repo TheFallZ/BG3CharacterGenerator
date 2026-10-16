@@ -473,11 +473,6 @@ const KEY_LEVEL_REASONS: Record<string, string> = {
   Warlock: "3rd-level spells", Wizard: "3rd-level spells", Rogue: "your subclass"
 };
 const DIP_REASONS: Record<string, string> = {Paladin: "Divine Smite", Sorcerer: "Metamagic", Warlock: "Eldritch Invocations"};
-// Short class names for the level strip.
-const CLASS_SHORT_NAMES: Record<string, string> = {
-  Barbarian: "Barb", Bard: "Bard", Cleric: "Cleric", Druid: "Druid", Fighter: "Fight", Monk: "Monk",
-  Paladin: "Pal", Ranger: "Rngr", Rogue: "Rogue", Sorcerer: "Sorc", Warlock: "Warl", Wizard: "Wiz"
-};
 
 // No ability score can go above this.
 const MAX_ABILITY_SCORE = 20;

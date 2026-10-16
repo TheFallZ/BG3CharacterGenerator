@@ -1640,38 +1640,47 @@ button.lock-button[aria-pressed="true"] {
   font-weight: 400;
 }
 
-.entry-wide {
-  grid-column: 1 / -1;
+/* Level-up order: a dark panel dropped down from the Multiclass badge, over the top of the Class
+   card, with one numbered box per character level, colored by class. */
+.card-class {
+  position: relative;
 }
 
-/* Level-up order: twelve boxes, one per character level, colored by class, opened from the badge. */
-.level-order {
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--rule);
+.level-order-pop {
+  position: absolute;
+  top: 40px;
+  right: 10px;
+  z-index: 3;
+  width: min(560px, calc(100% - 20px));
+  border: 1px solid var(--control-border-hover);
+  border-radius: 7px;
+  padding: 9px 10px 8px;
+  background: var(--control-bg);
+  box-shadow: var(--shadow);
+  color: var(--control-ink);
+}
+
+.level-order-pop[hidden] {
+  display: none;
 }
 
 .level-strip {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 3px;
-  margin: 4px 0 0;
+  gap: 4px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .level-box {
   border-radius: 4px;
-  padding: 3px 0 4px;
+  padding: 4px 0;
   text-align: center;
-  font-size: 12.5px;
-  font-weight: 400;
-  line-height: 1.15;
-}
-
-.level-box b {
-  display: block;
   font-family: var(--font-display);
   font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .level-class-0 { background: var(--accent-deep); color: #f6e7ec; }
@@ -1679,9 +1688,9 @@ button.lock-button[aria-pressed="true"] {
 .level-class-2 { background: #5c4a7a; color: #ece6f6; }
 
 .level-reason {
-  margin: 6px 0 2px;
-  color: var(--muted);
-  font-size: 14.5px;
+  margin: 7px 0 0;
+  color: var(--page-ink);
+  font-size: 15px;
   font-weight: 400;
 }
 
@@ -1792,8 +1801,8 @@ button.lock-button[aria-pressed="true"] {
     gap: 7px 10px;
   }
 
-  .level-box span {
-    display: none;
+  .level-box {
+    font-size: 12px;
   }
 
   /* The heading goes first, then Generate across the full width, then the other buttons. */

@@ -275,21 +275,30 @@ async function renderBuildPicture(savedId: string | null): Promise<void> {
   document.getElementById("buildTitle")!.classList.toggle("has-picture", !!picture);
 }
 
-// A multiclass build's level-up order at the top of the Class card: one box per character level,
-// colored by class, with a line on why it starts that way.
+// A multiclass build's level-up order, in a dark panel that drops down from the Multiclass badge
+// over the Class card: one numbered box per character level, colored by class, and a line on why
+// it starts that way.
 function levelUpOrderHTML(): string {
   const classes = getClassLevels().map(({className}) => className);
   const boxes = levelUpOrder().flatMap(({className, from, to}) =>
     Array.from({length: to - from + 1}, () => className));
   const strip = boxes.map((className, index) =>
-    `<li class="level-box level-class-${classes.indexOf(className)}" title="Level ${index + 1}: ${escapeHTML(className)}">
-      <b>${index + 1}</b><span>${escapeHTML(CLASS_SHORT_NAMES[className] ?? className)}</span>
-    </li>`).join("");
-  return `<div class="entry entry-wide level-order">
-    <span class="entry-label">Level-up order</span>
+    `<li class="level-box level-class-${classes.indexOf(className)}" title="Level ${index + 1}: ${escapeHTML(className)}">${index + 1}</li>`).join("");
+  return `<div class="level-order-pop" id="levelOrder"${levelOrderOpen ? "" : " hidden"}>
     <ol class="level-strip" aria-label="${escapeHTML(levelUpOrderText())}">${strip}</ol>
     <p class="level-reason">${escapeHTML(levelUpReason())}</p>
   </div>`;
+}
+
+// Shows or hides the level-up order without redrawing the cards.
+function setLevelOrderOpen(open: boolean): void {
+  levelOrderOpen = open;
+  const panel = document.getElementById("levelOrder");
+  const toggle = document.querySelector<HTMLButtonElement>("[data-level-order]");
+  if (panel) panel.hidden = !open;
+  toggle?.setAttribute("aria-expanded", String(open));
+  const caret = toggle?.querySelector(".level-order-caret");
+  if (caret) caret.textContent = open ? "▴" : "▾";
 }
 
 function entryHTML(entry: ClassEntry): string {
@@ -399,12 +408,11 @@ function renderCards(): void {
         }
         return entryHTML(entry);
       }).join("");
-    // With the level-up order on, the Multiclass badge opens it at the top of the Class card.
+    // With the level-up order on, the Multiclass badge drops it down over the Class card.
     const hasLevelOrder = key === "class" && isMulticlass && settings.showLevelOrder;
-    const classContent = hasLevelOrder && levelOrderOpen ? levelUpOrderHTML() + content : content;
     const badgeText = classCount > 2 ? "Triple class" : "Multiclass";
     const badge = !isMulticlass ? ""
-      : hasLevelOrder ? `<button class="multiclass-badge level-order-toggle" data-level-order aria-expanded="${levelOrderOpen}" title="${levelOrderOpen ? "Hide" : "Show"} level-up order">${badgeText} <span aria-hidden="true">${levelOrderOpen ? "▴" : "▾"}</span></button>`
+      : hasLevelOrder ? `<button class="multiclass-badge level-order-toggle" data-level-order aria-expanded="${levelOrderOpen}" aria-controls="levelOrder">Level-up order <span class="level-order-caret" aria-hidden="true">${levelOrderOpen ? "▴" : "▾"}</span></button>`
       : `<span class="multiclass-badge">${badgeText}</span>`;
     const setByOrigin = isSetByOrigin(key);
     const rerollLabel = setByOrigin ? `${title} is set by your origin` : `Reroll ${title}`;
@@ -418,7 +426,8 @@ function renderCards(): void {
           <button class="text-button reroll-button" data-reroll="${key}" aria-label="${escapeHTML(rerollLabel)}" title="${escapeHTML(rerollLabel)}"${locked || setByOrigin ? " disabled" : ""}>Reroll</button>
         </div>
       </div>
-      <div class="card-body">${classContent}</div>
+      ${hasLevelOrder ? levelUpOrderHTML() : ""}
+      <div class="card-body">${content}</div>
     </article>`;
   }).join("");
 
@@ -428,12 +437,7 @@ function renderCards(): void {
   host.querySelectorAll<HTMLButtonElement>("[data-lock]").forEach(button => {
     button.addEventListener("click", () => toggleLock(button.dataset.lock as CardKey));
   });
-  host.querySelector<HTMLButtonElement>("[data-level-order]")?.addEventListener("click", () => {
-    levelOrderOpen = !levelOrderOpen;
-    rolledCards = new Set();
-    renderCards();
-    document.querySelector<HTMLButtonElement>("[data-level-order]")?.focus();
-  });
+  host.querySelector<HTMLButtonElement>("[data-level-order]")?.addEventListener("click", () => setLevelOrderOpen(!levelOrderOpen));
 }
 
 document.getElementById("generateAll")!.addEventListener("click", generateAll);
@@ -445,7 +449,10 @@ document.getElementById("shareToggle")!.addEventListener("click", () => {
 document.getElementById("copyLink")!.addEventListener("click", copyCurrentLink);
 document.getElementById("copyText")!.addEventListener("click", copyCurrentText);
 document.addEventListener("click", event => {
-  if (!(event.target as HTMLElement).closest(".share")) setShareMenu(false);
+  const target = event.target as HTMLElement;
+  if (!target.closest(".share")) setShareMenu(false);
+  // A click anywhere else closes the level-up order.
+  if (levelOrderOpen && !target.closest(".level-order-pop, [data-level-order]")) setLevelOrderOpen(false);
 });
 // Single-key shortcuts, ignored while typing or when a modifier key is held.
 const SHORTCUTS: Record<string, () => void> = {
@@ -460,6 +467,10 @@ document.addEventListener("keydown", event => {
     const inMenu = !!(document.activeElement as HTMLElement | null)?.closest("#shareMenu");
     setShareMenu(false);
     if (inMenu) document.getElementById("shareToggle")?.focus();
+    if (levelOrderOpen) {
+      setLevelOrderOpen(false);
+      document.querySelector<HTMLButtonElement>("[data-level-order]")?.focus();
+    }
   }
   const target = event.target as HTMLElement;
   if (event.ctrlKey || event.metaKey || event.altKey || target.closest("input, textarea, select, [contenteditable]")) return;
