@@ -41,7 +41,10 @@
 
 body {
   margin: 0;
-  background: radial-gradient(ellipse at 50% 0, var(--page-glow) 0, var(--page-mid) 38%, var(--page) 75%);
+  /* Faint d20s scattered over the dark page, drawn like the favicon's die. */
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560' viewBox='0 0 560 560'%3E%3Cg fill='none' stroke='%23e9a5bb' stroke-width='1.6' stroke-linejoin='round'%3E%3Cg transform='translate%2840 50%29 rotate%28-12 40.0 40.0%29 scale%281.250%29' stroke-opacity='0.080'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%28330 30%29 rotate%2820 24.0 24.0%29 scale%280.750%29' stroke-opacity='0.056'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%28200 230%29 rotate%288 32.0 32.0%29 scale%281.000%29' stroke-opacity='0.068'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%28440 300%29 rotate%28-25 45.0 45.0%29 scale%281.406%29' stroke-opacity='0.080'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%2860 380%29 rotate%2830 28.0 28.0%29 scale%280.875%29' stroke-opacity='0.056'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3Cg transform='translate%28300 460%29 rotate%28-5 20.0 20.0%29 scale%280.625%29' stroke-opacity='0.048'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 50% 0, var(--page-glow) 0, var(--page-mid) 38%, var(--page) 75%);
   background-attachment: fixed;
   color: var(--ink);
   font: 16.5px/1.5 var(--font);
@@ -105,32 +108,57 @@ main {
 
 /* Site header */
 
+/* A centered title between two ruled lines with a d20 on each, like the cover of a tome, with the
+   pages listed underneath between two thin rules. */
 .site-header {
-  border-bottom: 1px solid var(--accent);
+  background: linear-gradient(180deg, #120c14, rgba(5, 5, 5, 0));
 }
 
 .site-header-inner {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 6px 18px;
+  gap: 10px;
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 10px 0;
+  padding: 26px 0 0;
+  text-align: center;
 }
 
 .site-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  width: 100%;
   color: var(--page-ink);
   font-family: var(--font-display);
-  font-size: 19px;
+  font-size: 34px;
   font-weight: 700;
+  letter-spacing: .03em;
+  line-height: 1.1;
   text-decoration: none;
+}
+
+.site-name::before,
+.site-name::after {
+  content: "";
+  flex: 0 1 200px;
+  min-width: 24px;
+  height: 22px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23e9a5bb' stroke-width='5' stroke-linejoin='round'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3C/svg%3E") center / 22px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) center / 100% 1px no-repeat;
 }
 
 .site-nav {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 4px;
+  border-top: 1px solid rgba(233, 165, 187, .35);
+  border-bottom: 1px solid rgba(233, 165, 187, .35);
+  padding: 6px 14px;
 }
 
 .site-nav a {
@@ -1640,6 +1668,29 @@ button.lock-button[aria-pressed="true"] {
   .site-header-inner,
   .site-footer {
     width: calc(100% - 24px);
+  }
+
+  .site-header-inner {
+    padding-top: 16px;
+    gap: 8px;
+  }
+
+  /* The title's ruled lines shrink to just their d20s so the title stays on one line. */
+  .site-name {
+    gap: 8px;
+    font-size: 20px;
+  }
+
+  .site-name::before,
+  .site-name::after {
+    flex-basis: 40px;
+    min-width: 16px;
+    height: 16px;
+    background-size: 16px, 100% 1px;
+  }
+
+  .site-nav {
+    padding: 5px 4px;
   }
 
   .card-class .card-body,
