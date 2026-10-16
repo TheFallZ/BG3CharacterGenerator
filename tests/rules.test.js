@@ -48,6 +48,27 @@ const builds = SETTING_MIXES.flatMap(overrides =>
   Array.from({length: BUILDS / SETTING_MIXES.length}, () => ({overrides, build: run(`rollBuild(${JSON.stringify(overrides)})`)}))
 );
 
+// Rerolling the Race card and then the Background card keeps the class, ability scores and feats,
+// fixing up what depended on the old ones, the way the Generator page does. A quarter of the
+// builds are checked again after that, leaving out origin characters, whose race and background are set.
+run(`
+function rerollRaceAndBackground(build, overrides) {
+  settings = {...defaultSettings(), ...overrides};
+  character = build;
+  const classSkills = getClassSkillProficiencies();
+  character.race = rollRaceAvoiding([...classSkills, ...getBackgroundSkillProficiencies()]);
+  character.background = rollBackground(classSkills);
+  const owned = [...getRacialSkillProficiencies(), ...getBackgroundSkillProficiencies(), ...getClassSkillProficiencies()];
+  character.class = repairDeity(repairExpertise(character.class, owned), raceNames());
+  character.feats = rollFeats(featValues());
+  return JSON.parse(JSON.stringify(character));
+}
+`);
+builds.push(...builds.filter(({build}, index) => index % 4 === 0 && !run("ORIGIN_CHARACTERS")[build.origin]).map(({overrides, build}) => ({
+  overrides: {...overrides, rerolled: true},
+  build: run(`rerollRaceAndBackground(${JSON.stringify(build)}, ${JSON.stringify(overrides)})`)
+})));
+
 const values = entry => entry == null ? [] : Array.isArray(entry.value) ? entry.value : entry.value == null ? [] : [entry.value];
 const labelled = (entries, test) => (entries || []).filter(entry => typeof test === "string" ? entry.label === test : test(entry.label));
 const all = (entries, label) => labelled(entries, label).flatMap(values);
@@ -264,6 +285,22 @@ test("feats fill every feat level and make sense together", () => {
     const casts = blocks.some(block => block.level >= (C.CASTER_CLASSES[block.name] ?? Infinity)) ||
       C.CASTER_SUBCLASSES.some(subclass => build.class.flatMap(values).includes(subclass));
     if (!casts) names.forEach(name => assert.ok(!C.SPELL_FEATS.includes(name), `${name} without spells`));
+  });
+});
+
+test("armor feats build on armor the character has, and never grant armor it already has", () => {
+  forEachBuild(build => {
+    const unfit = run(`(() => {
+      character = ${JSON.stringify(build)};
+      const armor = getArmorProficiencies();
+      return featValues().filter(feat => {
+        const fits = fitsArmor(feat, armor);
+        const grants = FEAT_ARMOR_RULES[featName(feat)]?.grants;
+        if (grants) armor.add(grants);
+        return !fits;
+      });
+    })()`);
+    assert.deepEqual([...unfit], []);
   });
 });
 

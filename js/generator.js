@@ -740,13 +740,13 @@ function rollFeat(taken, armor, scores) {
 }
 // Keeps the given feats (in order) and fills any remaining feat levels with new ones. A kept
 // Ability Improvement or Resilient that would now push a score past 20, say after new ability
-// scores, is rolled again so it fits.
+// scores, is rolled again so it fits, and so is an armor feat that no longer fits the armor.
 function rollFeats(keep = []) {
     const armor = getArmorProficiencies();
     const scores = startingScores();
     const taken = [];
     return featLevels().map((slot, index) => {
-        const kept = index < keep.length ? keep[index] : null;
+        const kept = index < keep.length && fitsArmor(keep[index], armor) ? keep[index] : null;
         const feat = kept === null ? rollFeat(taken, armor, scores)
             : applyFeat(scores, kept) ? kept
                 : featName(kept) === "Resilient" ? fitResilient(scores)
@@ -758,6 +758,23 @@ function rollFeats(keep = []) {
                 armor.add(grants);
         }
         return { label: slot.label, value: feat };
+    });
+}
+// Whether a kept armor feat still makes sense, say after a new race: it needs the armor it builds
+// on and mustn't grant armor the character already has.
+function fitsArmor(feat, armor) {
+    const rule = FEAT_ARMOR_RULES[featName(feat)];
+    return !(rule?.requires && !armor.has(rule.requires)) && !(rule?.grants && armor.has(rule.grants));
+}
+// After a new race with the class kept, a race-locked deity follows the race: Lolth-Sworn Drow
+// always follow Lolth, and a deity only another race may follow is picked again.
+function repairDeity(classEntries, races) {
+    return classEntries.map(entry => {
+        if (entry.label !== "Deity" || typeof entry.value !== "string")
+            return entry;
+        const lockedRace = DEITY_RACES[entry.value];
+        const fits = races.includes("Lolth-Sworn Drow") ? entry.value === "Lolth" : !lockedRace || races.includes(lockedRace);
+        return fits ? entry : { ...entry, value: rollDeity(races) };
     });
 }
 // A Resilient pick on an ability with room, for a kept Resilient whose ability is now at 20.

@@ -109,14 +109,16 @@ function rollCards(keys: CardKey[]): void {
     }
   }
 
-  // A kept class's Expertise has to stay on skills the character still has.
+  // A kept class's Expertise has to stay on skills the character still has, and its deity has to
+  // be one the new race may follow.
   if (!targets.has("class") && (targets.has("race") || targets.has("background")) && character.class) {
     character.class = repairExpertise(character.class, [...getRacialSkillProficiencies(), ...getBackgroundSkillProficiencies(), ...getClassSkillProficiencies()]);
+    if (targets.has("race")) character.class = repairDeity(character.class, raceNames());
   }
 
-  // Locked feats survive a new class, trimmed or topped up to the new number of feat levels, and
-  // new ability scores, with any Ability Improvement that no longer fits under 20 rolled again.
-  if ((targets.has("class") || targets.has("abilities")) && !targets.has("feats")) {
+  // Kept feats survive a new class, trimmed or topped up to the new number of feat levels, new
+  // ability scores and a new race, with any that no longer fit the scores or armor rolled again.
+  if ((targets.has("class") || targets.has("abilities") || targets.has("race")) && !targets.has("feats")) {
     character.feats = rollFeats(featValues());
   }
 
@@ -128,12 +130,12 @@ function rollCards(keys: CardKey[]): void {
   renderCards();
 }
 
-// Feats follow the class levels, and race and class decide which armor feats are allowed.
+// Rerolling a card only rerolls the cards built from it: ability scores and feats are arranged for
+// the class. A new race or background keeps everything else, with the bits that depend on it
+// (Expertise, a race-locked deity, armor feats) fixed up in rollCards.
 function reroll(key: CardKey): void {
   trackEvent(`reroll-${key}`);
   if (key === "origin") rollCards(["origin", "race", "background", "class", "abilities", "feats", "romance", "companionBuild"]);
-  else if (key === "race") rollCards(["race", "background", "class", "abilities", "feats"]);
-  else if (key === "background") rollCards(["background", "class", "abilities", "feats"]);
   else if (key === "class") rollCards(["class", "abilities", "feats"]);
   else if (key === "romance") rollCards(["romance", "companionBuild"]);
   else rollCards([key]);
