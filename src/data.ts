@@ -607,8 +607,6 @@ const ORIGIN_CHARACTERS: Record<string, {race: string; subrace?: string; backgro
 // Percent chances for who you play; the rest of the origin chance is split between the origin characters.
 const ORIGIN_CHANCES = {custom: 45, darkUrge: 15};
 
-// Companions who can't travel together in an ordinary playthrough.
-const COMPANION_CONFLICTS: [string, string][] = [["Halsin", "Minthara"]];
 const PARTY_SIZE = 3;
 
 const ABILITIES = ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"];
@@ -693,11 +691,13 @@ const FIGHTING_STYLE_WEAPONS: Record<string, string[]> = {
 };
 
 const BARD_BLADES = ["Rapier", "Longsword", "Shortsword", "Scimitar", "Dagger"];
+// Clerics only use simple weapons; these join the list for a domain that grants martial weapons.
+const MARTIAL_CLERIC_WEAPONS = ["Morningstar", "Flail", "Warhammer"];
 
 const WEAPON_PREFERENCES: Record<string, WeaponPreferences> = {
   Barbarian: {melee: ["Greataxe", "Greatsword", "Maul"], ranged: ["Longbow", "Heavy Crossbow"]},
   Bard: {melee: ["Rapier", "Shortsword", "Longsword"], ranged: ["Shortbow", "Hand Crossbow"]},
-  Cleric: {melee: ["Mace", "Morningstar", "Flail", "Quarterstaff"], ranged: ["Light Crossbow", "Shortbow"]},
+  Cleric: {melee: ["Mace", "Quarterstaff", "Spear"], ranged: ["Light Crossbow", "Shortbow"]},
   Druid: {melee: ["Quarterstaff", "Scimitar", "Sickle", "Spear"], ranged: ["Javelin"]},
   Fighter: {melee: ["Greatsword", "Longsword", "Greataxe"], ranged: ["Longbow", "Heavy Crossbow"]},
   Monk: {melee: ["Quarterstaff", "Shortsword", "Spear"], ranged: ["Shortbow", "Light Crossbow"]},

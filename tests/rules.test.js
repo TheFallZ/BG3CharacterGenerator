@@ -272,6 +272,63 @@ test("ability scores are a 27-point buy plus +2 and +1", () => {
   });
 });
 
+test("the romance is a companion or no one, never the character you play", () => {
+  const romances = run("data.romances");
+  forEachBuild(build => {
+    assert.ok(romances.includes(build.romance), build.romance);
+    assert.notEqual(build.romance, build.origin);
+  });
+});
+
+test("companions and hirelings match the game", () => {
+  const defaults = run("COMPANION_DEFAULT_CLASSES");
+  const hirelings = new Map(run("BASE_HIRELINGS").map(hireling => [hireling.name, hireling.defaultClass]));
+  forEachBuild(build => {
+    const entries = build.companionBuild;
+    const starts = entries.map((entry, index) => ["Companion", "Hireling"].includes(entry.label) ? index : -1).filter(index => index >= 0);
+    starts.forEach((start, n) => {
+      const member = entries.slice(start, starts[n + 1] ?? entries.length);
+      const name = member[0].value;
+      const className = all(member, "Class")[0];
+      const subclass = all(member, "Subclass")[0];
+      assert.ok(C.options[className] !== undefined, className);
+      assert.ok(run(`data.classes[${JSON.stringify(className)}].subclasses`).includes(subclass), `${className} ${subclass}`);
+      if (member[0].label === "Hireling") {
+        assert.equal(build.romance, "No One");
+        assert.equal(className, hirelings.get(name), name);
+      } else {
+        assert.ok(defaults[name], name);
+        if (all(member, "Class choice")[0] === "Default class") assert.equal(className, defaults[name], name);
+        else assert.notEqual(className, defaults[name], name);
+      }
+      const deity = all(member, "Deity")[0];
+      assert.equal(!!deity, className === "Cleric", `${name} ${className} deity`);
+      if (name === "Shadowheart" && deity) assert.match(deity, /Shar or Selûne/);
+      if (name === "Minthara" && deity) assert.equal(deity, "Lolth");
+    });
+  });
+});
+
+test("clerics only prefer weapons they're proficient with", () => {
+  const martial = run("MARTIAL_CLERIC_WEAPONS");
+  const grants = run("SUBCLASS_PROFICIENCIES.Cleric");
+  const check = (entries, subclass) => {
+    const weapon = all(entries, "Preferred melee weapon")[0];
+    if (weapon && martial.includes(weapon)) assert.ok((grants[subclass] || []).includes("Martial Weapons"), `${subclass} cleric with ${weapon}`);
+  };
+  forEachBuild(build => {
+    const [first] = classBlocks(build.class);
+    if (first.name === "Cleric") check(build.class, all(first.entries, C.SUBCLASS_LABELS.Cleric)[0]);
+    const entries = build.companionBuild;
+    entries.forEach((entry, index) => {
+      if (entry.label === "Class" && entry.value === "Cleric") {
+        const member = entries.slice(index, index + 8);
+        check(member, all(member, "Subclass")[0]);
+      }
+    });
+  });
+});
+
 test("a full party has three different companions, never the character you play", () => {
   forEachBuild((build, overrides) => {
     if (!overrides.party) return;
@@ -279,6 +336,5 @@ test("a full party has three different companions, never the character you play"
     assert.equal(members.length, 3);
     assert.equal(new Set(members).size, 3);
     assert.ok(!members.includes(build.origin));
-    assert.ok(!(members.includes("Halsin") && members.includes("Minthara")));
   });
 });

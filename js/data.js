@@ -489,8 +489,6 @@ const ORIGIN_CHARACTERS = {
 };
 // Percent chances for who you play; the rest of the origin chance is split between the origin characters.
 const ORIGIN_CHANCES = { custom: 45, darkUrge: 15 };
-// Companions who can't travel together in an ordinary playthrough.
-const COMPANION_CONFLICTS = [["Halsin", "Minthara"]];
 const PARTY_SIZE = 3;
 const ABILITIES = ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"];
 // Point-buy spreads worth 27 points (8 costs 0, 15 costs 9), highest first. They are handed out in
@@ -566,10 +564,12 @@ const FIGHTING_STYLE_WEAPONS = {
     "Protection": ["Longsword", "Warhammer", "Morningstar"]
 };
 const BARD_BLADES = ["Rapier", "Longsword", "Shortsword", "Scimitar", "Dagger"];
+// Clerics only use simple weapons; these join the list for a domain that grants martial weapons.
+const MARTIAL_CLERIC_WEAPONS = ["Morningstar", "Flail", "Warhammer"];
 const WEAPON_PREFERENCES = {
     Barbarian: { melee: ["Greataxe", "Greatsword", "Maul"], ranged: ["Longbow", "Heavy Crossbow"] },
     Bard: { melee: ["Rapier", "Shortsword", "Longsword"], ranged: ["Shortbow", "Hand Crossbow"] },
-    Cleric: { melee: ["Mace", "Morningstar", "Flail", "Quarterstaff"], ranged: ["Light Crossbow", "Shortbow"] },
+    Cleric: { melee: ["Mace", "Quarterstaff", "Spear"], ranged: ["Light Crossbow", "Shortbow"] },
     Druid: { melee: ["Quarterstaff", "Scimitar", "Sickle", "Spear"], ranged: ["Javelin"] },
     Fighter: { melee: ["Greatsword", "Longsword", "Greataxe"], ranged: ["Longbow", "Heavy Crossbow"] },
     Monk: { melee: ["Quarterstaff", "Shortsword", "Spear"], ranged: ["Shortbow", "Light Crossbow"] },

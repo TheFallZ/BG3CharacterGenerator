@@ -462,11 +462,20 @@ function splitLevels(count: number): number[] {
 }
 
 // Preferred weapons for your own character, from the starting class and its fighting style.
+// Melee weapons a class is proficient with, plus martial ones for a cleric domain that grants them.
+function meleeWeapons(className: string, subclass: string | null): string[] {
+  const melee = WEAPON_PREFERENCES[className]?.melee ?? [];
+  const martial = SUBCLASS_PROFICIENCIES[className]?.[subclass ?? ""]?.includes("Martial Weapons");
+  return className === "Cleric" && martial ? [...melee, ...MARTIAL_CLERIC_WEAPONS] : melee;
+}
+
 function rollWeapons(className: string, classEntries: ClassEntry[]): ClassEntry[] {
   const weapons = WEAPON_PREFERENCES[className];
   if (!weapons) return [];
+  const subclass = classEntries.find(entry => entry.label === SUBCLASS_LABELS[className])?.value;
   const style = classEntries.find(entry => entry.label === "Fighting Style")?.value;
-  let melee = FIGHTING_STYLE_WEAPONS[typeof style === "string" ? style : ""] ?? weapons.melee;
+  let melee = FIGHTING_STYLE_WEAPONS[typeof style === "string" ? style : ""] ??
+    meleeWeapons(className, typeof subclass === "string" ? subclass : null);
   // College of Swords bards fight with blades they're proficient with.
   if (className === "Bard") melee = melee.filter(weapon => BARD_BLADES.includes(weapon));
   if (!melee.length) melee = weapons.melee;
@@ -740,9 +749,7 @@ function rollParty(romance: string | null | undefined = character.romance): Clas
   const members: string[] = romance && COMPANION_DEFAULT_CLASSES[romance] && romance !== character.origin ? [romance] : [];
   const pool = Object.keys(COMPANION_DEFAULT_CLASSES).filter(name => name !== character.origin && !members.includes(name));
   while (members.length < PARTY_SIZE && pool.length) {
-    const name = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
-    const conflicts = COMPANION_CONFLICTS.some(pair => pair.includes(name) && members.some(member => pair.includes(member)));
-    if (!conflicts) members.push(name);
+    members.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
   }
   return members.flatMap(name => rollCompanionBuild(name));
 }
@@ -780,7 +787,7 @@ function rollCompanionBuild(romance: string | null | undefined = character.roman
     entries.push({label: "Deity", value: deity});
   }
 
-  entries.push({label: "Preferred melee weapon", value: pick(weapons.melee)});
+  entries.push({label: "Preferred melee weapon", value: pick(meleeWeapons(className, subclass))});
   entries.push({label: "Preferred ranged weapon", value: pick(weapons.ranged)});
   return entries;
 }
