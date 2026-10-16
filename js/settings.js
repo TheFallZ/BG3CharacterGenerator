@@ -42,8 +42,8 @@ function renderSettings() {
       <fieldset class="settings-group">
         <legend class="visually-hidden">Cards to show</legend>
         ${HIDEABLE_CARDS.map(({ key, label }) => checkboxHTML("showCard", key, label, !settings.hiddenCards.includes(key)) +
-        // Alignment sits on the Background card, which comes right after Ability scores.
-        (key === "abilities" ? `<label class="check"><input type="checkbox" name="showAlignment"${settings.showAlignment ? " checked" : ""}> Alignment</label>` : "")).join("")}
+        // Alignment isn't a card of its own, so it's slotted in after Romance.
+        (key === "romance" ? `<label class="check"><input type="checkbox" name="showAlignment"${settings.showAlignment ? " checked" : ""}> Alignment</label>` : "")).join("")}
       </fieldset>
     </section>
     <section class="settings-section settings-pools">

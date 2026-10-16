@@ -27,12 +27,12 @@ const CARD_TITLES = {
     romance: "Romance",
     companionBuild: "Companion Build"
 };
-// Story cards a visitor can hide, in the order they appear on the Generator; the build cards always show.
+// Story cards a visitor can hide, in the order Settings lists them; the build cards always show.
 const HIDEABLE_CARDS = [
     { key: "origin", label: "Origin" },
+    { key: "romance", label: "Romance" },
     { key: "abilities", label: "Ability scores" },
     { key: "darkUrge", label: "Tadpole choice" },
-    { key: "romance", label: "Romance" },
     { key: "companionBuild", label: "Companion build" }
 ];
 // The Companion card holds one companion, or three when the party setting is on.
