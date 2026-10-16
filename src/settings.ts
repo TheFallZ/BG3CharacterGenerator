@@ -24,6 +24,7 @@ function renderSettings(): void {
             ${MULTICLASS_MODES.map(({mode, label}) => `<label><input type="radio" name="multiclass" value="${mode}"${settings.multiclass === mode ? " checked" : ""}><span>${label}</span></label>`).join("")}
           </div>
           <label class="check"><input type="checkbox" name="tripleClass"${settings.tripleClass ? " checked" : ""}> Allow triple classing</label>
+          <label class="check"><input type="checkbox" name="showLevelOrder"${settings.showLevelOrder ? " checked" : ""}> Show level-up order</label>
           <p class="settings-note">Sometimes will roll a multiclass build ${data.settings.multiclassChance}% of the time. Triple classing gives ${data.settings.tripleClassChance}% of those a third class.</p>
         </fieldset>
         <fieldset class="settings-group">
@@ -80,6 +81,8 @@ function updateSettingsControls(): void {
   }
   const triple = panel.querySelector<HTMLInputElement>('input[name="tripleClass"]')!;
   triple.disabled = settings.multiclass === "never" || allowedClasses().length < 3;
+  // With no multiclass builds there's no level-up order to show.
+  panel.querySelector<HTMLInputElement>('input[name="showLevelOrder"]')!.disabled = settings.multiclass === "never";
   // The Origin card can only be shown or hidden while origin characters are allowed.
   const originCard = panel.querySelector<HTMLInputElement>('input[name="showCard"][value="origin"]')!;
   originCard.closest("label")!.hidden = !settings.originCharacters;
@@ -102,7 +105,8 @@ function readSettings(event?: Event): void {
     hiddenCards: unchecked("showCard") as CardKey[],
     party: panel.querySelector<HTMLInputElement>('input[name="party"]')!.checked,
     originCharacters: panel.querySelector<HTMLInputElement>('input[name="originCharacters"]')!.checked,
-    showAlignment: panel.querySelector<HTMLInputElement>('input[name="showAlignment"]')!.checked
+    showAlignment: panel.querySelector<HTMLInputElement>('input[name="showAlignment"]')!.checked,
+    showLevelOrder: panel.querySelector<HTMLInputElement>('input[name="showLevelOrder"]')!.checked
   };
   storeSettings();
   updateSettingsControls();

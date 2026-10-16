@@ -135,9 +135,22 @@ function reroll(key) {
     else
         rollCards([key]);
 }
+// Pressing Generate spins the d20 on the button, and one roll in 20 is a natural 20.
+const NATURAL_20_CHANCE = 1 / 20;
+function rollDie() {
+    const die = document.querySelector("#generateAll .roll-die");
+    if (!die)
+        return;
+    die.classList.remove("is-rolling");
+    void die.offsetWidth; // Restarts the spin when Generate is pressed again mid-roll.
+    die.classList.add("is-rolling");
+}
 function generateAll() {
     trackEvent("generate");
     rollCards(ROLL_ORDER);
+    rollDie();
+    if (Math.random() < NATURAL_20_CHANCE)
+        setNotice("Natural 20!");
 }
 // Puts a build on screen that came from somewhere else: a saved build, a link, or this tab's last visit.
 function showBuild(build, savedId, name) {
@@ -256,6 +269,20 @@ async function renderBuildPicture(savedId) {
     image.alt = picture ? `Picture of ${currentBuildName() ?? describeCharacter(character)}` : "";
     document.getElementById("buildTitle").classList.toggle("has-picture", !!picture);
 }
+// A multiclass build's level-up order at the top of the Class card: one box per character level,
+// colored by class, with a line on why it starts that way.
+function levelUpOrderHTML() {
+    const classes = getClassLevels().map(({ className }) => className);
+    const boxes = levelUpOrder().flatMap(({ className, from, to }) => Array.from({ length: to - from + 1 }, () => className));
+    const strip = boxes.map((className, index) => `<li class="level-box level-class-${classes.indexOf(className)}" title="Level ${index + 1}: ${escapeHTML(className)}">
+      <b>${index + 1}</b><span>${escapeHTML(CLASS_SHORT_NAMES[className] ?? className)}</span>
+    </li>`).join("");
+    return `<div class="entry entry-wide level-order">
+    <span class="entry-label">Level-up order</span>
+    <ol class="level-strip" aria-label="${escapeHTML(levelUpOrderText())}">${strip}</ol>
+    <p class="level-reason">${escapeHTML(levelUpReason())}</p>
+  </div>`;
+}
 function entryHTML(entry) {
     const value = entry.value;
     let htmlValue;
@@ -366,6 +393,7 @@ function renderCards() {
                     }
                     return entryHTML(entry);
                 }).join("");
+        const classContent = key === "class" && isMulticlass && settings.showLevelOrder ? levelUpOrderHTML() + content : content;
         const setByOrigin = isSetByOrigin(key);
         const rerollLabel = setByOrigin ? `${title} is set by your origin` : `Reroll ${title}`;
         return `<article class="${classes.join(" ")}"${rolledCards.has(key) ? ` style="--roll-index: ${rollIndex++}"` : ""}>
@@ -377,7 +405,7 @@ function renderCards() {
           <button class="text-button reroll-button" data-reroll="${key}" aria-label="${escapeHTML(rerollLabel)}" title="${escapeHTML(rerollLabel)}"${locked || setByOrigin ? " disabled" : ""}>Reroll</button>
         </div>
       </div>
-      <div class="card-body">${content}</div>
+      <div class="card-body">${classContent}</div>
     </article>`;
     }).join("");
     host.querySelectorAll("[data-reroll]").forEach(button => {
@@ -452,7 +480,7 @@ loadSharedBuild().then(loaded => {
     const current = loadCurrentBuild();
     if (current)
         showBuild(current.character, current.savedId, current.sharedName);
-    // Rolled directly so the first build of a visit isn't counted as a Generate press.
+    // Rolled directly so the first build of a visit isn't counted as a Generate press, or rolls the die.
     else
         rollCards(ROLL_ORDER);
 });

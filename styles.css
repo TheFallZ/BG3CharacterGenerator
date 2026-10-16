@@ -327,6 +327,30 @@ button.primary {
   box-shadow: 0 2px 5px rgba(114, 63, 81, .12);
 }
 
+/* The d20 on the Generate button, which spins when pressed. */
+.roll-die {
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+  margin-right: 7px;
+  vertical-align: -3px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23432d36' stroke-width='5' stroke-linejoin='round'%3E%3Cpolygon points='32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5'/%3E%3Cpolygon points='32,18 45,40 19,40'/%3E%3Cpath d='M32 7 32 18 M10 19.5 32 18 54 19.5 M10 19.5 19 40 M54 19.5 45 40 M10 44.5 19 40 M54 44.5 45 40 M32 57 19 40 M32 57 45 40'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.roll-die.is-rolling {
+  animation: roll-die .7s cubic-bezier(.2, .7, .3, 1);
+}
+
+@keyframes roll-die {
+  from { transform: rotate(0) scale(1); }
+  40% { transform: rotate(400deg) scale(1.25); }
+  to { transform: rotate(720deg) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roll-die.is-rolling { animation: none; }
+}
+
 button.primary:hover {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
@@ -1591,6 +1615,46 @@ button.lock-button[aria-pressed="true"] {
   font-weight: 400;
 }
 
+.entry-wide {
+  grid-column: 1 / -1;
+}
+
+/* Level-up order: twelve boxes, one per character level, colored by class. */
+.level-strip {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 3px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.level-box {
+  border-radius: 4px;
+  padding: 3px 0 4px;
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.level-box b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 14px;
+}
+
+.level-class-0 { background: var(--accent-deep); color: #f6e7ec; }
+.level-class-1 { background: var(--multiclass-divider); color: #e7f1ea; }
+.level-class-2 { background: #5c4a7a; color: #ece6f6; }
+
+.level-reason {
+  margin: 6px 0 2px;
+  color: var(--muted);
+  font-size: 14.5px;
+  font-weight: 400;
+}
+
 .class-divider {
   grid-column: 1 / -1;
   display: flex;
@@ -1696,6 +1760,10 @@ button.lock-button[aria-pressed="true"] {
   .card-class .card-body,
   .card-companionBuild .card-body {
     gap: 7px 10px;
+  }
+
+  .level-box span {
+    display: none;
   }
 
   /* The heading goes first, then Generate across the full width, then the other buttons. */

@@ -83,6 +83,8 @@ interface Settings {
   // Show the rolled alignment on the Background card. It's still rolled when hidden, so turning
   // this back on shows it, and shared builds keep it.
   showAlignment: boolean;
+  // Show the level-up order on multiclass builds' Class card and in their copied text.
+  showLevelOrder: boolean;
 }
 
 const DEFAULT_DATA: GeneratorData = {
@@ -452,6 +454,30 @@ const CASTER_SUBCLASSES = ["Eldritch Knight", "Arcane Trickster"];
 const WEAPON_STYLE_FEATS = ["Great Weapon Master", "Shield Master", "Dual Wielder"];
 // Feats that only help with spells.
 const SPELL_FEATS = ["War Caster", "Elemental Adept"];
+// Level-up order for multiclass builds. The starting class goes first, up to the level where it
+// comes online: Extra Attack at 5 for weapon classes, 3rd-level spells at 5 for casters, Rogues
+// at 3 for their subclass. Each later class then takes its levels up to its own key level, and
+// after that the classes finish their remaining levels in order.
+const KEY_CLASS_LEVELS: Record<string, number> = {
+  Barbarian: 5, Bard: 5, Cleric: 5, Druid: 5, Fighter: 5, Monk: 5,
+  Paladin: 5, Ranger: 5, Rogue: 3, Sorcerer: 5, Warlock: 5, Wizard: 5
+};
+// How far a later class goes before the classes finish in order: its subclass level, or 2 where
+// the second level is what a dip is for (Divine Smite, Eldritch Invocations, Metamagic).
+const DIP_LEVELS: Record<string, number> = {Paladin: 2, Sorcerer: 2, Warlock: 2};
+// What the starting class reaches at its key level, and what a later class's dip is for.
+const KEY_LEVEL_REASONS: Record<string, string> = {
+  Barbarian: "Extra Attack", Fighter: "Extra Attack", Monk: "Extra Attack", Paladin: "Extra Attack", Ranger: "Extra Attack",
+  Bard: "3rd-level spells", Cleric: "3rd-level spells", Druid: "3rd-level spells", Sorcerer: "3rd-level spells",
+  Warlock: "3rd-level spells", Wizard: "3rd-level spells", Rogue: "your subclass"
+};
+const DIP_REASONS: Record<string, string> = {Paladin: "Divine Smite", Sorcerer: "Metamagic", Warlock: "Eldritch Invocations"};
+// Short class names for the level strip.
+const CLASS_SHORT_NAMES: Record<string, string> = {
+  Barbarian: "Barb", Bard: "Bard", Cleric: "Cleric", Druid: "Druid", Fighter: "Fight", Monk: "Monk",
+  Paladin: "Pal", Ranger: "Rngr", Rogue: "Rogue", Sorcerer: "Sorc", Warlock: "Lock", Wizard: "Wiz"
+};
+
 // No ability score can go above this.
 const MAX_ABILITY_SCORE = 20;
 // How often a feat level becomes an Ability Improvement, in percent.

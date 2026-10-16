@@ -6,7 +6,7 @@ let character: Character = {};
 const MAX_LEVEL = 12;
 
 function defaultSettings(): Settings {
-  return {excludedClasses: [], excludedRaces: [], multiclass: "sometimes", tripleClass: false, hiddenCards: [], party: false, originCharacters: false, showAlignment: true};
+  return {excludedClasses: [], excludedRaces: [], multiclass: "sometimes", tripleClass: false, hiddenCards: [], party: false, originCharacters: false, showAlignment: true, showLevelOrder: false};
 }
 
 let settings: Settings = defaultSettings();
@@ -633,6 +633,53 @@ function featContext(armor: Set<string>): {shields: boolean; spells: boolean} {
     spells: classLevels.some(({className, level}) => level >= (CASTER_CLASSES[className] ?? Infinity)) ||
       CASTER_SUBCLASSES.some(subclass => subclasses.includes(subclass))
   };
+}
+
+// The order to level a multiclass build in, as runs of class levels, like Paladin 1–5, Warlock 1–2,
+// Paladin 6–8, Warlock 3–4. A single-class build is one run.
+function levelUpOrder(classEntries: Character["class"] = character.class): {className: string; from: number; to: number}[] {
+  const classes = getClassLevels(classEntries);
+  const taken = new Map(classes.map(({className}) => [className, 0]));
+  const runs: {className: string; from: number; to: number}[] = [];
+  const takeUpTo = (className: string, target: number) => {
+    const from = taken.get(className)! + 1;
+    if (target < from) return;
+    taken.set(className, target);
+    const last = runs[runs.length - 1];
+    if (last?.className === className) last.to = target;
+    else runs.push({className, from, to: target});
+  };
+  const [first, ...others] = classes;
+  if (!first) return runs;
+  takeUpTo(first.className, Math.min(first.level, KEY_CLASS_LEVELS[first.className] ?? 5));
+  for (const {className, level} of others) {
+    takeUpTo(className, Math.min(level, DIP_LEVELS[className] ?? SUBCLASS_LEVELS[className] ?? 3));
+  }
+  for (const {className, level} of classes) takeUpTo(className, level);
+  return runs;
+}
+
+// One line on why the order starts the way it does, like "Bard to 5 first for 3rd-level spells,
+// then Wizard 2 for your subclass."
+function levelUpReason(classEntries: Character["class"] = character.class): string {
+  const [first, second] = levelUpOrder(classEntries);
+  if (!first || !second) return "";
+  const firstKey = KEY_CLASS_LEVELS[first.className] ?? 5;
+  const start = first.to >= firstKey
+    ? `${first.className} to ${first.to} first for ${KEY_LEVEL_REASONS[first.className] ?? "its key features"}`
+    : `All ${first.to} ${first.className} levels first`;
+  const dip = DIP_LEVELS[second.className] ?? SUBCLASS_LEVELS[second.className] ?? 3;
+  const range = second.from === second.to ? `${second.to}` : `${second.from}–${second.to}`;
+  const then = second.to >= dip
+    ? `${second.className} ${range} for ${DIP_REASONS[second.className] ?? "your subclass"}`
+    : `${second.className} ${range}`;
+  return `${start}, then ${then}.`;
+}
+
+function levelUpOrderText(classEntries: Character["class"] = character.class): string {
+  return levelUpOrder(classEntries)
+    .map(({className, from, to}) => `${className} ${from === to ? from : `${from}–${to}`}`)
+    .join(" → ");
 }
 
 // The character's ability scores from the Ability Scores card, racial bonuses included.

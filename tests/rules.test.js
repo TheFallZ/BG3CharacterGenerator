@@ -107,6 +107,25 @@ test("class levels add up to 12, with no class twice", () => {
   });
 });
 
+test("the level-up order covers every class level once, starting with the starting class", () => {
+  forEachBuild(build => {
+    const blocks = classBlocks(build.class);
+    const runs = run(`levelUpOrder(${JSON.stringify(build.class)})`);
+    assert.equal(runs[0].className, blocks[0].name);
+    assert.equal(runs[0].from, 1);
+    const reached = Object.fromEntries(blocks.map(block => [block.name, 0]));
+    let previous = null;
+    for (const step of runs) {
+      assert.notEqual(step.className, previous, "two runs of the same class in a row");
+      assert.equal(step.from, reached[step.className] + 1, `${step.className} skips or repeats a level`);
+      assert.ok(step.to >= step.from);
+      reached[step.className] = step.to;
+      previous = step.className;
+    }
+    for (const block of blocks) assert.equal(reached[block.name], block.level, `${block.name} ends at the wrong level`);
+  });
+});
+
 test("subclasses appear only from the level they unlock", () => {
   forEachBuild(build => {
     for (const block of classBlocks(build.class)) {

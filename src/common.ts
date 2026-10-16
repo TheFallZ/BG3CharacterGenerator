@@ -76,7 +76,8 @@ function loadSettings(): Settings {
       hiddenCards: strings(saved.hiddenCards, HIDEABLE_CARDS.map(({key}) => key)) as CardKey[],
       party: saved.party === true,
       originCharacters: saved.originCharacters === true,
-      showAlignment: saved.showAlignment !== false
+      showAlignment: saved.showAlignment !== false,
+      showLevelOrder: saved.showLevelOrder === true
     };
   } catch {
     return defaults;
@@ -445,6 +446,7 @@ async function buildText(build: Character, name: string | null): Promise<string>
   }
 
   lines.push(...classTextLines(build));
+  if (settings.showLevelOrder && getClassLevels(build.class).length > 1) line("Level-up order", levelUpOrderText(build.class));
   line("Feats", listText(featValues(build.feats).map(choiceText)) || "None before level 4");
   if (shown.has("darkUrge")) line("Tadpole", build.darkUrge);
   if (shown.has("romance")) line("Romance", build.romance);

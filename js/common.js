@@ -60,7 +60,8 @@ function loadSettings() {
             hiddenCards: strings(saved.hiddenCards, HIDEABLE_CARDS.map(({ key }) => key)),
             party: saved.party === true,
             originCharacters: saved.originCharacters === true,
-            showAlignment: saved.showAlignment !== false
+            showAlignment: saved.showAlignment !== false,
+            showLevelOrder: saved.showLevelOrder === true
         };
     }
     catch {
@@ -425,6 +426,8 @@ async function buildText(build, name) {
         line("Ability scores", `${scores.join(", ")}${bonuses ? ` (${bonuses})` : ""}`);
     }
     lines.push(...classTextLines(build));
+    if (settings.showLevelOrder && getClassLevels(build.class).length > 1)
+        line("Level-up order", levelUpOrderText(build.class));
     line("Feats", listText(featValues(build.feats).map(choiceText)) || "None before level 4");
     if (shown.has("darkUrge"))
         line("Tadpole", build.darkUrge);

@@ -20,6 +20,7 @@ function renderSettings() {
             ${MULTICLASS_MODES.map(({ mode, label }) => `<label><input type="radio" name="multiclass" value="${mode}"${settings.multiclass === mode ? " checked" : ""}><span>${label}</span></label>`).join("")}
           </div>
           <label class="check"><input type="checkbox" name="tripleClass"${settings.tripleClass ? " checked" : ""}> Allow triple classing</label>
+          <label class="check"><input type="checkbox" name="showLevelOrder"${settings.showLevelOrder ? " checked" : ""}> Show level-up order</label>
           <p class="settings-note">Sometimes will roll a multiclass build ${data.settings.multiclassChance}% of the time. Triple classing gives ${data.settings.tripleClassChance}% of those a third class.</p>
         </fieldset>
         <fieldset class="settings-group">
@@ -75,6 +76,8 @@ function updateSettingsControls() {
     }
     const triple = panel.querySelector('input[name="tripleClass"]');
     triple.disabled = settings.multiclass === "never" || allowedClasses().length < 3;
+    // With no multiclass builds there's no level-up order to show.
+    panel.querySelector('input[name="showLevelOrder"]').disabled = settings.multiclass === "never";
     // The Origin card can only be shown or hidden while origin characters are allowed.
     const originCard = panel.querySelector('input[name="showCard"][value="origin"]');
     originCard.closest("label").hidden = !settings.originCharacters;
@@ -95,7 +98,8 @@ function readSettings(event) {
         hiddenCards: unchecked("showCard"),
         party: panel.querySelector('input[name="party"]').checked,
         originCharacters: panel.querySelector('input[name="originCharacters"]').checked,
-        showAlignment: panel.querySelector('input[name="showAlignment"]').checked
+        showAlignment: panel.querySelector('input[name="showAlignment"]').checked,
+        showLevelOrder: panel.querySelector('input[name="showLevelOrder"]').checked
     };
     storeSettings();
     updateSettingsControls();
