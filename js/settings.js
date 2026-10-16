@@ -34,7 +34,7 @@ function renderSettings() {
       <fieldset class="settings-group">
         <legend class="visually-hidden">Companions</legend>
         <label class="check"><input type="checkbox" name="party"${settings.party ? " checked" : ""}> Generate a full party</label>
-        <p class="settings-note">Rolls three companions instead of one, including your romance when there is one.</p>
+        <p class="settings-note">Rolls three companions instead of one.</p>
       </fieldset>
     </section>
     <section class="settings-section">
