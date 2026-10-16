@@ -478,9 +478,42 @@ button.primary:hover {
   display: none;
 }
 
+/* Drawn checkboxes: the browser's own is a bright white square on the dark panels. */
 .check input {
+  display: grid;
+  flex: none;
+  place-content: center;
+  width: 17px;
+  height: 17px;
   margin: 0;
-  accent-color: var(--accent);
+  border: 1px solid var(--control-border-hover);
+  border-radius: 4px;
+  background: var(--control-bg);
+  cursor: pointer;
+  appearance: none;
+}
+
+.check input::before {
+  content: "";
+  width: 9px;
+  height: 5px;
+  border-bottom: 2px solid var(--accent-ink);
+  border-left: 2px solid var(--accent-ink);
+  opacity: 0;
+  transform: translateY(-1px) rotate(-45deg);
+}
+
+.check input:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.check input:checked::before {
+  opacity: 1;
+}
+
+.check:hover input:not(:disabled) {
+  border-color: var(--accent);
 }
 
 .check:has(input:disabled) {
