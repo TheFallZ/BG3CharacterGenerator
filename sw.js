@@ -5,7 +5,7 @@
 // offline or when the connection is too slow to answer.
 //
 // Bump CACHE with the ?v= number on the pages, so old copies are cleared out.
-const CACHE = "bg3-generator-v106";
+const CACHE = "bg3-generator-v111";
 const PAGES = ["./", "saved/", "settings/", "about/", "whats-new/"];
 // Waits this long for the network before showing the saved copy of a page.
 const NETWORK_TIMEOUT = 4000;

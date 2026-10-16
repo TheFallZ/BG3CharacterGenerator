@@ -1648,18 +1648,13 @@ button.lock-button[aria-pressed="true"] {
   font-weight: 400;
 }
 
-/* Level-up order: a dark panel dropped down from the Multiclass badge, over the top of the Class
-   card, with one numbered box per character level, colored by class. */
-.card-class {
-  position: relative;
-}
-
+/* Level-up order: a dark panel that opens in the Class card's left column, spanning the first two
+   rows, so Class and Skill Proficiencies sit beside it and nothing is covered. One numbered box
+   per character level, colored by class. */
 .level-order-pop {
-  position: absolute;
-  top: 40px;
-  right: 10px;
-  z-index: 3;
-  width: min(560px, calc(100% - 20px));
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: start;
   border: 1px solid var(--control-border-hover);
   border-radius: 7px;
   padding: 9px 10px 8px;
@@ -1670,6 +1665,13 @@ button.lock-button[aria-pressed="true"] {
 
 .level-order-pop[hidden] {
   display: none;
+}
+/* Half of a narrow Class card is too tight for twelve boxes, so the level-up order takes the whole row. */
+@media (max-width: 760px) {
+  .level-order-pop {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
 }
 
 .level-strip {

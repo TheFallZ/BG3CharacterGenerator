@@ -271,9 +271,10 @@ async function renderBuildPicture(savedId) {
     image.alt = picture ? `Picture of ${currentBuildName() ?? describeCharacter(character)}` : "";
     document.getElementById("buildTitle").classList.toggle("has-picture", !!picture);
 }
-// A multiclass build's level-up order, in a dark panel that drops down from the Multiclass badge
-// over the Class card: one numbered box per character level, colored by class, and a line on why
-// it starts that way.
+// A multiclass build's level-up order, in a dark panel that opens as the first item in the Class
+// card, so the class details flow beside and below it: one numbered box per character level,
+// colored by class, and a line on why it starts that way. It stays open across new builds until
+// it's closed.
 function levelUpOrderHTML() {
     const classes = getClassLevels().map(({ className }) => className);
     const boxes = levelUpOrder().flatMap(({ className, from, to }) => Array.from({ length: to - from + 1 }, () => className));
@@ -422,8 +423,7 @@ function renderCards() {
           <button class="text-button reroll-button" data-reroll="${key}" aria-label="${escapeHTML(rerollLabel)}" title="${escapeHTML(rerollLabel)}"${locked || setByOrigin ? " disabled" : ""}>Reroll</button>
         </div>
       </div>
-      ${hasLevelOrder ? levelUpOrderHTML() : ""}
-      <div class="card-body">${content}</div>
+      <div class="card-body">${hasLevelOrder ? levelUpOrderHTML() : ""}${content}</div>
     </article>`;
     }).join("");
     host.querySelectorAll("[data-reroll]").forEach(button => {
@@ -443,12 +443,8 @@ document.getElementById("shareToggle").addEventListener("click", () => {
 document.getElementById("copyLink").addEventListener("click", copyCurrentLink);
 document.getElementById("copyText").addEventListener("click", copyCurrentText);
 document.addEventListener("click", event => {
-    const target = event.target;
-    if (!target.closest(".share"))
+    if (!event.target.closest(".share"))
         setShareMenu(false);
-    // A click anywhere else closes the level-up order.
-    if (levelOrderOpen && !target.closest(".level-order-pop, [data-level-order]"))
-        setLevelOrderOpen(false);
 });
 // Single-key shortcuts, ignored while typing or when a modifier key is held.
 const SHORTCUTS = {
