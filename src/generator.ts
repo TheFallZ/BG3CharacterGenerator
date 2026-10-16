@@ -6,7 +6,7 @@ let character: Character = {};
 const MAX_LEVEL = 12;
 
 function defaultSettings(): Settings {
-  return {excludedClasses: [], excludedRaces: [], multiclass: "sometimes", tripleClass: false, hiddenCards: [], party: false, originCharacters: false};
+  return {excludedClasses: [], excludedRaces: [], multiclass: "sometimes", tripleClass: false, hiddenCards: [], party: false, originCharacters: false, showAlignment: true};
 }
 
 let settings: Settings = defaultSettings();
@@ -676,21 +676,24 @@ function featValues(feats: Character["feats"] = character.feats): string[] {
   return (feats || []).flatMap(feat => typeof feat === "string" ? [feat] : entryValues(feat));
 }
 
+// A background's entries, with an alignment to play it with.
+function backgroundEntries(background: string): ClassEntry[] {
+  return [
+    {label: "Background", value: background},
+    {label: "Background Skill Proficiencies", value: BACKGROUND_SKILLS[background] || []},
+    {label: "Alignment", value: pick(ALIGNMENTS)}
+  ];
+}
+
 function rollBackground(avoidSkills: string[] = []): ClassEntry[] {
   const fixed = originProfile()?.background ?? (character.origin === DARK_URGE_ORIGIN ? DARK_URGE_BACKGROUND : null);
-  if (fixed) return [
-    {label: "Background", value: fixed},
-    {label: "Background Skill Proficiencies", value: BACKGROUND_SKILLS[fixed] || []}
-  ];
+  if (fixed) return backgroundEntries(fixed);
   const takenSkills = new Set([...getRacialSkillProficiencies(), ...avoidSkills]);
   const availableBackgrounds = data.backgrounds.filter(background =>
     (BACKGROUND_SKILLS[background] || []).every(skill => !takenSkills.has(skill))
   );
   const background = pick(availableBackgrounds.length ? availableBackgrounds : data.backgrounds) ?? data.backgrounds[0];
-  return [
-    {label: "Background", value: background},
-    {label: "Background Skill Proficiencies", value: BACKGROUND_SKILLS[background] || []}
-  ];
+  return backgroundEntries(background);
 }
 // You can't romance yourself, so an origin character drops out of the romance options.
 function rollRomance(): string | null {

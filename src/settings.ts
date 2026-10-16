@@ -45,7 +45,9 @@ function renderSettings(): void {
       <h2>Cards</h2>
       <fieldset class="settings-group">
         <legend class="visually-hidden">Cards to show</legend>
-        ${HIDEABLE_CARDS.map(({key, label}) => checkboxHTML("showCard", key, label, !settings.hiddenCards.includes(key))).join("")}
+        ${HIDEABLE_CARDS.map(({key, label}) => checkboxHTML("showCard", key, label, !settings.hiddenCards.includes(key)) +
+          // Alignment sits on the Background card, which comes right after Ability scores.
+          (key === "abilities" ? `<label class="check"><input type="checkbox" name="showAlignment"${settings.showAlignment ? " checked" : ""}> Alignment</label>` : "")).join("")}
       </fieldset>
     </section>
     <section class="settings-section settings-pools">
@@ -99,7 +101,8 @@ function readSettings(event?: Event): void {
     tripleClass: panel.querySelector<HTMLInputElement>('input[name="tripleClass"]')!.checked,
     hiddenCards: unchecked("showCard") as CardKey[],
     party: panel.querySelector<HTMLInputElement>('input[name="party"]')!.checked,
-    originCharacters: panel.querySelector<HTMLInputElement>('input[name="originCharacters"]')!.checked
+    originCharacters: panel.querySelector<HTMLInputElement>('input[name="originCharacters"]')!.checked,
+    showAlignment: panel.querySelector<HTMLInputElement>('input[name="showAlignment"]')!.checked
   };
   storeSettings();
   updateSettingsControls();

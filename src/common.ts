@@ -32,12 +32,12 @@ const CARD_TITLES: Record<CardKey, string> = {
   companionBuild: "Companion Build"
 };
 
-// Story cards a visitor can hide; the build cards always show.
+// Story cards a visitor can hide, in the order they appear on the Generator; the build cards always show.
 const HIDEABLE_CARDS: {key: CardKey; label: string}[] = [
   {key: "origin", label: "Origin"},
-  {key: "romance", label: "Romance"},
   {key: "abilities", label: "Ability scores"},
   {key: "darkUrge", label: "Tadpole choice"},
+  {key: "romance", label: "Romance"},
   {key: "companionBuild", label: "Companion build"}
 ];
 
@@ -75,7 +75,8 @@ function loadSettings(): Settings {
       tripleClass: saved.tripleClass === true,
       hiddenCards: strings(saved.hiddenCards, HIDEABLE_CARDS.map(({key}) => key)) as CardKey[],
       party: saved.party === true,
-      originCharacters: saved.originCharacters === true
+      originCharacters: saved.originCharacters === true,
+      showAlignment: saved.showAlignment !== false
     };
   } catch {
     return defaults;
@@ -234,7 +235,10 @@ function buildCardEntries(build: Character, key: CardKey): ClassEntry[] {
     if (!feats.length) return [{label: "", value: "No feats before level 4"}];
     return typeof feats[0] === "string" ? [{label: "", value: feats as string[]}] : feats as ClassEntry[];
   }
-  if (key === "companionBuild" || key === "background") return normalizeResult(value);
+  if (key === "background") {
+    return normalizeResult(value).filter(entry => entry.label !== "Alignment" || settings.showAlignment);
+  }
+  if (key === "companionBuild") return normalizeResult(value);
   if (key === "abilities") {
     return normalizeResult(value).map(entry => {
       const score = Number(entry.value);
@@ -424,6 +428,7 @@ async function buildText(build: Character, name: string | null): Promise<string>
     .map(entry => `${entry.label}: ${listText(entryValues(entry))}`);
   line("Race", race && [race, ...raceExtras].join(" · "));
   line("Background", typeof build.background === "string" ? build.background : entryText(build.background ?? undefined, "Background")[0]);
+  if (settings.showAlignment && Array.isArray(build.background)) line("Alignment", entryText(build.background, "Alignment")[0]);
 
   const skills = [...new Set([
     ...getRacialSkillProficiencies(build.race),
@@ -466,27 +471,43 @@ const PICTURE_SIZE = 640;
 // Anything bigger in a build file is ignored, so a shared file can't fill up storage.
 const MAX_PICTURE_LENGTH = 1_500_000;
 
+// One connection per page, opened the first time a picture is needed.
+let pictureDB: Promise<IDBDatabase | null> | null = null;
+
 function openPictures(): Promise<IDBDatabase | null> {
-  return new Promise(resolve => {
+  pictureDB ??= new Promise(resolve => {
     try {
       const request = indexedDB.open(PICTURE_DB, 1);
       request.onupgradeneeded = () => request.result.createObjectStore(PICTURE_STORE);
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => {
+        const db = request.result;
+        // Another tab upgrading the database closes this connection; the next call reopens it.
+        db.onversionchange = () => {
+          db.close();
+          pictureDB = null;
+        };
+        resolve(db);
+      };
       request.onerror = () => resolve(null);
     } catch {
       resolve(null);
     }
   });
+  return pictureDB;
 }
 
+// Runs one request. A write only counts once its transaction completes, since a full disk
+// aborts the transaction after the request itself has already succeeded.
 async function pictureRequest<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T | null> {
   const db = await openPictures();
   if (!db) return null;
   return new Promise(resolve => {
     try {
-      const request = run(db.transaction(PICTURE_STORE, mode).objectStore(PICTURE_STORE));
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => resolve(null);
+      const transaction = db.transaction(PICTURE_STORE, mode);
+      const request = run(transaction.objectStore(PICTURE_STORE));
+      transaction.oncomplete = () => resolve(request.result);
+      transaction.onabort = () => resolve(null);
+      transaction.onerror = () => resolve(null);
     } catch {
       resolve(null);
     }
@@ -498,12 +519,18 @@ async function getPicture(id: string): Promise<string | null> {
   return isPictureData(picture) ? picture : null;
 }
 
+// Every stored picture, read in one pass so ids and pictures can't fall out of step.
 async function getAllPictures(): Promise<Map<string, string>> {
   const pictures = new Map<string, string>();
-  const keys = await pictureRequest("readonly", store => store.getAllKeys()) ?? [];
-  const values = await pictureRequest("readonly", store => store.getAll()) ?? [];
-  keys.forEach((key, index) => {
-    if (typeof key === "string" && isPictureData(values[index])) pictures.set(key, values[index]);
+  await pictureRequest("readonly", store => {
+    const cursor = store.openCursor();
+    cursor.onsuccess = () => {
+      const entry = cursor.result;
+      if (!entry) return;
+      if (typeof entry.key === "string" && isPictureData(entry.value)) pictures.set(entry.key, entry.value);
+      entry.continue();
+    };
+    return cursor;
   });
   return pictures;
 }
@@ -531,7 +558,11 @@ async function shrinkPicture(file: Blob): Promise<string | null> {
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(image.width * scale);
     canvas.height = Math.round(image.height * scale);
-    canvas.getContext("2d")!.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const context = canvas.getContext("2d")!;
+    // See-through parts take the picture frame's dark color, rather than black where JPEG is used.
+    context.fillStyle = "#302628";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
     image.close();
     const webp = canvas.toDataURL("image/webp", 0.82);
     const picture = webp.startsWith("data:image/webp") ? webp : canvas.toDataURL("image/jpeg", 0.85);

@@ -215,6 +215,15 @@ test("subclass choices match the subclass and level", () => {
   });
 });
 
+test("every background comes with one alignment", () => {
+  const alignments = run("ALIGNMENTS");
+  forEachBuild(build => {
+    const rolled = all(build.background, "Alignment");
+    assert.equal(rolled.length, 1);
+    assert.ok(alignments.includes(rolled[0]), rolled[0]);
+  });
+});
+
 test("Lolth-sworn drow clerics follow Lolth", () => {
   forEachBuild(build => {
     const races = [...all(build.race, "Race"), ...all(build.race, "Subrace")];

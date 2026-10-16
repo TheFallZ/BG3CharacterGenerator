@@ -9,8 +9,23 @@ const BACKUP_FORMAT = "bg3-character-generator-saved-builds";
 const BACKUP_VERSION = 2;
 const BUILD_FILE_EXTENSION = ".bg3build";
 
-// Pictures by saved build id, loaded once when the page opens.
+// Pictures by saved build id, loaded once when the page opens. The cards show them through
+// short blob URLs, so re-rendering the list (on every search keystroke) doesn't copy megabytes
+// of picture data into the page or make the browser decode every picture again.
 let pictures = new Map<string, string>();
+const pictureURLs = new Map<string, string>();
+
+function setPicture(id: string, picture: string | null): void {
+  const old = pictureURLs.get(id);
+  if (old) URL.revokeObjectURL(old);
+  pictureURLs.delete(id);
+  pictures.delete(id);
+  if (!picture) return;
+  pictures.set(id, picture);
+  const [header, data] = picture.split(",");
+  const bytes = Uint8Array.from(atob(data), char => char.charCodeAt(0));
+  pictureURLs.set(id, URL.createObjectURL(new Blob([bytes], {type: header.slice(5, header.indexOf(";"))})));
+}
 // The build that the picture chooser is open for.
 let pictureFor: string | null = null;
 
@@ -53,7 +68,7 @@ function renderSavedPage(): void {
       ? {label: "Race", value: raceName(item)}
       : {label: "Subclass", value: primaryClassAndSubclass(item.character.class).subclass ?? "None yet"};
     const companion = romanceOrCompanion(item);
-    const picture = pictures.get(item.id);
+    const picture = pictureURLs.get(item.id);
     const detail = (label: string, value: string) =>
       `<div class="entry"><span class="entry-label">${escapeHTML(label)}</span><div class="entry-value">${escapeHTML(value)}</div></div>`;
     const head = `<div class="saved-card-head">
@@ -280,7 +295,7 @@ function cancelDelete(id: string): void {
 function deleteSaved(id: string): void {
   try {
     storeSavedCharacters(getSavedCharacters().filter(saved => saved.id !== id));
-    pictures.delete(id);
+    setPicture(id, null);
     deletePicture(id);
     setNotice("Build deleted.");
   } catch {
@@ -305,29 +320,31 @@ async function addPicture(id: string, file: File): Promise<void> {
     return;
   }
   trackEvent("add-picture");
-  pictures.set(id, picture);
+  setPicture(id, picture);
   setNotice("Picture added.");
   renderSavedPage();
 }
 
 async function removePicture(id: string): Promise<void> {
   await deletePicture(id);
-  pictures.delete(id);
+  setPicture(id, null);
   setNotice("Picture removed.");
   renderSavedPage();
   savedCard(id)?.querySelector<HTMLButtonElement>("[data-picture]")?.focus();
 }
 
-// Saved builds as they go into a file, each with its picture if it has one.
-function fileBuilds(saved: SavedCharacter[]): (SavedCharacter & {picture?: string})[] {
+// Saved builds as they go into a file, each with its picture if it has one. Pictures are read
+// fresh from storage, in case the page hasn't finished loading them yet.
+async function fileBuilds(saved: SavedCharacter[]): Promise<(SavedCharacter & {picture?: string})[]> {
+  const stored = await getAllPictures();
   return saved.map(item => {
-    const picture = pictures.get(item.id);
+    const picture = stored.get(item.id) ?? pictures.get(item.id);
     return picture ? {...item, picture} : item;
   });
 }
 
-function downloadFile(fileName: string, builds: SavedCharacter[]): void {
-  const contents = {format: BACKUP_FORMAT, version: BACKUP_VERSION, exported: new Date().toISOString(), builds: fileBuilds(builds)};
+async function downloadFile(fileName: string, builds: SavedCharacter[]): Promise<void> {
+  const contents = {format: BACKUP_FORMAT, version: BACKUP_VERSION, exported: new Date().toISOString(), builds: await fileBuilds(builds)};
   const url = URL.createObjectURL(new Blob([JSON.stringify(contents)], {type: "application/json"}));
   const link = document.createElement("a");
   link.href = url;
@@ -337,21 +354,21 @@ function downloadFile(fileName: string, builds: SavedCharacter[]): void {
 }
 
 // One build, with its name, note and picture, in a file someone else can import.
-function downloadBuild(id: string): void {
+async function downloadBuild(id: string): Promise<void> {
   const item = getSavedCharacters().find(saved => saved.id === id);
   if (!item) return;
   trackEvent("download-build");
   const fileName = savedTitle(item).replace(/[^\p{L}\p{N} -]+/gu, "").trim().replace(/\s+/g, "-") || "build";
-  downloadFile(fileName + BUILD_FILE_EXTENSION, [item]);
+  await downloadFile(fileName + BUILD_FILE_EXTENSION, [item]);
   setNotice(`Downloaded "${savedTitle(item)}". Anyone you send the file to can import it on their Saved page.`);
 }
 
 // Downloads every saved build as a file that Import can read back, here or on another device.
-function exportSaved(): void {
+async function exportSaved(): Promise<void> {
   const saved = getSavedCharacters();
   if (!saved.length) return;
   trackEvent("backup");
-  downloadFile(`bg3-saved-builds-${new Date().toISOString().slice(0, 10)}.json`, saved);
+  await downloadFile(`bg3-saved-builds-${new Date().toISOString().slice(0, 10)}.json`, saved);
   setNotice(`Backed up ${saved.length} ${saved.length === 1 ? "build" : "builds"}.`);
 }
 
@@ -395,7 +412,7 @@ async function importSaved(file: File): Promise<void> {
   try {
     storeSavedCharacters([...added, ...existing]);
     for (const [id, picture] of addedPictures) {
-      if (await storePicture(id, picture)) pictures.set(id, picture);
+      if (await storePicture(id, picture)) setPicture(id, picture);
     }
     setNotice(added.length === 1 ? `Added "${savedTitle(added[0])}".` : `Imported ${added.length} builds.`);
   } catch {
@@ -481,6 +498,6 @@ document.addEventListener("keydown", event => {
 renderSavedPage();
 getAllPictures().then(stored => {
   if (!stored.size) return;
-  pictures = stored;
+  stored.forEach((picture, id) => setPicture(id, picture));
   renderSavedPage();
 });

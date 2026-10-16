@@ -80,6 +80,9 @@ interface Settings {
   // Show the Origin card, which can make you the Dark Urge or an origin character like Astarion.
   // Off means you always play a custom character.
   originCharacters: boolean;
+  // Show the rolled alignment on the Background card. It's still rolled when hidden, so turning
+  // this back on shows it, and shared builds keep it.
+  showAlignment: boolean;
 }
 
 const DEFAULT_DATA: GeneratorData = {
@@ -579,6 +582,13 @@ const STARTING_MAGIC: Record<string, {cantrips: string[]; cantripCount: number; 
     spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Color Spray", "Disguise Self", "Enhance Leap", "Expeditious Retreat", "False Life", "Feather Fall", "Find Familiar", "Fog Cloud", "Grease", "Ice Knife", "Longstrider", "Mage Armor", "Magic Missile", "Protection from Evil and Good", "Ray of Sickness", "Shield", "Sleep", "Tasha's Hideous Laughter", "Thunderwave", "Witch Bolt"]
   }
 };
+
+// BG3 has no alignment system, so this is a roleplaying suggestion, rolled with the background.
+const ALIGNMENTS = [
+  "Lawful Good", "Neutral Good", "Chaotic Good",
+  "Lawful Neutral", "True Neutral", "Chaotic Neutral",
+  "Lawful Evil", "Neutral Evil", "Chaotic Evil"
+];
 
 const CUSTOM_ORIGIN = "Custom character";
 const DARK_URGE_ORIGIN = "The Dark Urge";

@@ -253,7 +253,8 @@ async function renderBuildPicture(savedId: string | null): Promise<void> {
   const picture = savedId ? await getPicture(savedId) : null;
   if (savedId !== currentSavedId) return;
   image.hidden = !picture;
-  image.src = picture ?? "";
+  if (picture) image.src = picture;
+  else image.removeAttribute("src");
   image.alt = picture ? `Picture of ${currentBuildName() ?? describeCharacter(character)}` : "";
   document.getElementById("buildTitle")!.classList.toggle("has-picture", !!picture);
 }

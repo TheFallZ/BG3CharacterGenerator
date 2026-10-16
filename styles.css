@@ -1180,14 +1180,25 @@ button.danger:hover {
   grid-column: 2;
 }
 
+/* The whole picture shows at its own shape, framed like on the Saved cards: a wide screenshot
+   becomes a wide thumbnail rather than a cropped square. */
 .build-picture {
   grid-row: 1 / span 4;
-  width: 76px;
-  height: 76px;
-  border: 2px solid var(--frame);
-  border-radius: 8px;
-  object-fit: cover;
-  object-position: center 20%;
+  width: auto;
+  height: 100px;
+  max-width: 180px;
+  border: 1px solid var(--frame);
+  border-radius: 6px;
+  background: var(--ink);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .5);
+  object-fit: contain;
+}
+
+@media (max-width: 560px) {
+  .build-picture {
+    height: 72px;
+    max-width: 128px;
+  }
 }
 
 .build-picture[hidden] {

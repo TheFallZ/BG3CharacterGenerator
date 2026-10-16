@@ -469,6 +469,12 @@ const STARTING_MAGIC = {
         spells: ["Burning Hands", "Charm Person", "Chromatic Orb", "Color Spray", "Disguise Self", "Enhance Leap", "Expeditious Retreat", "False Life", "Feather Fall", "Find Familiar", "Fog Cloud", "Grease", "Ice Knife", "Longstrider", "Mage Armor", "Magic Missile", "Protection from Evil and Good", "Ray of Sickness", "Shield", "Sleep", "Tasha's Hideous Laughter", "Thunderwave", "Witch Bolt"]
     }
 };
+// BG3 has no alignment system, so this is a roleplaying suggestion, rolled with the background.
+const ALIGNMENTS = [
+    "Lawful Good", "Neutral Good", "Chaotic Good",
+    "Lawful Neutral", "True Neutral", "Chaotic Neutral",
+    "Lawful Evil", "Neutral Evil", "Chaotic Evil"
+];
 const CUSTOM_ORIGIN = "Custom character";
 const DARK_URGE_ORIGIN = "The Dark Urge";
 const DARK_URGE_BACKGROUND = "The Haunted One";
