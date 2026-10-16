@@ -21,7 +21,9 @@ Serve the folder (for example `python -m http.server`) and open it in a browser 
 
 The live site is GitHub Pages, deployed from the `main` branch root. New work goes on the `dev` branch; to release, merge `dev` into `main` and push. Commit the rebuilt `js/` folder along with your changes; the site updates within a minute or two of a push to `main`.
 
-When you change `styles.css` or the scripts, bump the `?v=` number on their links in every page (`index.html`, `saved/index.html`, `settings/index.html`, `about/index.html`, `whats-new/index.html`). GitHub Pages lets browsers cache files for 10 minutes, and the new number makes them fetch the matching files instead of mixing old and new.
+When you change `styles.css` or the scripts, bump the `?v=` number on their links in every page (`index.html`, `saved/index.html`, `settings/index.html`, `about/index.html`, `whats-new/index.html`). GitHub Pages lets browsers cache files for 10 minutes, and the new number makes them fetch the matching files instead of mixing old and new. Bump `CACHE` in `sw.js` to the same number too.
+
+`sw.js` keeps a copy of the site on each visitor's device so it opens without a connection. Pages always come from the network when there is one, so releases show up right away; the stored copy is only used offline. Changing `CACHE` replaces the stored copy with the new version.
 
 ## Project Layout
 

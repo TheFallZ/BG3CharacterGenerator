@@ -604,6 +604,17 @@ function updateNav() {
         badge.textContent = count ? String(count) : "";
     });
 }
+// Lets the site open without a connection once it's been visited (see sw.js). Only works over
+// https or on localhost, so opening the files straight from disk skips it.
+function registerOffline() {
+    if (!("serviceWorker" in navigator) || !location.protocol.startsWith("http"))
+        return;
+    const script = new URL(`${document.body.dataset.root || "./"}sw.js`, location.href);
+    navigator.serviceWorker.register(script.href).catch(() => {
+        // The site still works online without it.
+    });
+}
 settings = loadSettings();
 updateNav();
+registerOffline();
 document.getElementById("copyClose")?.addEventListener("click", hideCopyBox);
