@@ -861,29 +861,41 @@ kbd {
   z-index: 6;
 }
 
-/* No dividing lines inside saved cards: the header tint and spacing separate the parts.
-   Its corners follow the card's, since the card no longer clips it. */
-.saved-card .card-head {
-  border-bottom: 0;
-  border-radius: 7px 4px 0 0 / 8px 1px 0 0;
+/* The name sits on the parchment above the details, in the same ink but in the title font
+   and a size up, so it reads as the build's name rather than another detail. */
+.saved-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 13px 0;
 }
 
-.saved-card .card-head h2 {
-  font-size: 19px;
+.saved-card-head h2 {
+  min-width: 0;
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.15;
   overflow-wrap: anywhere;
 }
 
-/* The picture runs the width of the card, framed on every side in the text color with a light
-   edge on the parchment side, so it reads as set into the card rather than cut into it.
-   Character screenshots are usually taller than wide, so the crop favors the top, where the face is. */
+/* The picture sits inside the card like a framed portrait, with parchment around it. It keeps
+   its own shape up to 250px tall, so a wide screenshot fills the frame with nothing cropped, and
+   only a tall one gets dark bars at its sides. */
 .saved-card-picture {
   display: block;
-  width: 100%;
-  height: 200px;
-  border: 3px solid var(--ink);
-  box-shadow: 0 -1px 0 rgba(255, 246, 239, .6), 0 1px 0 rgba(255, 246, 239, .6);
-  object-fit: cover;
-  object-position: center 20%;
+  width: calc(100% - 16px);
+  height: auto;
+  max-height: 250px;
+  margin: 8px 8px 0;
+  border: 1px solid var(--frame);
+  border-radius: 6px;
+  background: var(--ink);
+  box-shadow: 0 1px 4px rgba(48, 38, 40, .3);
+  object-fit: contain;
 }
 
 .saved-card-body {

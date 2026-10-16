@@ -47,8 +47,7 @@ function renderSavedPage() {
         const companion = romanceOrCompanion(item);
         const picture = pictures.get(item.id);
         const detail = (label, value) => `<div class="entry"><span class="entry-label">${escapeHTML(label)}</span><div class="entry-value">${escapeHTML(value)}</div></div>`;
-        return `<li class="card saved-card" data-id="${id}">
-      <div class="card-head">
+        const head = `<div class="saved-card-head">
         <h2 class="saved-card-title">${escapeHTML(title)}</h2>
         <div class="saved-menu-wrap">
           <button class="text-button saved-more" data-menu="${id}" aria-haspopup="true" aria-expanded="false" aria-label="More actions for ${escapeHTML(title)}">⋯</button>
@@ -63,8 +62,11 @@ function renderSavedPage() {
             <button class="saved-menu-group saved-menu-danger" data-delete="${id}">Delete</button>
           </div>
         </div>
-      </div>
+      </div>`;
+        // The picture, if there is one, tops the card; the name sits on the parchment under it.
+        return `<li class="card saved-card" data-id="${id}">
       ${picture ? `<img class="saved-card-picture" src="${escapeHTML(picture)}" alt="Picture of ${escapeHTML(title)}">` : ""}
+      ${head}
       <div class="card-body saved-card-body">
         <div class="saved-card-text">
           <div class="saved-details">
