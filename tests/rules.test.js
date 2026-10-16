@@ -261,6 +261,41 @@ test("origins set race and background, and stay off unless allowed", () => {
   });
 });
 
+// Adds up the Ability Scores card and every feat that raises a score, in feat order.
+function finalScores(build) {
+  const scores = Object.fromEntries(C.ABILITIES.map(ability => [ability, Number(all(build.abilities, ability)[0])]));
+  for (const feat of build.feats.flatMap(values)) {
+    const [name, choice = ""] = feat.split(":").map(part => part.trim());
+    if (name === "Ability Improvement") {
+      const increases = [...choice.matchAll(/\+(\d) (\w+)/g)];
+      assert.ok(increases.length && increases.reduce((sum, [, amount]) => sum + Number(amount), 0) === 2, `${feat} should add 2 points`);
+      for (const [, amount, ability] of increases) scores[ability] += Number(amount);
+    } else if (name === "Resilient") {
+      scores[choice] += 1;
+    }
+    for (const ability of C.ABILITIES) assert.ok(scores[ability] <= 20, `${ability} reaches ${scores[ability]} after ${feat}`);
+  }
+  return scores;
+}
+
+test("feats never push an ability score past 20", () => {
+  forEachBuild(build => finalScores(build));
+});
+
+test("new ability scores keep kept feats under 20", () => {
+  for (let i = 0; i < BUILDS; i++) {
+    const build = run(`(() => {
+      rollBuild();
+      for (let n = 0; n < 3; n++) {
+        character.abilities = rollAbilities();
+        character.feats = rollFeats(featValues());
+      }
+      return JSON.parse(JSON.stringify(character));
+    })()`);
+    finalScores(build);
+  }
+});
+
 test("ability scores are a 27-point buy plus +2 and +1", () => {
   forEachBuild(build => {
     const scores = C.ABILITIES.map(ability => Number(all(build.abilities, ability)[0]));

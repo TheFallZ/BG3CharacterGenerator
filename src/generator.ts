@@ -635,15 +635,54 @@ function featContext(armor: Set<string>): {shields: boolean; spells: boolean} {
   };
 }
 
-// +2 to one main ability, or +1 to two, from the starting class's main abilities.
-function rollAbilityImprovement(): string {
-  const main = CLASS_MAIN_ABILITIES[getClassLevels()[0]?.className ?? ""] ?? ["Constitution"];
-  const [first, second] = pickMany(main, 2);
-  return second && Math.random() < 0.4 ? `Ability Improvement: +1 ${first}, +1 ${second}` : `Ability Improvement: +2 ${first}`;
+// The character's ability scores from the Ability Scores card, racial bonuses included.
+// A build from before that card existed counts every score as 10.
+function startingScores(): Record<string, number> {
+  return Object.fromEntries(ABILITIES.map(ability =>
+    [ability, Number((character.abilities || []).find(entry => entry.label === ability)?.value) || 10]));
 }
 
-function rollFeat(taken: string[], armor: Set<string>): string | null {
-  if (Math.random() * 100 < ABILITY_IMPROVEMENT_CHANCE) return rollAbilityImprovement();
+// The increases a feat gives: "Ability Improvement: +2 Dexterity", "Ability Improvement: +1 Strength,
+// +1 Constitution" or "Resilient: Wisdom". Other feats raise nothing the generator tracks.
+function featIncreases(feat: string): Record<string, number> {
+  const increases: Record<string, number> = {};
+  const [name, choice = ""] = feat.split(":").map(part => part.trim());
+  if (name === "Ability Improvement") {
+    for (const [, amount, ability] of choice.matchAll(/\+(\d) (\w+)/g)) increases[ability] = (increases[ability] ?? 0) + Number(amount);
+  } else if (name === "Resilient" && choice) {
+    increases[choice] = 1;
+  }
+  return increases;
+}
+
+// Whether a feat fits under the cap of 20, and if so, adds its increases to the scores.
+function applyFeat(scores: Record<string, number>, feat: string): boolean {
+  const increases = Object.entries(featIncreases(feat));
+  if (increases.some(([ability, amount]) => !(ability in scores) || scores[ability] + amount > MAX_ABILITY_SCORE)) return false;
+  increases.forEach(([ability, amount]) => { scores[ability] += amount; });
+  return true;
+}
+
+// +2 to one ability or +1 to two, never past 20. The starting class's main abilities come first,
+// then any other score with room.
+function rollAbilityImprovement(scores: Record<string, number>): string {
+  const room = (ability: string) => MAX_ABILITY_SCORE - scores[ability];
+  const main = CLASS_MAIN_ABILITIES[getClassLevels()[0]?.className ?? ""] ?? ["Constitution"];
+  const choices = [
+    ...pickMany(main.filter(ability => room(ability) > 0), main.length),
+    ...pickMany(ABILITIES.filter(ability => !main.includes(ability) && room(ability) > 0), ABILITIES.length)
+  ];
+  const [first, second] = choices;
+  const feat = !first ? "Ability Improvement"
+    : second && (room(first) < 2 || Math.random() < 0.4) ? `Ability Improvement: +1 ${first}, +1 ${second}`
+    : room(first) >= 2 ? `Ability Improvement: +2 ${first}`
+    : `Ability Improvement: +1 ${first}`;
+  applyFeat(scores, feat);
+  return feat;
+}
+
+function rollFeat(taken: string[], armor: Set<string>, scores: Record<string, number>): string | null {
+  if (Math.random() * 100 < ABILITY_IMPROVEMENT_CHANCE) return rollAbilityImprovement(scores);
   const takenNames = new Set(taken.map(featName));
   const can = featContext(armor);
   const hasWeaponStyle = WEAPON_STYLE_FEATS.some(feat => takenNames.has(feat));
@@ -658,19 +697,30 @@ function rollFeat(taken: string[], armor: Set<string>): string | null {
     return true;
   });
   const feat = pick(options);
-  if (!feat) return rollAbilityImprovement();
+  if (!feat) return rollAbilityImprovement(scores);
   const grants = FEAT_ARMOR_RULES[feat]?.grants;
   if (grants) armor.add(grants);
-  const choice = pick(FEAT_CHOICES[feat]);
-  return choice ? `${feat}: ${choice}` : feat;
+  // Resilient raises the chosen ability by 1, so it skips one that's already 20.
+  const choices = feat === "Resilient" ? (FEAT_CHOICES[feat] ?? []).filter(ability => scores[ability] < MAX_ABILITY_SCORE) : FEAT_CHOICES[feat];
+  const choice = pick(choices);
+  const value = choice ? `${feat}: ${choice}` : feat;
+  applyFeat(scores, value);
+  return value;
 }
 
-// Keeps the given feats (in order) and fills any remaining feat levels with new ones.
+// Keeps the given feats (in order) and fills any remaining feat levels with new ones. A kept
+// Ability Improvement or Resilient that would now push a score past 20, say after new ability
+// scores, is rolled again so it fits.
 function rollFeats(keep: string[] = []): ClassEntry[] {
   const armor = getArmorProficiencies();
+  const scores = startingScores();
   const taken: string[] = [];
   return featLevels().map((slot, index) => {
-    const feat = index < keep.length ? keep[index] : rollFeat(taken, armor);
+    const kept = index < keep.length ? keep[index] : null;
+    const feat = kept === null ? rollFeat(taken, armor, scores)
+      : applyFeat(scores, kept) ? kept
+      : featName(kept) === "Resilient" ? fitResilient(scores)
+      : rollAbilityImprovement(scores);
     if (feat) {
       taken.push(feat);
       const grants = FEAT_ARMOR_RULES[featName(feat)]?.grants;
@@ -678,6 +728,14 @@ function rollFeats(keep: string[] = []): ClassEntry[] {
     }
     return {label: slot.label, value: feat};
   });
+}
+
+// A Resilient pick on an ability with room, for a kept Resilient whose ability is now at 20.
+function fitResilient(scores: Record<string, number>): string {
+  const choice = pick((FEAT_CHOICES.Resilient ?? []).filter(ability => scores[ability] < MAX_ABILITY_SCORE));
+  const feat = choice ? `Resilient: ${choice}` : "Resilient";
+  applyFeat(scores, feat);
+  return feat;
 }
 
 // Feat names from either the current format or an older saved list of names.

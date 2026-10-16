@@ -112,8 +112,9 @@ function rollCards(keys: CardKey[]): void {
     character.class = repairExpertise(character.class, [...getRacialSkillProficiencies(), ...getBackgroundSkillProficiencies(), ...getClassSkillProficiencies()]);
   }
 
-  // Locked feats survive a new class, trimmed or topped up to the new number of feat levels.
-  if (targets.has("class") && !targets.has("feats")) {
+  // Locked feats survive a new class, trimmed or topped up to the new number of feat levels, and
+  // new ability scores, with any Ability Improvement that no longer fits under 20 rolled again.
+  if ((targets.has("class") || targets.has("abilities")) && !targets.has("feats")) {
     character.feats = rollFeats(featValues());
   }
 

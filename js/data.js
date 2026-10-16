@@ -346,6 +346,8 @@ const CASTER_SUBCLASSES = ["Eldritch Knight", "Arcane Trickster"];
 const WEAPON_STYLE_FEATS = ["Great Weapon Master", "Shield Master", "Dual Wielder"];
 // Feats that only help with spells.
 const SPELL_FEATS = ["War Caster", "Elemental Adept"];
+// No ability score can go above this.
+const MAX_ABILITY_SCORE = 20;
 // How often a feat level becomes an Ability Improvement, in percent.
 const ABILITY_IMPROVEMENT_CHANCE = 20;
 // The abilities each class leans on most, for Ability Improvement.
