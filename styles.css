@@ -149,6 +149,14 @@ main {
   letter-spacing: .03em;
   line-height: 1.1;
   text-decoration: none;
+  /* The title stays on one line; the ruled lines beside it shrink first, then the title does. */
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .site-name {
+    font-size: 28px;
+  }
 }
 
 .site-name::before,
