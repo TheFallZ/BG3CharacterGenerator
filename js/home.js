@@ -423,7 +423,7 @@ document.addEventListener("keydown", event => {
 });
 window.addEventListener("hashchange", loadSharedBuild);
 // The update banner shows until dismissed. Change LATEST_UPDATE with each release to show it again.
-const LATEST_UPDATE = "2026-10-big-update";
+const LATEST_UPDATE = "2026-10-pictures";
 const DISMISSED_UPDATE_KEY = "bg3-character-generator-dismissed-update";
 function showUpdateBanner() {
     const banner = document.getElementById("updateBanner");
