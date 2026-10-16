@@ -36,6 +36,8 @@ function currentEntry(): CurrentBuild | null {
 
 let lockedCards = loadLockedCards();
 let rolledCards = new Set<CardKey>();
+// Whether the level-up order is open under the Multiclass badge. It stays open across new builds.
+let levelOrderOpen = false;
 
 // The build on screen keeps a name while it is a saved build or came from a named link;
 // any roll makes it a new, unnamed build.
@@ -397,14 +399,20 @@ function renderCards(): void {
         }
         return entryHTML(entry);
       }).join("");
-    const classContent = key === "class" && isMulticlass && settings.showLevelOrder ? levelUpOrderHTML() + content : content;
+    // With the level-up order on, the Multiclass badge opens it at the top of the Class card.
+    const hasLevelOrder = key === "class" && isMulticlass && settings.showLevelOrder;
+    const classContent = hasLevelOrder && levelOrderOpen ? levelUpOrderHTML() + content : content;
+    const badgeText = classCount > 2 ? "Triple class" : "Multiclass";
+    const badge = !isMulticlass ? ""
+      : hasLevelOrder ? `<button class="multiclass-badge level-order-toggle" data-level-order aria-expanded="${levelOrderOpen}" title="${levelOrderOpen ? "Hide" : "Show"} level-up order">${badgeText} <span aria-hidden="true">${levelOrderOpen ? "▴" : "▾"}</span></button>`
+      : `<span class="multiclass-badge">${badgeText}</span>`;
     const setByOrigin = isSetByOrigin(key);
     const rerollLabel = setByOrigin ? `${title} is set by your origin` : `Reroll ${title}`;
 
     return `<article class="${classes.join(" ")}"${rolledCards.has(key) ? ` style="--roll-index: ${rollIndex++}"` : ""}>
       <div class="card-head">
         <h2>${escapeHTML(title)}</h2>
-        ${isMulticlass ? `<span class="multiclass-badge">${classCount > 2 ? "Triple class" : "Multiclass"}</span>` : ""}
+        ${badge}
         <div class="card-actions">
           <button class="text-button lock-button" data-lock="${key}" aria-pressed="${locked}" aria-label="${escapeHTML(lockLabel)}" title="${escapeHTML(lockLabel)}"${lockedByCompanion ? " disabled" : ""}>${locked ? "Locked" : "Lock"}</button>
           <button class="text-button reroll-button" data-reroll="${key}" aria-label="${escapeHTML(rerollLabel)}" title="${escapeHTML(rerollLabel)}"${locked || setByOrigin ? " disabled" : ""}>Reroll</button>
@@ -419,6 +427,12 @@ function renderCards(): void {
   });
   host.querySelectorAll<HTMLButtonElement>("[data-lock]").forEach(button => {
     button.addEventListener("click", () => toggleLock(button.dataset.lock as CardKey));
+  });
+  host.querySelector<HTMLButtonElement>("[data-level-order]")?.addEventListener("click", () => {
+    levelOrderOpen = !levelOrderOpen;
+    rolledCards = new Set();
+    renderCards();
+    document.querySelector<HTMLButtonElement>("[data-level-order]")?.focus();
   });
 }
 

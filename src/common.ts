@@ -77,7 +77,7 @@ function loadSettings(): Settings {
       party: saved.party === true,
       originCharacters: saved.originCharacters === true,
       showAlignment: saved.showAlignment !== false,
-      showLevelOrder: saved.showLevelOrder === true
+      showLevelOrder: saved.showLevelOrder !== false
     };
   } catch {
     return defaults;

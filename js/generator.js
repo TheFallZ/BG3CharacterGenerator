@@ -3,7 +3,7 @@ let data = structuredClone(DEFAULT_DATA);
 let character = {};
 const MAX_LEVEL = 12;
 function defaultSettings() {
-    return { excludedClasses: [], excludedRaces: [], multiclass: "sometimes", tripleClass: false, hiddenCards: [], party: false, originCharacters: false, showAlignment: true, showLevelOrder: false };
+    return { excludedClasses: [], excludedRaces: [], multiclass: "sometimes", tripleClass: false, hiddenCards: [], party: false, originCharacters: false, showAlignment: true, showLevelOrder: true };
 }
 let settings = defaultSettings();
 // Classes and races the visitor allows; excluding everything falls back to the full list.

@@ -367,7 +367,7 @@ const DIP_REASONS = { Paladin: "Divine Smite", Sorcerer: "Metamagic", Warlock: "
 // Short class names for the level strip.
 const CLASS_SHORT_NAMES = {
     Barbarian: "Barb", Bard: "Bard", Cleric: "Cleric", Druid: "Druid", Fighter: "Fight", Monk: "Monk",
-    Paladin: "Pal", Ranger: "Rngr", Rogue: "Rogue", Sorcerer: "Sorc", Warlock: "Lock", Wizard: "Wiz"
+    Paladin: "Pal", Ranger: "Rngr", Rogue: "Rogue", Sorcerer: "Sorc", Warlock: "Warl", Wizard: "Wiz"
 };
 // No ability score can go above this.
 const MAX_ABILITY_SCORE = 20;

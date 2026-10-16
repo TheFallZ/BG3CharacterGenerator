@@ -6,7 +6,7 @@ let character: Character = {};
 const MAX_LEVEL = 12;
 
 function defaultSettings(): Settings {
-  return {excludedClasses: [], excludedRaces: [], multiclass: "sometimes", tripleClass: false, hiddenCards: [], party: false, originCharacters: false, showAlignment: true, showLevelOrder: false};
+  return {excludedClasses: [], excludedRaces: [], multiclass: "sometimes", tripleClass: false, hiddenCards: [], party: false, originCharacters: false, showAlignment: true, showLevelOrder: true};
 }
 
 let settings: Settings = defaultSettings();

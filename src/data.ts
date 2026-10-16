@@ -83,7 +83,8 @@ interface Settings {
   // Show the rolled alignment on the Background card. It's still rolled when hidden, so turning
   // this back on shows it, and shared builds keep it.
   showAlignment: boolean;
-  // Show the level-up order on multiclass builds' Class card and in their copied text.
+  // Let the Multiclass badge open the level-up order on multiclass builds, and add it to their
+  // copied text.
   showLevelOrder: boolean;
 }
 
@@ -475,7 +476,7 @@ const DIP_REASONS: Record<string, string> = {Paladin: "Divine Smite", Sorcerer: 
 // Short class names for the level strip.
 const CLASS_SHORT_NAMES: Record<string, string> = {
   Barbarian: "Barb", Bard: "Bard", Cleric: "Cleric", Druid: "Druid", Fighter: "Fight", Monk: "Monk",
-  Paladin: "Pal", Ranger: "Rngr", Rogue: "Rogue", Sorcerer: "Sorc", Warlock: "Lock", Wizard: "Wiz"
+  Paladin: "Pal", Ranger: "Rngr", Rogue: "Rogue", Sorcerer: "Sorc", Warlock: "Warl", Wizard: "Wiz"
 };
 
 // No ability score can go above this.

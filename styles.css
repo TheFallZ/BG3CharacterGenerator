@@ -1452,6 +1452,20 @@ button.danger:hover {
   font-size: 14.5px;
 }
 
+/* The badge as a button that opens the level-up order. */
+button.level-order-toggle {
+  border: 1px solid var(--multiclass);
+  border-radius: 10px;
+  padding: 0 8px;
+  background: transparent;
+  line-height: 1.5;
+}
+
+button.level-order-toggle:hover,
+button.level-order-toggle[aria-expanded="true"] {
+  background: rgba(113, 133, 119, .16);
+}
+
 button.text-button {
   padding: 2px 0;
   border: 0;
@@ -1630,7 +1644,12 @@ button.lock-button[aria-pressed="true"] {
   grid-column: 1 / -1;
 }
 
-/* Level-up order: twelve boxes, one per character level, colored by class. */
+/* Level-up order: twelve boxes, one per character level, colored by class, opened from the badge. */
+.level-order {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+}
+
 .level-strip {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
