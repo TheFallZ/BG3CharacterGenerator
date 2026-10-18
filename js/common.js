@@ -35,9 +35,24 @@ const HIDEABLE_CARDS = [
     { key: "darkUrge", label: "Tadpole choice" },
     { key: "companionBuild", label: "Companion build" }
 ];
+// Labels that start each companion on the Companion card. "Companion or hireling" is from older builds.
+const COMPANION_LABELS = ["Companion", "Hireling", "Companion or hireling"];
 // The Companion card holds one companion, or three when the party setting is on.
 function companionCount(build) {
-    return (build.companionBuild || []).filter(entry => entry.label === "Companion" || entry.label === "Hireling" || entry.label === "Companion or hireling").length;
+    return (build.companionBuild || []).filter(entry => COMPANION_LABELS.includes(entry.label)).length;
+}
+// The Companion card's entries, split into one list per companion.
+function companionMembers(entries) {
+    const members = [];
+    for (const entry of entries || []) {
+        if (COMPANION_LABELS.includes(entry.label) || !members.length)
+            members.push([]);
+        members[members.length - 1].push(entry);
+    }
+    return members;
+}
+function preferredWeapons(entries) {
+    return [...entryText(entries, "Preferred melee weapon"), ...entryText(entries, "Preferred ranged weapon")];
 }
 function cardTitle(build, key) {
     return key === "companionBuild" && companionCount(build) > 1 ? "Party" : CARD_TITLES[key];
@@ -47,34 +62,45 @@ const MULTICLASS_MODES = [
     { mode: "sometimes", label: "Sometimes" },
     { mode: "always", label: "Always" }
 ];
-function loadSettings() {
-    const defaults = defaultSettings();
+// Reads a JSON value from localStorage or sessionStorage. Missing, unreadable or blocked storage
+// all read as null.
+function readStored(area, key) {
     try {
-        const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
-        const strings = (value, known) => Array.isArray(value) ? value.filter((item) => known.includes(item)) : [];
-        return {
-            excludedClasses: strings(saved.excludedClasses, Object.keys(data.classes)),
-            excludedRaces: strings(saved.excludedRaces, Object.keys(data.races)),
-            multiclass: MULTICLASS_MODES.some(({ mode }) => mode === saved.multiclass) ? saved.multiclass : defaults.multiclass,
-            tripleClass: saved.tripleClass === true,
-            hiddenCards: strings(saved.hiddenCards, HIDEABLE_CARDS.map(({ key }) => key)),
-            party: saved.party === true,
-            originCharacters: saved.originCharacters === true,
-            showAlignment: saved.showAlignment !== false,
-            showLevelOrder: saved.showLevelOrder !== false
-        };
+        const value = (area === "local" ? localStorage : sessionStorage).getItem(key);
+        return value === null ? null : JSON.parse(value);
     }
     catch {
-        return defaults;
+        return null;
     }
 }
-function storeSettings() {
+// Returns false when storage is full or blocked; the page carries on for this visit either way.
+function writeStored(area, key, value) {
     try {
-        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        (area === "local" ? localStorage : sessionStorage).setItem(key, JSON.stringify(value));
+        return true;
     }
     catch {
-        // Settings still apply for this visit without storage.
+        return false;
     }
+}
+// Stored settings, checked field by field so an old or edited value falls back to the default.
+function loadSettings() {
+    const saved = (readStored("local", SETTINGS_KEY) ?? {});
+    const strings = (value, known) => Array.isArray(value) ? value.filter((item) => known.includes(item)) : [];
+    return {
+        excludedClasses: strings(saved.excludedClasses, Object.keys(data.classes)),
+        excludedRaces: strings(saved.excludedRaces, Object.keys(data.races)),
+        multiclass: MULTICLASS_MODES.find(({ mode }) => mode === saved.multiclass)?.mode ?? defaultSettings().multiclass,
+        tripleClass: saved.tripleClass === true,
+        hiddenCards: strings(saved.hiddenCards, HIDEABLE_CARDS.map(({ key }) => key)),
+        party: saved.party === true,
+        originCharacters: saved.originCharacters === true,
+        showAlignment: saved.showAlignment !== false,
+        showLevelOrder: saved.showLevelOrder !== false
+    };
+}
+function storeSettings() {
+    writeStored("local", SETTINGS_KEY, settings);
 }
 // The Origin card only exists while origin characters are allowed.
 function visibleCards() {
@@ -89,59 +115,47 @@ function isSavedCharacter(value) {
         typeof candidate.character === "object" && candidate.character !== null;
 }
 function getSavedCharacters() {
-    try {
-        const saved = JSON.parse(localStorage.getItem(SAVED_CHARACTERS_KEY) || "[]");
-        return Array.isArray(saved) ? saved.filter(isSavedCharacter) : [];
-    }
-    catch {
-        return [];
-    }
+    const saved = readStored("local", SAVED_CHARACTERS_KEY);
+    return Array.isArray(saved) ? saved.filter(isSavedCharacter) : [];
+}
+function findSaved(id) {
+    return id ? getSavedCharacters().find(item => item.id === id) : undefined;
 }
 // Throws when storage is full or blocked, so callers can say so.
 function storeSavedCharacters(saved) {
     localStorage.setItem(SAVED_CHARACTERS_KEY, JSON.stringify(saved));
     updateNav();
 }
+// Changes one saved build. Throws like storeSavedCharacters when storage is full or blocked.
+function updateSaved(id, change) {
+    storeSavedCharacters(getSavedCharacters().map(item => item.id === id ? change(item) : item));
+}
+// Without storage the Generator page just rolls a new build next time.
 function storeCurrentBuild(current) {
-    try {
-        sessionStorage.setItem(CURRENT_BUILD_KEY, JSON.stringify(current));
-    }
-    catch {
-        // Without storage the Generator page just rolls a new build next time.
-    }
+    writeStored("session", CURRENT_BUILD_KEY, current);
+}
+// A stored current or Undo build, checked like any other untrusted build.
+function toCurrentBuild(stored) {
+    const input = (stored ?? {});
+    const build = sanitizeCharacter(input.character);
+    if (!build)
+        return null;
+    return {
+        character: build,
+        savedId: typeof input.savedId === "string" ? input.savedId : null,
+        sharedName: typeof input.sharedName === "string" ? input.sharedName.slice(0, MAX_NAME_LENGTH) : null
+    };
 }
 function loadCurrentBuild() {
-    try {
-        const stored = JSON.parse(sessionStorage.getItem(CURRENT_BUILD_KEY) || "null");
-        const build = sanitizeCharacter(stored?.character);
-        if (!build)
-            return null;
-        return {
-            character: build,
-            savedId: typeof stored.savedId === "string" ? stored.savedId : null,
-            sharedName: typeof stored.sharedName === "string" ? stored.sharedName.slice(0, MAX_NAME_LENGTH) : null
-        };
-    }
-    catch {
-        return null;
-    }
+    return toCurrentBuild(readStored("session", CURRENT_BUILD_KEY));
 }
 function loadHistory() {
-    try {
-        const stored = JSON.parse(sessionStorage.getItem(HISTORY_KEY) || "[]");
-        return Array.isArray(stored) ? stored : [];
-    }
-    catch {
-        return [];
-    }
+    const stored = readStored("session", HISTORY_KEY);
+    return Array.isArray(stored) ? stored : [];
 }
+// Undo just has less to go back to without storage.
 function storeHistory(history) {
-    try {
-        sessionStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-HISTORY_LIMIT)));
-    }
-    catch {
-        // Undo just has less to go back to without storage.
-    }
+    writeStored("session", HISTORY_KEY, history.slice(-HISTORY_LIMIT));
 }
 // Remembers the build on screen before it's replaced, so Undo can bring it back.
 function pushHistory(entry) {
@@ -151,27 +165,17 @@ function pushHistory(entry) {
 function popHistory() {
     const history = loadHistory();
     while (history.length) {
-        const stored = history.pop();
-        const build = sanitizeCharacter(stored?.character);
-        if (build) {
+        const previous = toCurrentBuild(history.pop());
+        if (previous) {
             storeHistory(history);
-            return {
-                character: build,
-                savedId: typeof stored.savedId === "string" ? stored.savedId : null,
-                sharedName: typeof stored.sharedName === "string" ? stored.sharedName : null
-            };
+            return previous;
         }
     }
     storeHistory([]);
     return null;
 }
-function entryText(entries, label) {
-    return (entries || [])
-        .filter(entry => entry.label === label && typeof entry.value === "string")
-        .map(entry => entry.value);
-}
 function describeCharacter(build) {
-    const race = entryText(build.race, "Subrace")[0] ?? entryText(build.race, "Race")[0];
+    const race = shownRace(build.race);
     const classLevels = getClassLevels(build.class);
     const classes = classLevels
         .map(({ className, level }) => classLevels.length > 1 ? `${className} ${level}` : className)
@@ -365,7 +369,7 @@ function classTextLines(build) {
         const level = entryText(entries, "Level")[0] ?? String(MAX_LEVEL);
         const subclass = entryText(entries, SUBCLASS_LABELS[className] ?? "Subclass")[0];
         lines.push(`- **${className} ${level}**${subclass ? ` (${subclass})` : ""}`);
-        const weapons = [...entryText(entries, "Preferred melee weapon"), ...entryText(entries, "Preferred ranged weapon")];
+        const weapons = preferredWeapons(entries);
         for (const entry of entries) {
             if (TEXT_SKIPPED_CLASS_LABELS.includes(entry.label) || CLASS_SKILL_LABELS.includes(entry.label) || entry.label.includes("Expertise"))
                 continue;
@@ -380,16 +384,10 @@ function classTextLines(build) {
 }
 // One line per companion: "Astarion: Rogue (Arcane Trickster), Rapier and Shortbow".
 function companionTextLines(build) {
-    const members = [];
-    for (const entry of build.companionBuild || []) {
-        if (entry.label === "Companion" || entry.label === "Hireling" || entry.label === "Companion or hireling")
-            members.push([]);
-        members[members.length - 1]?.push(entry);
-    }
-    return members.map(entries => {
+    return companionMembers(build.companionBuild).map(entries => {
         const [first] = entries;
         const subclass = entryText(entries, "Subclass")[0];
-        const weapons = [...entryText(entries, "Preferred melee weapon"), ...entryText(entries, "Preferred ranged weapon")];
+        const weapons = preferredWeapons(entries);
         return `${first.value}: ${entryText(entries, "Class")[0] ?? ""}${subclass ? ` (${subclass})` : ""}` +
             (weapons.length ? `, ${weapons.join(" and ")}` : "");
     });
@@ -405,12 +403,12 @@ async function buildText(build, name) {
     };
     if (shown.has("origin") && build.origin && build.origin !== CUSTOM_ORIGIN)
         line("Origin", build.origin);
-    const race = entryText(build.race, "Subrace")[0] ?? entryText(build.race, "Race")[0];
+    const race = shownRace(build.race);
     const raceExtras = (build.race || [])
         .filter(entry => !["Race", "Subrace", "Racial Proficiencies", "Additional Skill Proficiency"].includes(entry.label))
         .map(entry => `${entry.label}: ${listText(entryValues(entry))}`);
     line("Race", race && [race, ...raceExtras].join(" · "));
-    line("Background", typeof build.background === "string" ? build.background : entryText(build.background ?? undefined, "Background")[0]);
+    line("Background", backgroundName(build.background));
     if (settings.showAlignment && Array.isArray(build.background))
         line("Alignment", entryText(build.background, "Alignment")[0]);
     const skills = [...new Set([

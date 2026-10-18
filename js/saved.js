@@ -58,7 +58,7 @@ function renderSavedPage() {
         const classes = levels.map(({ className, level }) => `${className} ${level}`).join(" / ");
         // An unnamed build's title is already its race and class, so it shows the subclass instead of the race.
         const second = item.name
-            ? { label: "Race", value: raceName(item) }
+            ? { label: "Race", value: shownRace(item.character.race) ?? "" }
             : { label: "Subclass", value: primaryClassAndSubclass(item.character.class).subclass ?? "None yet" };
         const companion = romanceOrCompanion(item);
         const picture = pictureURLs.get(item.id);
@@ -88,7 +88,7 @@ function renderSavedPage() {
           <div class="saved-details">
             ${detail("Class", classes)}
             ${detail(second.label, second.value)}
-            ${detail("Background", backgroundName(item))}
+            ${detail("Background", backgroundName(item.character.background) ?? "")}
             ${detail(companion.label, companion.value)}
           </div>
           ${item.note ? `<p class="saved-card-note"><span>Note:</span> ${escapeHTML(item.note)}</p>` : ""}
@@ -107,7 +107,7 @@ function romanceOrCompanion(item) {
     if (romance && romance !== "No One")
         return { label: "Romance", value: romance };
     const members = (item.character.companionBuild || [])
-        .filter(entry => ["Companion", "Hireling", "Companion or hireling"].includes(entry.label) && typeof entry.value === "string");
+        .filter(entry => COMPANION_LABELS.includes(entry.label) && typeof entry.value === "string");
     if (members.length > 1)
         return { label: "Party", value: members.map(entry => entry.value).join(", ") };
     if (members.length === 1) {
@@ -115,15 +115,6 @@ function romanceOrCompanion(item) {
         return { label, value: members[0].value };
     }
     return { label: "Romance", value: "No one" };
-}
-function raceName(item) {
-    return entryText(item.character.race, "Subrace")[0] ?? entryText(item.character.race, "Race")[0] ?? "";
-}
-function backgroundName(item) {
-    const background = item.character.background;
-    if (typeof background === "string")
-        return background;
-    return entryText(background ?? undefined, "Background")[0] ?? "";
 }
 function shortDate(item) {
     const savedAt = savedTime(item);
@@ -151,7 +142,7 @@ function savedCard(id) {
 }
 // Opens the build on the Generator page, which picks it up from this tab's storage.
 function openSaved(id) {
-    const item = getSavedCharacters().find(saved => saved.id === id);
+    const item = findSaved(id);
     if (!item)
         return;
     trackEvent("open-saved-build");
@@ -160,21 +151,21 @@ function openSaved(id) {
     location.href = homeURL();
 }
 async function copySavedLink(id) {
-    const item = getSavedCharacters().find(saved => saved.id === id);
+    const item = findSaved(id);
     if (!item)
         return;
     trackEvent("copy-link");
     await copyToClipboard(await buildLink(item.character, item.name ?? null), `Link to "${savedTitle(item)}" copied.`);
 }
 async function copySavedText(id) {
-    const item = getSavedCharacters().find(saved => saved.id === id);
+    const item = findSaved(id);
     if (!item)
         return;
     trackEvent("copy-text");
     await copyToClipboard(await buildText(item.character, item.name ?? null), `Text for "${savedTitle(item)}" copied.`);
 }
 function startRename(id) {
-    const item = getSavedCharacters().find(saved => saved.id === id);
+    const item = findSaved(id);
     const title = savedCard(id)?.querySelector(".saved-card-title");
     if (!item || !title)
         return;
@@ -208,12 +199,10 @@ function startRename(id) {
 // An empty name goes back to the automatic race and class description.
 function renameSaved(id, name) {
     try {
-        storeSavedCharacters(getSavedCharacters().map(item => {
-            if (item.id !== id)
-                return item;
+        updateSaved(id, item => {
             const { name: _old, ...rest } = item;
             return name.trim() ? { ...rest, name: name.trim() } : rest;
-        }));
+        });
         setNotice("Build renamed.");
     }
     catch {
@@ -224,7 +213,7 @@ function renameSaved(id, name) {
 }
 // Notes are edited in place under the build's details. Ctrl+Enter saves, Escape cancels.
 function startNote(id) {
-    const item = getSavedCharacters().find(saved => saved.id === id);
+    const item = findSaved(id);
     const text = savedCard(id)?.querySelector(".saved-card-text");
     if (!item || !text || text.querySelector(".saved-note-editor"))
         return;
@@ -253,12 +242,10 @@ function startNote(id) {
 function saveNote(id, note) {
     const trimmed = note.trim().slice(0, MAX_NOTE_LENGTH);
     try {
-        storeSavedCharacters(getSavedCharacters().map(item => {
-            if (item.id !== id)
-                return item;
+        updateSaved(id, item => {
             const { note: _old, ...rest } = item;
             return trimmed ? { ...rest, note: trimmed } : rest;
-        }));
+        });
         setNotice(trimmed ? "Note saved." : "Note removed.");
     }
     catch {
@@ -269,7 +256,7 @@ function saveNote(id, note) {
 }
 // Asks on the page rather than with confirm(), which some in-app browsers block.
 function askToDelete(id) {
-    const item = getSavedCharacters().find(saved => saved.id === id);
+    const item = findSaved(id);
     const actions = savedCard(id)?.querySelector(".saved-card-actions");
     if (!item || !actions)
         return;
@@ -344,7 +331,7 @@ async function downloadFile(fileName, builds) {
 }
 // One build, with its name, note and picture, in a file someone else can import.
 async function downloadBuild(id) {
-    const item = getSavedCharacters().find(saved => saved.id === id);
+    const item = findSaved(id);
     if (!item)
         return;
     trackEvent("download-build");

@@ -39,17 +39,12 @@ let currentSavedId = null;
 let sharedName = null;
 function currentBuildName() {
     if (currentSavedId)
-        return getSavedCharacters().find(item => item.id === currentSavedId)?.name ?? null;
+        return findSaved(currentSavedId)?.name ?? null;
     return sharedName;
 }
 function loadLockedCards() {
-    try {
-        const saved = JSON.parse(localStorage.getItem(LOCKED_CARDS_KEY) || "[]");
-        return new Set(Array.isArray(saved) ? saved.filter((key) => cardOrder.includes(key)) : []);
-    }
-    catch {
-        return new Set();
-    }
+    const saved = readStored("local", LOCKED_CARDS_KEY);
+    return new Set(Array.isArray(saved) ? saved.filter((key) => cardOrder.includes(key)) : []);
 }
 // The companion comes from the romance, so a locked companion build keeps its romance too.
 function isLockedByCompanion(key) {
@@ -63,12 +58,8 @@ function toggleLock(key) {
         lockedCards.delete(key);
     else
         lockedCards.add(key);
-    try {
-        localStorage.setItem(LOCKED_CARDS_KEY, JSON.stringify([...lockedCards]));
-    }
-    catch {
-        // Locks still work for this visit without storage.
-    }
+    // Locks still work for this visit without storage.
+    writeStored("local", LOCKED_CARDS_KEY, [...lockedCards]);
     rolledCards = new Set();
     renderCards();
     document.querySelector(`[data-lock="${key}"]`)?.focus();
@@ -245,17 +236,17 @@ async function copyCurrentText() {
 function renderBuildTitle() {
     const name = currentBuildName();
     const summary = document.getElementById("buildSummary");
-    const isSaved = !!currentSavedId && getSavedCharacters().some(item => item.id === currentSavedId);
+    const saved = findSaved(currentSavedId);
     document.getElementById("buildKind").textContent =
-        isSaved ? "Saved build" : name ? "Shared build" : "Your character";
+        saved ? "Saved build" : name ? "Shared build" : "Your character";
     document.getElementById("buildName").textContent = name ?? describeCharacter(character);
     summary.textContent = name ? describeCharacter(character) : "";
     summary.hidden = !name;
-    const note = currentSavedId ? getSavedCharacters().find(item => item.id === currentSavedId)?.note : undefined;
+    const note = saved?.note;
     const noteLine = document.getElementById("buildNote");
     noteLine.textContent = note ?? "";
     noteLine.hidden = !note;
-    renderBuildPicture(isSaved ? currentSavedId : null);
+    renderBuildPicture(saved ? currentSavedId : null);
 }
 // A saved build's picture sits beside its heading. It loads after the rest, so a later build
 // that has already replaced this one isn't given the wrong picture.
@@ -344,13 +335,7 @@ function gridAreas(columns, visible) {
 }
 // A party shows each companion in its own column; a single companion keeps the two-column layout.
 function companionHTML() {
-    const members = [];
-    for (const entry of buildCardEntries(character, "companionBuild")) {
-        const startsMember = ["Companion", "Hireling", "Companion or hireling"].includes(entry.label);
-        if (startsMember || !members.length)
-            members.push([]);
-        members[members.length - 1].push(entry);
-    }
+    const members = companionMembers(buildCardEntries(character, "companionBuild"));
     if (members.length < 2)
         return members.flat().map(entryHTML).join("");
     return `<div class="party">${members.map(member => `<div class="party-member">${member.map(entryHTML).join("")}</div>`).join("")}</div>`;
@@ -366,8 +351,7 @@ function abilitiesHTML() {
       <span class="ability-mod">${score ? abilityModifier(score) : ""}</span>
     </div>`;
     }).join("");
-    const bonus = entries.find(entry => entry.label === "Racial bonuses")?.value;
-    const bonusText = typeof bonus === "string" ? bonus.replace(", ", " and ") : "";
+    const bonusText = entryText(entries, "Racial bonuses")[0]?.replace(", ", " and ") ?? "";
     return `<div class="abilities">${boxes}</div>
     <p class="abilities-note">Set these in character creation${bonusText ? `, putting your bonus points into ${escapeHTML(bonusText)}` : ""}.</p>`;
 }

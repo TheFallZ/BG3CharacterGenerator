@@ -2,6 +2,13 @@
 
 // The Settings page. Changes save as soon as they're made.
 
+// The on/off settings, each shown as one checkbox named after it.
+type ToggleSetting = {[K in keyof Settings]: Settings[K] extends boolean ? K : never}[keyof Settings];
+
+function toggleHTML(name: ToggleSetting, label: string): string {
+  return `<label class="check"><input type="checkbox" name="${name}"${settings[name] ? " checked" : ""}> ${escapeHTML(label)}</label>`;
+}
+
 function checkboxHTML(name: string, value: string, label: string, checked: boolean): string {
   return `<label class="check"><input type="checkbox" name="${name}" value="${escapeHTML(value)}"${checked ? " checked" : ""}> ${escapeHTML(label)}</label>`;
 }
@@ -23,13 +30,13 @@ function renderSettings(): void {
           <div class="segmented">
             ${MULTICLASS_MODES.map(({mode, label}) => `<label><input type="radio" name="multiclass" value="${mode}"${settings.multiclass === mode ? " checked" : ""}><span>${label}</span></label>`).join("")}
           </div>
-          <label class="check"><input type="checkbox" name="tripleClass"${settings.tripleClass ? " checked" : ""}> Allow triple classing</label>
-          <label class="check"><input type="checkbox" name="showLevelOrder"${settings.showLevelOrder ? " checked" : ""}> Show level-up order</label>
+          ${toggleHTML("tripleClass", "Allow triple classing")}
+          ${toggleHTML("showLevelOrder", "Show level-up order")}
           <p class="settings-note">Sometimes will roll a multiclass build ${data.settings.multiclassChance}% of the time. Triple classing gives ${data.settings.tripleClassChance}% of those a third class.</p>
         </fieldset>
         <fieldset class="settings-group">
           <legend>Origin</legend>
-          <label class="check"><input type="checkbox" name="originCharacters"${settings.originCharacters ? " checked" : ""}> Allow origin characters</label>
+          ${toggleHTML("originCharacters", "Allow origin characters")}
           <p class="settings-note">Allows you to play as an origin character instead of only custom characters.</p>
         </fieldset>
       </div>
@@ -38,7 +45,7 @@ function renderSettings(): void {
       <h2>Companions</h2>
       <fieldset class="settings-group">
         <legend class="visually-hidden">Companions</legend>
-        <label class="check"><input type="checkbox" name="party"${settings.party ? " checked" : ""}> Generate a full party</label>
+        ${toggleHTML("party", "Generate a full party")}
         <p class="settings-note">Rolls three companions instead of one.</p>
       </fieldset>
     </section>
@@ -48,7 +55,7 @@ function renderSettings(): void {
         <legend class="visually-hidden">Cards to show</legend>
         ${HIDEABLE_CARDS.map(({key, label}) => checkboxHTML("showCard", key, label, !settings.hiddenCards.includes(key)) +
           // Alignment isn't a card of its own, so it's slotted in after Romance.
-          (key === "romance" ? `<label class="check"><input type="checkbox" name="showAlignment"${settings.showAlignment ? " checked" : ""}> Alignment</label>` : "")).join("")}
+          (key === "romance" ? toggleHTML("showAlignment", "Alignment") : "")).join("")}
       </fieldset>
     </section>
     <section class="settings-section settings-pools">
@@ -97,16 +104,17 @@ function readSettings(event?: Event): void {
   }
   const unchecked = (name: string) =>
     [...panel.querySelectorAll<HTMLInputElement>(`input[name="${name}"]:not(:checked)`)].map(box => box.value);
+  const isOn = (name: ToggleSetting) => panel.querySelector<HTMLInputElement>(`input[name="${name}"]`)!.checked;
   settings = {
     excludedClasses: unchecked("class"),
     excludedRaces: unchecked("race"),
     multiclass: (panel.querySelector<HTMLInputElement>('input[name="multiclass"]:checked')?.value ?? "sometimes") as MulticlassMode,
-    tripleClass: panel.querySelector<HTMLInputElement>('input[name="tripleClass"]')!.checked,
+    tripleClass: isOn("tripleClass"),
     hiddenCards: unchecked("showCard") as CardKey[],
-    party: panel.querySelector<HTMLInputElement>('input[name="party"]')!.checked,
-    originCharacters: panel.querySelector<HTMLInputElement>('input[name="originCharacters"]')!.checked,
-    showAlignment: panel.querySelector<HTMLInputElement>('input[name="showAlignment"]')!.checked,
-    showLevelOrder: panel.querySelector<HTMLInputElement>('input[name="showLevelOrder"]')!.checked
+    party: isOn("party"),
+    originCharacters: isOn("originCharacters"),
+    showAlignment: isOn("showAlignment"),
+    showLevelOrder: isOn("showLevelOrder")
   };
   storeSettings();
   updateSettingsControls();

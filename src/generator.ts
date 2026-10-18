@@ -12,16 +12,17 @@ function defaultSettings(): Settings {
 let settings: Settings = defaultSettings();
 
 // Classes and races the visitor allows; excluding everything falls back to the full list.
-function allowedClasses(): string[] {
-  const names = Object.keys(data.classes);
-  const allowed = names.filter(name => !settings.excludedClasses.includes(name));
+function allowedNames(names: string[], excluded: string[]): string[] {
+  const allowed = names.filter(name => !excluded.includes(name));
   return allowed.length ? allowed : names;
 }
 
+function allowedClasses(): string[] {
+  return allowedNames(Object.keys(data.classes), settings.excludedClasses);
+}
+
 function allowedRaces(): string[] {
-  const names = Object.keys(data.races);
-  const allowed = names.filter(name => !settings.excludedRaces.includes(name));
-  return allowed.length ? allowed : names;
+  return allowedNames(Object.keys(data.races), settings.excludedRaces);
 }
 
 function rollStartingMagic(className: string): ClassEntry[] {
@@ -53,6 +54,23 @@ function entryValues(entry: ClassEntry | undefined): string[] {
   return Array.isArray(entry.value) ? entry.value : typeof entry.value === "string" ? [entry.value] : [];
 }
 
+// The single-text values of every entry with this label, like a build's "Class" entries.
+function entryText(entries: ClassEntry[] | null | undefined, label: string): string[] {
+  return (entries || [])
+    .filter(entry => entry.label === label && typeof entry.value === "string")
+    .map(entry => entry.value as string);
+}
+
+// The race a build shows: its subrace, or its race when it has none.
+function shownRace(race: Character["race"] = character.race): string | null {
+  return entryText(race, "Subrace")[0] ?? entryText(race, "Race")[0] ?? null;
+}
+
+// The background's name, from its entries or, in builds from before those, the plain name.
+function backgroundName(background: Character["background"] = character.background): string | null {
+  return typeof background === "string" ? background : entryText(background, "Background")[0] ?? null;
+}
+
 function randomSkills(className: string, count: number, excludedSkills: string[] = [], reservedSkills: string[] = [], reservedCount = 0): string[] {
   const cls = data.classes[className];
   const availableSkills = (cls?.skills || []).filter(skill => !excludedSkills.includes(skill));
@@ -77,15 +95,11 @@ function getRacialSkillProficiencies(race: Character["race"] = character.race): 
   return [...new Set(skills)];
 }
 
+// The skills listed on the Background card, or the background's usual skills for older builds.
 function getBackgroundSkillProficiencies(background: Character["background"] = character.background): string[] {
-  if (typeof background === "string") return BACKGROUND_SKILLS[background] || [];
-  if (!Array.isArray(background)) return [];
-
-  const skillEntry = background.find(entry => entry.label === "Background Skill Proficiencies");
+  const skillEntry = Array.isArray(background) ? background.find(entry => entry.label === "Background Skill Proficiencies") : undefined;
   if (Array.isArray(skillEntry?.value)) return skillEntry.value.filter((skill): skill is string => typeof skill === "string");
-
-  const backgroundName = background.find(entry => entry.label === "Background")?.value;
-  return typeof backgroundName === "string" ? BACKGROUND_SKILLS[backgroundName] || [] : [];
+  return BACKGROUND_SKILLS[backgroundName(background) ?? ""] || [];
 }
 
 const CLASS_SKILL_LABELS = ["Skill Proficiencies", "Multiclass Skill Proficiencies", "Nature Domain Skill Proficiency", "Subclass Skill Proficiency", "College of Lore Skill Proficiencies"];
@@ -150,10 +164,7 @@ function originProfile(origin: string | null | undefined = character.origin) {
 // romance or companion can't also be you.
 function rollOrigin(keepRace = false, keepBackground = false, avoidNames: string[] = []): string {
   if (!settings.originCharacters || settings.hiddenCards.includes("origin")) return CUSTOM_ORIGIN;
-  const background = character.background;
-  const keptBackground = !keepBackground ? null
-    : typeof background === "string" ? background
-    : background?.find(entry => entry.label === "Background")?.value ?? null;
+  const keptBackground = keepBackground ? backgroundName() : null;
   const darkUrgeAllowed = !keepBackground || keptBackground === DARK_URGE_BACKGROUND;
   const originsAllowed = !keepRace && !keepBackground;
   const roll = Math.random() * 100;
@@ -472,10 +483,9 @@ function meleeWeapons(className: string, subclass: string | null): string[] {
 function rollWeapons(className: string, classEntries: ClassEntry[]): ClassEntry[] {
   const weapons = WEAPON_PREFERENCES[className];
   if (!weapons) return [];
-  const subclass = classEntries.find(entry => entry.label === SUBCLASS_LABELS[className])?.value;
-  const style = classEntries.find(entry => entry.label === "Fighting Style")?.value;
-  let melee = FIGHTING_STYLE_WEAPONS[typeof style === "string" ? style : ""] ??
-    meleeWeapons(className, typeof subclass === "string" ? subclass : null);
+  const subclass = entryText(classEntries, SUBCLASS_LABELS[className])[0] ?? null;
+  const style = entryText(classEntries, "Fighting Style")[0] ?? "";
+  let melee = FIGHTING_STYLE_WEAPONS[style] ?? meleeWeapons(className, subclass);
   // College of Swords bards fight with blades they're proficient with.
   if (className === "Bard") melee = melee.filter(weapon => BARD_BLADES.includes(weapon));
   if (!melee.length) melee = weapons.melee;
@@ -764,7 +774,8 @@ function rollFeats(keep: string[] = []): ClassEntry[] {
   const taken: string[] = [];
   return featLevels().map((slot, index) => {
     const kept = index < keep.length && fitsArmor(keep[index], armor) ? keep[index] : null;
-    const feat = kept === null ? rollFeat(taken, armor, scores)
+    // A new feat in the middle of the list steers clear of the kept feats after it, too.
+    const feat = kept === null ? rollFeat([...taken, ...keep.slice(index + 1)], armor, scores)
       : applyFeat(scores, kept) ? kept
       : featName(kept) === "Resilient" ? fitResilient(scores)
       : rollAbilityImprovement(scores);
@@ -834,9 +845,7 @@ function rollRomance(): string | null {
 
 function primaryClassAndSubclass(classEntries: Character["class"] = character.class): {className: string; subclass: string | null} {
   const className = getClassLevels(classEntries)[0]?.className ?? "Fighter";
-  const label = SUBCLASS_LABELS[className] ?? "Subclass";
-  const subclass = (classEntries || []).find(entry => entry.label === label)?.value;
-  return {className, subclass: typeof subclass === "string" ? subclass : null};
+  return {className, subclass: entryText(classEntries, SUBCLASS_LABELS[className] ?? "Subclass")[0] ?? null};
 }
 
 // Starting ability scores for the starting class: a 27-point buy plus the racial +2 and +1.
