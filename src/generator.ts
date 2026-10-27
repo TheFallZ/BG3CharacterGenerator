@@ -366,7 +366,7 @@ function rollClassOptions(className: string, subclass: string | null, level: num
       entries.push({label: "Pact Boon", value: pact});
       if (pact === "Pact of the Blade") {
         const weapons = [...options["Preferred Weapon"], ...(subclass === "Hexblade" ? options["Hexblade Pact Weapons"] : [])];
-        entries.push({label: "Preferred Weapon", value: pick(weapons)});
+        entries.push({label: "Preferred Summoned Weapon", value: pick(weapons)});
       }
       if (pact === "Pact of the Chain") entries.push({label: "Preferred Familiar", value: pick(options["Preferred Familiar"])});
     }

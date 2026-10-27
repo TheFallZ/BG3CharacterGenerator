@@ -248,7 +248,7 @@ test("subclass choices match the subclass and level", () => {
       if (block.name === "Druid") assert.equal(count("Bonus Cantrip"), subclass === "Circle of the Land" ? 1 : 0);
       if (block.name === "Cleric") assert.equal(count("Druid Cantrip"), subclass === "Nature" ? 1 : 0);
       if (block.name === "Warlock" && subclass !== "Hexblade") {
-        const weapon = values(labelled(block.entries, "Preferred Weapon")[0])[0];
+        const weapon = values(labelled(block.entries, "Preferred Summoned Weapon")[0])[0];
         if (weapon) assert.ok(!C.options.Warlock["Hexblade Pact Weapons"].includes(weapon), `${weapon} without Hexblade`);
       }
     }
